@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.io.Bytes;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.assets.FontInfo;
 
@@ -22,6 +23,10 @@ class AssetsBase {
 
     private function getImageFromHaxeResource(resourceId:String, callback:String->ImageInfo->Void) {
         callback(resourceId, null);
+    }
+
+    public function imageFromBytes(bytes:Bytes, callback:ImageInfo->Void) {
+
     }
 
     private function getFontInternal(resourceId:String, callback:FontInfo->Void) {
