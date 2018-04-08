@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.heaps.util.FontDetect;
 import haxe.io.Bytes;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.assets.FontInfo;
@@ -30,7 +31,14 @@ class AssetsBase {
     }
 
     private function getFontInternal(resourceId:String, callback:FontInfo->Void) {
-        callback(null);
+        FontDetect.onFontLoaded(resourceId, function(f) {
+            var fontInfo = {
+                data: f
+            }
+            callback(fontInfo);
+        }, function(f) {
+            callback(null);
+        });
     }
 
     private function getFontFromHaxeResource(resourceId:String, callback:String->FontInfo->Void) {

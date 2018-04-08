@@ -1,6 +1,7 @@
 package haxe.ui.backend;
 
 import haxe.ui.assets.FontInfo;
+import haxe.ui.backend.heaps.util.FontDetect;
 import haxe.ui.core.Component;
 import haxe.ui.core.TextDisplay.TextDisplayData;
 import haxe.ui.styles.Style;
@@ -42,16 +43,12 @@ class TextDisplayBase {
             }
 
             var fontSizeValue = Std.int(_textStyle.fontSize);
-            if (sprite.font.size != fontSizeValue) {
-                //TODO
-
+            if ((_fontInfo != null && sprite.font.name != _fontInfo.data)
+                || sprite.font.size != fontSizeValue) {
+                var fontName:String = _fontInfo != null ? _fontInfo.data : sprite.font.name;
+                sprite.font = hxd.res.FontBuilder.getFont(FontDetect.getFontName(fontName), fontSizeValue);
                 measureTextRequired = true;
             }
-
-//            if (_fontInfo != null && sprite.font.name != _fontInfo.data) {
-                //TODO
-//                measureTextRequired = true;
-//            }
 
             if (sprite.textColor != _textStyle.color) {
                 sprite.textColor = _textStyle.color;
@@ -88,8 +85,7 @@ class TextDisplayBase {
     }
 
     private function createText():h2d.Text {
-        var font:h2d.Font = hxd.res.DefaultFont.get();   //TODO
-        return new h2d.Text(font);
+        return new h2d.Text(hxd.res.DefaultFont.get());
     }
 
     private function getAlign(align:String):h2d.Text.Align {

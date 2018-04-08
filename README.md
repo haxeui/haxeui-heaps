@@ -22,7 +22,7 @@ TODO list
 * [x] Events
 * [ ] Assets
 * [ ] Texts
-    * [ ] Font file supported
+    * [x] Font file supported
     * [ ] Bitmap font supported
 * [ ] Images
 * [ ] Native components?

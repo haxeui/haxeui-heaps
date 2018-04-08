@@ -14,6 +14,6 @@ class TextInputBase extends TextDisplayBase {
     }
 
     private override function createText():h2d.Text {
-        return new h2d.TextInput(hxd.res.DefaultFont.get());    //TODO
+        return new h2d.TextInput(hxd.res.DefaultFont.get());
     }
 }
