@@ -10,7 +10,7 @@ TODO list
     * [ ] Clip Rect
     * [ ] Dialog
     * [ ] Targets
-        * [ ] Javascript
+        * [x] Javascript
         * [ ] HashLink
 * [ ] Style
     * [x] Border
@@ -24,5 +24,5 @@ TODO list
 * [ ] Texts
     * [x] Font file supported
     * [ ] Bitmap font supported
-* [ ] Images
+* [x] Images
 * [ ] Native components?

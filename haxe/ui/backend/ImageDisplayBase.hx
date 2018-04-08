@@ -1,7 +1,7 @@
 package haxe.ui.backend;
 
-import haxe.ui.core.Component;
 import haxe.ui.assets.ImageInfo;
+import haxe.ui.core.Component;
 import haxe.ui.util.Rectangle;
 
 class ImageDisplayBase {
@@ -21,18 +21,36 @@ class ImageDisplayBase {
     }
 
     private function validateData() {
-        
+        if (_imageInfo != null) {
+            sprite.tile = h2d.Tile.fromBitmap(_imageInfo.data);
+        }
     }
-    
-    private function validateStyle():Bool {
-        return false;
-    }
-    
+
     private function validatePosition() {
-        
+        if (sprite.x != _left) {
+            sprite.x = _left;
+        }
+
+        if (sprite.y != _top) {
+            sprite.y = _top;
+        }
     }
-    
+
     private function validateDisplay() {
-        
+        if (sprite.tile != null) {
+            var scaleX:Float = _imageWidth / sprite.tile.width;
+            if (sprite.scaleX != scaleX) {
+                sprite.scaleX = scaleX;
+            }
+
+            var scaleY:Float = _imageHeight / sprite.tile.height;
+            if (sprite.scaleY != scaleY) {
+                sprite.scaleY = scaleY;
+            }
+
+            sprite.smooth = scaleX > 1 || scaleY > 1;
+
+            //TODO - imageClipRect
+        }
     }
 }
