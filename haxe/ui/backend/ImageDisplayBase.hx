@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.heaps.shader.ScissorShader;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.core.Component;
 import haxe.ui.util.Rectangle;
@@ -15,6 +16,7 @@ class ImageDisplayBase {
     private var _imageHeight:Float;
     private var _imageInfo:ImageInfo;
     private var _imageClipRect:Rectangle;
+    private var _scissorShader:ScissorShader;
 
     public function new() {
         sprite = new h2d.Bitmap();
@@ -50,7 +52,24 @@ class ImageDisplayBase {
 
             sprite.smooth = scaleX != 1 || scaleY != 1;
 
-            //TODO - imageClipRect
+            if (_imageClipRect == null) {
+                if (_scissorShader != null) {
+                    sprite.removeShader(_scissorShader);
+                    _scissorShader = null;
+                }
+            } else {
+                var size = sprite.getSize();
+                if (_scissorShader == null) {
+                    _scissorShader = new ScissorShader();
+                    sprite.addShader(_scissorShader);
+                }
+
+                _scissorShader.setTo(-_left + _imageClipRect.left,
+                    -_left + _imageClipRect.left + _imageClipRect.width,
+                    -_top + _imageClipRect.top,
+                    -_top + _imageClipRect.top + _imageClipRect.height,
+                    size.width, size.height);
+            }
         }
     }
 }
