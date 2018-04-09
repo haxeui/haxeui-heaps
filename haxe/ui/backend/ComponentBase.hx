@@ -12,6 +12,7 @@ import haxe.ui.core.TextInput;
 import haxe.ui.core.UIEvent;
 import haxe.ui.styles.Style;
 import haxe.ui.util.Rectangle;
+import hxd.Cursor;
 
 class ComponentBase {
     public var sprite(default, null):UISprite;
@@ -166,11 +167,11 @@ class ComponentBase {
     }
 
     private function applyStyle(style:Style) {
-//        if (style.cursor != null) {
-            //TODO
-//        } else if (sprite.cursor != hxd.Cursor.Default) {
-//            sprite.cursor = hxd.Cursor.Default;
-//        }
+        if (style.cursor != null && style.cursor == "pointer") {
+            sprite.cursor = Cursor.Button;
+        } else if (sprite.cursor != hxd.Cursor.Default) {
+            sprite.cursor = Cursor.Default;
+        }
 
         if (style.filter != null) {
             //TODO

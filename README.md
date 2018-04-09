@@ -18,7 +18,7 @@ TODO list
     * [x] Background color
     * [ ] Background image
     * [x] Filters
-    * [ ] Cursor
+    * [x] Cursor
 * [x] Events
 * [x] Assets
 * [ ] Texts

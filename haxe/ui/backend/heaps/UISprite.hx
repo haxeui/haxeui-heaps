@@ -4,6 +4,7 @@ import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Sprite;
 import haxe.ui.util.Rectangle;
+import hxd.Cursor;
 
 class UISprite extends Graphics
 {
@@ -12,6 +13,7 @@ class UISprite extends Graphics
     public var interactive(default, set):Bool = false;
     public var interactiveObj(default, null):Interactive;
     public var clipRect:Rectangle;
+    public var cursor(default, set):Cursor = Cursor.Default;
 
     private function set_width(value:Float):Float {
         if (width != value) {
@@ -40,14 +42,16 @@ class UISprite extends Graphics
     private function set_interactive(value:Bool):Bool {
         if (interactive != value) {
             interactive = value;
+            checkInteraction();
+        }
 
-            if (value) {
-                interactiveObj = new Interactive(width, height, this);
-                interactiveObj.propagateEvents = true;
-            } else {
-                interactiveObj.remove();
-                interactiveObj = null;
-            }
+        return value;
+    }
+
+    private function set_cursor(value:Cursor):Cursor {
+        if (cursor != value) {
+            cursor = value;
+            checkInteraction();
         }
 
         return value;
@@ -172,5 +176,17 @@ class UISprite extends Graphics
 
     public function drawRoundRect(x:Float, y:Float, width:Float, height:Float) {
 
+    }
+
+    private function checkInteraction() {
+        if (interactive || cursor != Cursor.Default) {
+            if (interactiveObj == null) {
+                interactiveObj = new Interactive(width, height, this);
+                interactiveObj.propagateEvents = interactive;
+            }
+        } else if (interactiveObj == null) {
+            interactiveObj.remove();
+            interactiveObj = null;
+        }
     }
 }
