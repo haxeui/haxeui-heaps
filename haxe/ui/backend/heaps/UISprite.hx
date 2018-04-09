@@ -1,8 +1,9 @@
 package haxe.ui.backend.heaps;
 
-import h2d.Interactive;
 import h2d.Graphics;
+import h2d.Interactive;
 import h2d.Sprite;
+import haxe.ui.util.Rectangle;
 
 class UISprite extends Graphics
 {
@@ -10,6 +11,7 @@ class UISprite extends Graphics
     public var height(default, set):Float = 0;
     public var interactive(default, set):Bool = false;
     public var interactiveObj(default, null):Interactive;
+    public var clipRect:Rectangle;
 
     private function set_width(value:Float):Float {
         if (width != value) {
@@ -55,10 +57,83 @@ class UISprite extends Graphics
         super(parent);
     }
 
-    override function getBoundsRec(relativeTo, out, forSize ) {
-        super.getBoundsRec(relativeTo, out, forSize);
-        if (forSize) {
-            addBounds(relativeTo, out, 0, 0, width, height);
+    override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
+        if (clipRect != null) {
+            var xMin = out.xMin, yMin = out.yMin, xMax = out.xMax, yMax = out.yMax;
+            out.empty();
+            if( posChanged ) {
+                calcAbsPos();
+                for( c in children )
+                    c.posChanged = true;
+                posChanged = false;
+            }
+            addBounds(relativeTo, out, clipRect.left, clipRect.top, clipRect.width, clipRect.height);
+            var bxMin = out.xMin, byMin = out.yMin, bxMax = out.xMax, byMax = out.yMax;
+            out.xMin = xMin;
+            out.xMax = xMax;
+            out.yMin = yMin;
+            out.yMax = yMax;
+            super.getBoundsRec(relativeTo, out, forSize);
+            if( out.xMin < bxMin ) out.xMin = hxd.Math.min(xMin, bxMin);
+            if( out.yMin < byMin ) out.yMin = hxd.Math.min(yMin, byMin);
+            if( out.xMax > bxMax ) out.xMax = hxd.Math.max(xMax, bxMax);
+            if( out.yMax > byMax ) out.yMax = hxd.Math.max(yMax, byMax);
+        }
+        else {
+            super.getBoundsRec(relativeTo, out, forSize);
+            if (forSize) {
+                addBounds(relativeTo, out, 0, 0, width, height);
+            }
+        }
+    }
+
+    override function drawRec(ctx : h2d.RenderContext) @:privateAccess {
+        if( !visible ) return;
+
+        if (clipRect != null) {
+            var x1 = absX + clipRect.left;
+            var y1 = absY + clipRect.top;
+
+            var x2 = clipRect.width * matA + clipRect.height * matC + absX + clipRect.left;
+            var y2 = clipRect.width * matB + clipRect.height * matD + absY + clipRect.top;
+
+            var tmp;
+            if (x1 > x2) {
+                tmp = x1;
+                x1 = x2;
+                x2 = tmp;
+            }
+
+            if (y1 > y2) {
+                tmp = y1;
+                y1 = y2;
+                y2 = tmp;
+            }
+
+            ctx.flush();
+            if( ctx.hasRenderZone ) {
+                var oldX = ctx.renderX, oldY = ctx.renderY, oldW = ctx.renderW, oldH = ctx.renderH;
+                ctx.setRenderZone(x1, y1, x2-x1, y2-y1);
+                super.drawRec(ctx);
+                ctx.flush();
+                ctx.setRenderZone(oldX, oldY, oldW, oldH);
+            } else {
+                ctx.setRenderZone(x1, y1, x2-x1, y2-y1);
+                super.drawRec(ctx);
+                ctx.flush();
+                ctx.clearRenderZone();
+            }
+        } else {
+            super.drawRec(ctx);
+        }
+    }
+
+    override function calcAbsPos() {
+        super.calcAbsPos();
+
+        if (clipRect != null) {
+            absX -= clipRect.left;
+            absY -= clipRect.top;
         }
     }
 

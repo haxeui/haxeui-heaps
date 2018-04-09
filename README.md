@@ -7,7 +7,7 @@ TODO list
     * [ ] Custom external app instance
     * [x] Timer
     * [ ] Focus
-    * [ ] Clip Rect
+    * [x] Clip Rect
     * [ ] Dialog
     * [ ] Targets
         * [x] Javascript
@@ -20,7 +20,7 @@ TODO list
     * [x] Filters
     * [ ] Cursor
 * [x] Events
-* [ ] Assets
+* [x] Assets
 * [ ] Texts
     * [x] Font file supported
     * [ ] Bitmap font supported

@@ -54,11 +54,7 @@ class ComponentBase {
     }
 
     private function handleClipRect(value:Rectangle) {
-        if (value == null) {
-
-        } else {
-
-        }
+        sprite.clipRect = value;
     }
 
     public function handlePreReposition() {
