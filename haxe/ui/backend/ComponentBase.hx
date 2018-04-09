@@ -1,17 +1,17 @@
 package haxe.ui.backend;
 
-import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.core.MouseEvent;
-import haxe.ui.backend.heaps.UISprite;
+import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.StyleHelper;
-import haxe.ui.core.UIEvent;
+import haxe.ui.backend.heaps.UISprite;
 import haxe.ui.core.Component;
-import haxe.ui.styles.Style;
-import haxe.ui.util.Rectangle;
 import haxe.ui.core.ImageDisplay;
+import haxe.ui.core.MouseEvent;
 import haxe.ui.core.TextDisplay;
 import haxe.ui.core.TextInput;
+import haxe.ui.core.UIEvent;
+import haxe.ui.styles.Style;
+import haxe.ui.util.Rectangle;
 
 class ComponentBase {
     public var sprite(default, null):UISprite;
@@ -22,7 +22,6 @@ class ComponentBase {
     }
 
     public function handleCreate(native:Bool) {
-//        sprite = new h2d.Interactive(0, 0);
         sprite = new UISprite(null);
     }
 
@@ -44,9 +43,6 @@ class ComponentBase {
         sprite.width = width;
         sprite.height = height;
 
-//        var c:Component = cast(this, Component);
-//        var parent:ComponentBase = c.parentComponent;
-//        var borderSize:Int = parent.borderSize;
         StyleHelper.apply(sprite, style, sprite.x, sprite.y, width, height);
     }
 
