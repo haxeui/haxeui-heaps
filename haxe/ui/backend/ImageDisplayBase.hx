@@ -15,7 +15,7 @@ class ImageDisplayBase {
     private var _imageHeight:Float;
     private var _imageInfo:ImageInfo;
     private var _imageClipRect:Rectangle;
-    
+
     public function new() {
         sprite = new h2d.Bitmap();
     }
@@ -48,7 +48,7 @@ class ImageDisplayBase {
                 sprite.scaleY = scaleY;
             }
 
-            sprite.smooth = scaleX > 1 || scaleY > 1;
+            sprite.smooth = scaleX != 1 || scaleY != 1;
 
             //TODO - imageClipRect
         }
