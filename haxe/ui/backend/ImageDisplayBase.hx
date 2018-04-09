@@ -1,7 +1,7 @@
 package haxe.ui.backend;
 
-import haxe.ui.backend.heaps.shader.ScissorShader;
 import haxe.ui.assets.ImageInfo;
+import haxe.ui.backend.heaps.shader.ScissorShader;
 import haxe.ui.core.Component;
 import haxe.ui.util.Rectangle;
 
