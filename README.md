@@ -6,7 +6,7 @@ TODO list
     * [x] App
     * [ ] Custom external app instance
     * [x] Timer
-    * [ ] Focus
+    * [x] Focus
     * [x] Clip Rect
     * [ ] Dialog
     * [ ] Targets

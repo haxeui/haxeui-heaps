@@ -1,14 +1,14 @@
 package haxe.ui.backend;
 
-import hxd.Event.EventKind;
-import haxe.ui.core.KeyboardEvent;
-import haxe.ui.core.MouseEvent;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.containers.dialogs.Dialog;
 import haxe.ui.containers.dialogs.DialogButton;
 import haxe.ui.core.Component;
+import haxe.ui.core.KeyboardEvent;
+import haxe.ui.core.MouseEvent;
 import haxe.ui.core.UIEvent;
+import hxd.Event.EventKind;
 
 @:access(h2d.Layers)
 class ScreenBase {
@@ -26,7 +26,18 @@ class ScreenBase {
         }
     }
 
-    public var focus:Component;
+    public var focus(default, set):Component;
+    private function set_focus(value:Component):Component {
+        if (value != null) {
+            if (value.hasTextInput()) {
+                value.getTextInput().focus();
+            } else {
+                value.sprite.focus();
+            }
+        }
+
+        return value;
+    }
 
     private var _options:ToolkitOptions;
     public var options(get, set):ToolkitOptions;

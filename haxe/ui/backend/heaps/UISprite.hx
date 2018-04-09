@@ -61,6 +61,16 @@ class UISprite extends Graphics
         super(parent);
     }
 
+    public function hasFocus():Bool {
+        return interactiveObj != null && interactiveObj.hasFocus();
+    }
+
+    public function focus() {
+        if (interactiveObj != null) {
+            interactiveObj.focus();
+        }
+    }
+
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
         if (clipRect != null) {
             var xMin = out.xMin, yMin = out.yMin, xMax = out.xMax, yMax = out.yMax;
