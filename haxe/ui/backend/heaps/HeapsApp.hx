@@ -1,6 +1,5 @@
 package haxe.ui.backend.heaps;
 
-import haxe.ui.backend.heaps.fs.RuntimeFileSystem;
 class HeapsApp extends hxd.App
 {
     private static var instance:HeapsApp;
@@ -12,13 +11,9 @@ class HeapsApp extends hxd.App
         return instance;
     }
 
-    public var loader(default, null):hxd.res.Loader;
-
     public var onInitialized:Void->Void;
 
     override function init() {
-        loader = new hxd.res.Loader(new RuntimeFileSystem("."));
-
         if (onInitialized != null) {
             onInitialized();
         }
