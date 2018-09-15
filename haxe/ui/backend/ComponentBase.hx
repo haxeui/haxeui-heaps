@@ -71,6 +71,7 @@ class ComponentBase {
     public function createTextDisplay(text:String = null):TextDisplay {
         if (_textDisplay == null) {
             _textDisplay = new TextDisplay();
+            _textDisplay.parentComponent = cast(this, Component);
             sprite.addChild(_textDisplay.sprite);
         }
         if (text != null) {
@@ -91,6 +92,7 @@ class ComponentBase {
     public function createTextInput(text:String = null):TextInput {
         if (_textInput == null) {
             _textInput = new TextInput();
+            _textInput.parentComponent = cast(this, Component);
             sprite.addChild(_textInput.sprite);
         }
         if (text != null) {
