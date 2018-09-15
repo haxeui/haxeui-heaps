@@ -154,13 +154,13 @@ class StyleHelper
                         var ds:DropShadow = cast(filter, DropShadow);
                         if (ds.inner) {
                             //TODO
-                            //nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, ds.quality, 1, (ds.blurX + ds.blurY) * 0.5);
+                            //nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, (ds.blurX + ds.blurY) * 0.5, Std.int(ds.strength), ds.quality);
                         } else {
-                            nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, ds.quality, Std.int(ds.strength), (ds.blurX + ds.blurY) * 0.5);
+                            nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, (ds.blurX + ds.blurY) * 0.5, Std.int(ds.strength), ds.quality);
                         }
                     case Blur:
                         var b:Blur = cast(filter, Blur);
-                        nativeFilter = new h2d.filter.Blur(1, 1, b.amount);
+                        nativeFilter = new h2d.filter.Blur(b.amount);
                 }
 
                 s.filter = nativeFilter;
@@ -191,13 +191,13 @@ class StyleHelper
                     ds.color != nds.color ||
                     ds.alpha != nds.alpha ||
                     ds.quality != nds.quality ||
-                     Std.int(ds.strength) != nds.passes ||
-                     (ds.blurX + ds.blurY) * 0.5 != nds.sigma);
+                     Std.int(ds.strength) != nds.gain ||
+                     (ds.blurX + ds.blurY) * 0.5 != nds.radius);
                 }
             case Blur:
                 var b:Blur = cast(hxf, Blur);
                 var nb:h2d.filter.Blur = cast(nativeFilter, h2d.filter.Blur);
-                (b.amount != nb.sigma);
+                (b.amount != nb.radius);
             default:
                 false;
         }
