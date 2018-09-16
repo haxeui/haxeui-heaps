@@ -8,16 +8,17 @@ import hxd.Cursor;
 
 class UISprite extends Graphics
 {
-    public var width(default, set):Float = 0;
-    public var height(default, set):Float = 0;
+    public var width(get, set):Float;
+    public var height(get, set):Float;
     public var interactive(default, set):Bool = false;
     public var interactiveObj(default, null):Interactive;
     public var clipRect:Rectangle;
     public var cursor(default, set):Cursor = Cursor.Default;
 
+    private var _width:Float = 0;
     private function set_width(value:Float):Float {
-        if (width != value) {
-            width = value;
+        if (_width != value) {
+            _width = value;
 
             if (interactiveObj != null) {
                 interactiveObj.width = value;
@@ -26,10 +27,14 @@ class UISprite extends Graphics
 
         return value;
     }
+    private function get_width():Float {
+        return _width;
+    }
 
+    private var _height:Float = 0;
     private function set_height(value:Float):Float {
-        if (height != value) {
-            height = value;
+        if (_height != value) {
+            _height = value;
 
             if (interactiveObj != null) {
                 interactiveObj.height = value;
@@ -37,6 +42,9 @@ class UISprite extends Graphics
         }
 
         return value;
+    }
+    private function get_height():Float {
+        return _height;
     }
 
     private function set_interactive(value:Bool):Bool {

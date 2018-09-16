@@ -14,7 +14,7 @@ class AppBase {
     }
 
     private function init(onReady:Void->Void, onEnd:Void->Void = null) {
-        var app:HeapsApp = HeapsApp.getInstance();
+        var app:HeapsApp = Screen.instance.app;
         app.onInitialized = function() {
             Screen.instance.init();
             onReady();

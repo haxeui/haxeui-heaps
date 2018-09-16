@@ -4,7 +4,7 @@ TODO list
 
 * [ ] Core
     * [x] App
-    * [ ] Custom external app instance
+    * [x] Custom external app instance
     * [x] Timer
     * [x] Focus
     * [x] Clip Rect

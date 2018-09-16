@@ -1,7 +1,7 @@
 package haxe.ui.backend;
 
-import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.HeapsApp;
+import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.containers.dialogs.Dialog;
 import haxe.ui.containers.dialogs.DialogButton;
 import haxe.ui.core.Component;
@@ -14,12 +14,25 @@ import hxd.Event.EventKind;
 class ScreenBase {
     private var _mapping:Map<String, UIEvent->Void>;
 
+    public var app(get, null):HeapsApp;
+    private function get_app():HeapsApp {
+        if (app == null) {
+            if (options == null || options.app == null) {
+                app = new HeapsApp();
+            } else {
+                app = options.app;
+            }
+        }
+
+        return app;
+    }
+
     public function new() {
         _mapping = new Map<String, UIEvent->Void>();
     }
 
     public function init() {
-        var s2d:h2d.Scene = HeapsApp.getInstance().s2d;
+        var s2d:h2d.Scene = app.s2d;
         if (!Lambda.empty(_mapping)) {
             s2d.addEventListener(__onEvent);
             _mainEventAdded = true;
@@ -51,12 +64,12 @@ class ScreenBase {
 
     public var width(get, null):Float;
     private function get_width():Float {
-        return HeapsApp.getInstance().s2d.width;
+        return app.s2d.width;
     }
 
     public var height(get, null):Float;
     private function get_height():Float {
-        return HeapsApp.getInstance().s2d.height;
+        return app.s2d.height;
     }
 
     public var dpi(get, null):Float;
@@ -65,15 +78,15 @@ class ScreenBase {
     }
 
     public function addComponent(component:Component) {
-        HeapsApp.getInstance().s2d.addChildAt(component.sprite, 0);//TODO
+        app.s2d.addChildAt(component.sprite, 0);//TODO
     }
 
     public function removeComponent(component:Component) {
-        HeapsApp.getInstance().s2d.removeChild(component.sprite);
+        app.s2d.removeChild(component.sprite);
     }
 
     private function handleSetComponentIndex(child:Component, index:Int) {
-        HeapsApp.getInstance().s2d.addChildAt(child.sprite, index);
+        app.s2d.addChildAt(child.sprite, index);
     }
 
     //***********************************************************************************************************
@@ -108,7 +121,7 @@ class ScreenBase {
                 | KeyboardEvent.KEY_DOWN | KeyboardEvent.KEY_UP:
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
-                    var s2d:h2d.Scene = HeapsApp.getInstance().s2d;
+                    var s2d:h2d.Scene = app.s2d;
                     if (s2d != null && !_mainEventAdded) {
                         s2d.addEventListener(__onEvent);
                         _mainEventAdded = true;
@@ -123,7 +136,7 @@ class ScreenBase {
                 | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.CLICK
                 | KeyboardEvent.KEY_DOWN | KeyboardEvent.KEY_UP:
                 _mapping.remove(type);
-                var s2d:h2d.Scene = HeapsApp.getInstance().s2d;
+                var s2d:h2d.Scene = app.s2d;
                 if (s2d != null && Lambda.empty(_mapping)) {
                     s2d.removeEventListener(__onEvent);
                     _mainEventAdded = false;
@@ -187,7 +200,7 @@ class ScreenBase {
             } else {
                 var mouseEvent = new MouseEvent(type);
                 mouseEvent._originalEvent = originalEvent;
-                var s2d:h2d.Scene = HeapsApp.getInstance().s2d;
+                var s2d:h2d.Scene = app.s2d;
                 mouseEvent.screenX = s2d.mouseX / Toolkit.scaleX;//event.relX / Toolkit.scaleX;
                 mouseEvent.screenY = s2d.mouseY / Toolkit.scaleY;//event.relY / Toolkit.scaleY;
                 mouseEvent.buttonDown = false; //event.button;  //TODO

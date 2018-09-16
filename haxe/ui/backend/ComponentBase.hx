@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.core.Screen;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.StyleHelper;
@@ -225,7 +226,7 @@ class ComponentBase {
         if (fn != null) {
             var mouseEvent = new MouseEvent(type);
             mouseEvent._originalEvent = event;
-            var s2d:h2d.Scene = HeapsApp.getInstance().s2d;
+            var s2d:h2d.Scene = Screen.instance.app.s2d;
             mouseEvent.screenX = s2d.mouseX / Toolkit.scaleX;//event.relX / Toolkit.scaleX;
             mouseEvent.screenY = s2d.mouseY / Toolkit.scaleY;//event.relY / Toolkit.scaleY;
             mouseEvent.buttonDown = false; //event.button;  //TODO
