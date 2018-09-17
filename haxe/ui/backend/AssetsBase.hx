@@ -21,8 +21,23 @@ class AssetsBase {
     }
 
     private function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
-        var bytes = Resource.getBytes(resourceId);
-        imageFromBytes(bytes, callback);
+        var loader:hxd.res.Loader = hxd.Res.loader;
+        if (loader != null) {
+            if (loader.exists(resourceId)) {
+                var image:Image = loader.load(resourceId).toImage();
+                var size:Dynamic = image.getSize();
+                var imageInfo:ImageInfo = {
+                    width: size.width,
+                    height: size.height,
+                    data: image.toBitmap()
+                };
+                callback(imageInfo);
+            } else {
+                callback(null);
+            }
+        } else {
+            callback(null);
+        }
     }
 
     private function getImageFromHaxeResource(resourceId:String, callback:String->ImageInfo->Void) {
