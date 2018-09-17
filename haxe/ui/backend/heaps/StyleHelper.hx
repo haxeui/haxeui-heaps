@@ -1,6 +1,7 @@
 package haxe.ui.backend.heaps;
 
 import h2d.Tile;
+import haxe.ui.assets.ImageInfo;
 import haxe.ui.styles.Style;
 import haxe.ui.util.ColorUtil;
 import haxe.ui.util.filters.Blur;
@@ -24,73 +25,72 @@ class StyleHelper
         RECTANGLE_HELPER.width = w;
         RECTANGLE_HELPER.height = h;
 
-        var borderRadius:Float = 0;
-        if (style.borderRadius != null) {
-            borderRadius = style.borderRadius;
-        }
-
         if (style.opacity != null) {
             s.alpha = style.opacity;
         }
 
-        var borderRadius:Float = 0;
-        if (style.borderRadius != null) {
-            borderRadius = style.borderRadius;
-        }
-
+        var borderRadius:Float = style.borderRadius != null ? style.borderRadius : 0;
         var borderOpacity:Float = style.borderOpacity != null ? style.borderOpacity : 1;
         if (style.borderLeftSize != null && style.borderLeftSize != 0
             && style.borderLeftSize == style.borderRightSize
             && style.borderLeftSize == style.borderBottomSize
             && style.borderLeftSize == style.borderTopSize
-
             && style.borderLeftColor != null
             && style.borderLeftColor == style.borderRightColor
             && style.borderLeftColor == style.borderBottomColor
             && style.borderLeftColor == style.borderTopColor) { // full border
 
             var borderSize:Int = Std.int(style.borderLeftSize);
-            RECTANGLE_HELPER.left += borderSize;// / 2;
-            RECTANGLE_HELPER.top += borderSize;// / 2;
-            RECTANGLE_HELPER.width -= borderSize * 2;// / 2;
-            RECTANGLE_HELPER.height -= borderSize * 2;// / 2;
+            var halfBorderSize:Float = borderSize / 2;
             s.lineStyle(borderSize, style.borderLeftColor, borderOpacity);
-            s.drawRect(0, 0, w, h-1);
+            s.drawRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize);
+            RECTANGLE_HELPER.left += borderSize;
+            RECTANGLE_HELPER.top += borderSize;
+            RECTANGLE_HELPER.width -= borderSize * 2;
+            RECTANGLE_HELPER.height -= borderSize * 2;
         } else { // compound border
+            var heightTmp:Float = RECTANGLE_HELPER.height;
             if (style.borderTopSize != null && style.borderTopSize > 0) {
+                var halfBorderSize:Float = style.borderTopSize / 2;
                 s.lineStyle(style.borderTopSize, style.borderTopColor, borderOpacity);
-                s.moveTo(0, 0);
-                s.lineTo(w, 0);
-                RECTANGLE_HELPER.top += style.borderTopSize;
+                s.moveTo(0, halfBorderSize);
+                s.lineTo(w, halfBorderSize);
+                RECTANGLE_HELPER.top += halfBorderSize;
                 RECTANGLE_HELPER.height -= style.borderTopSize;
             }
 
             if (style.borderBottomSize != null && style.borderBottomSize > 0) {
+                var halfBorderSize:Float = style.borderBottomSize / 2;
+                var borderHeight:Float = h - halfBorderSize;
                 s.lineStyle(style.borderBottomSize, style.borderBottomColor, borderOpacity);
-                s.moveTo(0, h - style.borderBottomSize);
-                s.lineTo(w, h - style.borderBottomSize);
+                s.moveTo(0, borderHeight);
+                s.lineTo(w, borderHeight);
+                RECTANGLE_HELPER.top += halfBorderSize;
                 RECTANGLE_HELPER.height -= style.borderBottomSize;
             }
 
             if (style.borderLeftSize != null && style.borderLeftSize > 0) {
+                var halfBorderSize:Float = style.borderLeftSize / 2;
                 s.lineStyle(style.borderLeftSize, style.borderLeftColor, borderOpacity);
-                s.moveTo(0, 0);
-                s.lineTo(0, h);
-                RECTANGLE_HELPER.left += style.borderLeftSize;
+                s.moveTo(halfBorderSize, 0);
+                s.lineTo(halfBorderSize, h);
+                RECTANGLE_HELPER.left += halfBorderSize;
                 RECTANGLE_HELPER.width -= style.borderLeftSize;
             }
 
             if (style.borderRightSize != null && style.borderRightSize > 0) {
+                var halfBorderSize:Float = style.borderRightSize / 2;
+                var borderWidth:Float = w - halfBorderSize;
                 s.lineStyle(style.borderRightSize, style.borderRightColor, borderOpacity);
-                s.moveTo(w - style.borderRightSize + 1, 0);
-                s.lineTo(w - style.borderRightSize + 1, h);
+                s.moveTo(borderWidth, 0);
+                s.lineTo(borderWidth, h);
+                RECTANGLE_HELPER.left += halfBorderSize;
                 RECTANGLE_HELPER.width -= style.borderRightSize;
             }
         }
 
-        var backgroundOpacity:Int = (style.backgroundOpacity != null ? Std.int(style.backgroundOpacity*255) : 255) << 24;
+        var backgroundOpacity:Float = style.backgroundOpacity != null ? style.backgroundOpacity : 1;
         if (style.backgroundColor != null) {
-            s.lineStyle();
             if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
                 var gradientType:String = "vertical";
                 if (style.backgroundGradientStyle != null) {
@@ -98,25 +98,22 @@ class StyleHelper
                 }
 
                 var gradientID:String = '${style.backgroundColor}_${style.backgroundColorEnd}_$gradientType';
-                var tile:Tile;
-                var scaleXTile:Float = w;
-                var scaleYTile:Float = h;
-                if((tile = GRADIENT_CACHE.get(gradientID)) == null || tile.isDisposed())
+                var tile:Tile = GRADIENT_CACHE.get(gradientID);
+                if(tile == null || tile.isDisposed())
                 {
+                    var opacity:Int = Std.int(backgroundOpacity * 255) << 24;
                     var arr:Array<Int> = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, GRADIENT_SEGMENTS);
                     var bmp:hxd.BitmapData = null;
                     if (gradientType == "vertical") {
                         bmp = new hxd.BitmapData(1, GRADIENT_SEGMENTS);
                         for (i in 0...arr.length) {
-                            bmp.setPixel(0, i, backgroundOpacity | arr[i]);
+                            bmp.setPixel(0, i, opacity | arr[i]);
                         }
-                        scaleYTile /= GRADIENT_SEGMENTS;
                     } else if (gradientType == "horizontal") {
                         bmp = new hxd.BitmapData(GRADIENT_SEGMENTS, 1);
                         for (i in 0...arr.length) {
-                            bmp.setPixel(i, 0, backgroundOpacity | arr[i]);
+                            bmp.setPixel(i, 0, opacity | arr[i]);
                         }
-                        scaleXTile /= GRADIENT_SEGMENTS;
                     }
 
                     tile = h2d.Tile.fromBitmap(bmp);
@@ -124,26 +121,28 @@ class StyleHelper
 
                     GRADIENT_CACHE.set(gradientID, tile);
                 }
-                else
-                {
-                    if (gradientType == "vertical") {
-                        scaleYTile /= GRADIENT_SEGMENTS;
-                    } else if (gradientType == "horizontal") {
-                        scaleXTile /= GRADIENT_SEGMENTS;
-                    }
-                }
 
                 s.smooth = true;
-                s.beginTileFill(0, 0, scaleXTile, scaleYTile, tile);
+
+                tile.scaleToSize(Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                s.setBackground(tile, Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top));
             } else {
                 s.smooth = false;
+
+                s.lineStyle();
                 s.beginFill(style.backgroundColor, backgroundOpacity);
+                s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
+                s.endFill();
             }
+        } else if (style.backgroundImage != null) {
+            Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
+                var tile:Tile = Tile.fromBitmap(imageInfo.data);
+//                tile.scaleToSize(Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                s.setBackground(tile, Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top));
 
-            s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
-            s.endFill();
+                //TODO style.backgroundImageRepeat
+            });
         }
-
 
         if (style.filter != null && style.filter.length > 0) {
             var filter:Filter = style.filter[0];

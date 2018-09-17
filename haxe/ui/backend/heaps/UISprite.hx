@@ -3,6 +3,7 @@ package haxe.ui.backend.heaps;
 import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Sprite;
+import h2d.Tile;
 import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
@@ -14,6 +15,10 @@ class UISprite extends Graphics
     public var interactiveObj(default, null):Interactive;
     public var clipRect:Rectangle;
     public var cursor(default, set):Cursor = Cursor.Default;
+
+    private var backgroundTile:Tile;
+    private var backgroundX:Int = 0;
+    private var backgroundY:Int = 0;
 
     private var _width:Float = 0;
     private function set_width(value:Float):Float {
@@ -77,6 +82,13 @@ class UISprite extends Graphics
         if (interactiveObj != null) {
             interactiveObj.focus();
         }
+    }
+
+    public inline function setBackground(tile:Tile=null, x:Int=0, y=0)
+    {
+        backgroundTile = tile;
+        backgroundX = x;
+        backgroundY = y;
     }
 
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
@@ -159,39 +171,6 @@ class UISprite extends Graphics
         }
     }
 
-    public override function beginTileFill( ?dx : Float, ?dy : Float, ?scaleX : Float, ?scaleY : Float, ?tile : h2d.Tile ) {
-        beginFill(0xFFFFFF);
-        if( dx == null ) dx = 0;
-        if( dy == null ) dy = 0;
-        if( tile != null ) {
-            if( this.tile != null && tile.getTexture() != this.tile.getTexture() ) {
-                var tex = this.tile.getTexture();
-//                if( tex.width != 1 || tex.height != 1 )   //TODO - original implementation??? :S Not working with our gradient system
-//                    throw "All tiles must be of the same texture";
-                this.tile = tile;
-            }
-            if( this.tile == null  )
-                this.tile = tile;
-        } else
-            tile = this.tile;
-        if( tile == null )
-            throw "Tile not specified";
-        if( scaleX == null ) scaleX = 1;
-        if( scaleY == null ) scaleY = 1;
-        dx -= tile.x;
-        dy -= tile.y;
-
-        var tex = tile.getTexture();
-        var pixWidth = 1 / tex.width;
-        var pixHeight = 1 / tex.height;
-        ma = pixWidth / scaleX;
-        mb = 0;
-        mc = 0;
-        md = pixHeight / scaleY;
-        mx = -dx * ma;
-        my = -dy * md;
-    }
-
     public function drawRoundRect(x:Float, y:Float, width:Float, height:Float) {
 
     }
@@ -206,5 +185,17 @@ class UISprite extends Graphics
             interactiveObj.remove();
             interactiveObj = null;
         }
+    }
+
+    override function draw(ctx:h2d.RenderContext) {
+        if (backgroundTile != null) {
+            backgroundTile.dx += backgroundX;
+            backgroundTile.dy += backgroundY;
+            emitTile(ctx, backgroundTile);
+            backgroundTile.dx -= backgroundX;
+            backgroundTile.dy -= backgroundY;
+        }
+
+        super.draw(ctx);
     }
 }
