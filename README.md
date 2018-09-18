@@ -8,7 +8,6 @@ TODO list
     * [x] Timer
     * [x] Focus
     * [x] Clip Rect
-    * [ ] Dialog
     * [ ] Targets
         * [x] Javascript
         * [ ] HashLink
