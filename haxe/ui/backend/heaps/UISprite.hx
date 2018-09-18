@@ -107,6 +107,16 @@ class UISprite extends Graphics
         return _backgrounds != null ? _backgrounds.get(id) : null;
     }
 
+    override public function addChildAt( s : Sprite, pos : Int ) : Void {
+        if (interactiveObj != null && s != interactiveObj) {
+            var index:Int = getChildIndex(interactiveObj);
+            if(pos > index)
+                pos = index;
+        }
+
+        super.addChildAt(s, pos);
+    }
+
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
         if (clipRect != null) {
             var xMin = out.xMin, yMin = out.yMin, xMax = out.xMax, yMax = out.yMax;
