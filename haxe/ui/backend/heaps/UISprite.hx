@@ -3,7 +3,6 @@ package haxe.ui.backend.heaps;
 import h2d.Graphics;
 import h2d.Interactive;
 import h2d.Sprite;
-import h2d.Tile;
 import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
@@ -16,9 +15,7 @@ class UISprite extends Graphics
     public var clipRect:Rectangle;
     public var cursor(default, set):Cursor = Cursor.Default;
 
-    private var backgroundTile:Tile;
-    private var backgroundX:Int = 0;
-    private var backgroundY:Int = 0;
+    private var _backgrounds:Map<String, IBackground>;
 
     private var _width:Float = 0;
     private function set_width(value:Float):Float {
@@ -84,11 +81,30 @@ class UISprite extends Graphics
         }
     }
 
-    public inline function setBackground(tile:Tile=null, x:Int=0, y=0)
-    {
-        backgroundTile = tile;
-        backgroundX = x;
-        backgroundY = y;
+    public function addBackground(id:String, background:IBackground) {
+        if (_backgrounds == null) {
+            _backgrounds = new Map<String, IBackground>();
+        }
+
+        _backgrounds.set(id, background);
+    }
+
+    public function removeBackground(id:String) {
+        if (_backgrounds != null) {
+            _backgrounds.remove(id);
+        }
+    }
+
+    public function removeAllBackground() {
+        if (_backgrounds != null) {
+            for(k in _backgrounds.keys()) {
+                _backgrounds.remove(k);
+            }
+        }
+    }
+
+    public inline function getBackground(id:String):IBackground {
+        return _backgrounds != null ? _backgrounds.get(id) : null;
     }
 
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
@@ -188,12 +204,10 @@ class UISprite extends Graphics
     }
 
     override function draw(ctx:h2d.RenderContext) {
-        if (backgroundTile != null) {
-            backgroundTile.dx += backgroundX;
-            backgroundTile.dy += backgroundY;
-            emitTile(ctx, backgroundTile);
-            backgroundTile.dx -= backgroundX;
-            backgroundTile.dy -= backgroundY;
+        if (_backgrounds != null) {
+            for(background in _backgrounds) {
+                background.draw(this, ctx);
+            }
         }
 
         super.draw(ctx);

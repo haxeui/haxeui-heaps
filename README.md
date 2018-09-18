@@ -16,7 +16,7 @@ TODO list
     * [x] Border
     * [ ] Border radius
     * [x] Background color
-    * [ ] Background image
+    * [x] Background image
     * [x] Filters
     * [x] Cursor
 * [x] Events

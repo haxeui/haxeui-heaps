@@ -2,6 +2,7 @@ package haxe.ui.backend.heaps;
 
 import h2d.Tile;
 import haxe.ui.assets.ImageInfo;
+import haxe.ui.backend.heaps.BackgroundTile;
 import haxe.ui.styles.Style;
 import haxe.ui.util.ColorUtil;
 import haxe.ui.util.filters.Blur;
@@ -14,6 +15,10 @@ class StyleHelper
     private static var GRADIENT_SEGMENTS:Int = 10;
     private static var GRADIENT_CACHE:Map<String, Tile> = new Map<String, Tile>();
     private static var RECTANGLE_HELPER:Rectangle = new Rectangle();
+
+    private static var ID_BACKGROUND_COLOR:String = "backgroundColor";
+    private static var ID_BACKGROUND_IMAGE:String = "backgroundImage";
+    private static var ID_BACKGROUND_IMAGE_SLICE:String = "backgroundImageSlice";
 
     public static function apply(s:UISprite, style:Style, x:Float, y:Float, w:Float, h:Float):Void {
         if (w <= 0 || h <= 0) {
@@ -89,6 +94,80 @@ class StyleHelper
             }
         }
 
+        if (style.backgroundImage != null) {
+            Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
+                var tile:Tile = Tile.fromBitmap(imageInfo.data);
+                if (style.backgroundImageClipTop != null
+                    && style.backgroundImageClipLeft != null
+                    && style.backgroundImageClipBottom != null
+                    && style.backgroundImageClipRight != null) {
+
+                    tile = tile.sub(style.backgroundImageClipLeft,
+                        style.backgroundImageClipTop,
+                        style.backgroundImageClipRight - style.backgroundImageClipLeft,
+                        style.backgroundImageClipBottom - style.backgroundImageClipTop);
+                }
+
+                if (style.backgroundImageSliceTop != null
+                    && style.backgroundImageSliceLeft != null
+                    && style.backgroundImageSliceBottom != null
+                    && style.backgroundImageSliceRight != null) {
+
+                    var slice:Rectangle = new Rectangle(style.backgroundImageSliceLeft,
+                        style.backgroundImageSliceTop,
+                        style.backgroundImageSliceRight - style.backgroundImageSliceLeft,
+                        style.backgroundImageSliceBottom - style.backgroundImageSliceTop);
+
+                    s.removeBackground(ID_BACKGROUND_IMAGE);
+                    var background:BackgroundTileGroup = cast s.getBackground(ID_BACKGROUND_IMAGE_SLICE);
+                    if (background == null) {
+                        background = new BackgroundTileGroup(tile, slice,
+                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                            Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                        s.addBackground(ID_BACKGROUND_IMAGE_SLICE, background);
+                    } else {
+                        background.set(tile, slice,
+                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                            Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                    }
+
+                    RECTANGLE_HELPER.left += style.backgroundImageSliceLeft;
+                    RECTANGLE_HELPER.top += style.backgroundImageSliceTop;
+                    RECTANGLE_HELPER.width -= tile.width - style.backgroundImageSliceRight + style.backgroundImageSliceLeft;
+                    RECTANGLE_HELPER.height -= tile.height - style.backgroundImageSliceBottom + style.backgroundImageSliceTop;
+                } else {
+                    var width:Int = tile.width;
+                    var height:Int = tile.height;
+                    var repeat:Bool = style.backgroundImageRepeat == "repeat";
+                    switch(style.backgroundImageRepeat) {
+                        case "repeat", "stretch":
+                            width = Std.int(RECTANGLE_HELPER.width);
+                            height = Std.int(RECTANGLE_HELPER.height);
+
+                        default:
+
+                    }
+
+                    s.removeBackground(ID_BACKGROUND_IMAGE_SLICE);
+                    var background:BackgroundTile = cast s.getBackground(ID_BACKGROUND_IMAGE);
+                    if (background == null) {
+                        background = new BackgroundTile(tile,
+                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                            width, height, repeat);
+                        s.addBackground(ID_BACKGROUND_IMAGE, background);
+                    } else {
+                        background.set(tile,
+                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                            width, height);
+                        background.repeat = repeat;
+                    }
+                }
+            });
+        } else {
+            s.removeBackground(ID_BACKGROUND_IMAGE_SLICE);
+            s.removeBackground(ID_BACKGROUND_IMAGE);
+        }
+
         var backgroundOpacity:Float = style.backgroundOpacity != null ? style.backgroundOpacity : 1;
         if (style.backgroundColor != null) {
             if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
@@ -124,8 +203,17 @@ class StyleHelper
 
                 s.smooth = true;
 
-                tile.scaleToSize(Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
-                s.setBackground(tile, Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top));
+                var background:BackgroundTile = cast s.getBackground(ID_BACKGROUND_COLOR);
+                if (background == null) {
+                    background = new BackgroundTile(tile,
+                        Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                        Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                    s.addBackground(ID_BACKGROUND_COLOR, background);
+                } else {
+                    background.set(tile,
+                        Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
+                        Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                }
             } else {
                 s.smooth = false;
 
@@ -134,14 +222,8 @@ class StyleHelper
                 s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
                 s.endFill();
             }
-        } else if (style.backgroundImage != null) {
-            Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
-                var tile:Tile = Tile.fromBitmap(imageInfo.data);
-//                tile.scaleToSize(Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
-                s.setBackground(tile, Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top));
-
-                //TODO style.backgroundImageRepeat
-            });
+        } else {
+            s.removeBackground(ID_BACKGROUND_COLOR);
         }
 
         if (style.filter != null && style.filter.length > 0) {
