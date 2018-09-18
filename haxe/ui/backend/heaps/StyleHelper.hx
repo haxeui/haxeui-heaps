@@ -148,6 +148,8 @@ class StyleHelper
 
                     }
 
+                    s.smooth = style.backgroundImageRepeat == "stretch";
+
                     s.removeBackground(ID_BACKGROUND_IMAGE_SLICE);
                     var background:BackgroundTile = cast s.getBackground(ID_BACKGROUND_IMAGE);
                     if (background == null) {
