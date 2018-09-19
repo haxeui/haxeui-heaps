@@ -61,7 +61,8 @@ class UISprite extends Graphics
     private function set_cursor(value:Cursor):Cursor {
         if (cursor != value) {
             cursor = value;
-            checkInteraction();
+//            checkInteraction();   //FIXME - we can't create the interactive object because it creates problems with button for example
+                                    //It dispatches the "out" event in the Button when the mouse is on the Label.
         }
 
         return value;
@@ -105,16 +106,6 @@ class UISprite extends Graphics
 
     public inline function getBackground(id:String):IBackground {
         return _backgrounds != null ? _backgrounds.get(id) : null;
-    }
-
-    override public function addChildAt( s : Sprite, pos : Int ) : Void {
-        if (interactiveObj != null && s != interactiveObj) {
-            var index:Int = getChildIndex(interactiveObj);
-            if(pos > index)
-                pos = index;
-        }
-
-        super.addChildAt(s, pos);
     }
 
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
@@ -205,7 +196,7 @@ class UISprite extends Graphics
         if (interactive || cursor != Cursor.Default) {
             if (interactiveObj == null) {
                 interactiveObj = new Interactive(width, height, this);
-                interactiveObj.propagateEvents = interactive;
+                interactiveObj.propagateEvents = !interactive;
             }
         } else if (interactiveObj == null) {
             interactiveObj.remove();
