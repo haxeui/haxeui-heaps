@@ -8,8 +8,6 @@ import hxd.Cursor;
 
 class UISprite extends Graphics
 {
-    public var width(get, set):Float;
-    public var height(get, set):Float;
     public var interactive(default, set):Bool = false;
     public var interactiveObj(default, null):Interactive;
     public var clipRect:Rectangle;
@@ -17,37 +15,8 @@ class UISprite extends Graphics
 
     private var _backgrounds:Map<String, IBackground>;
 
-    private var _width:Float = 0;
-    private function set_width(value:Float):Float {
-        if (_width != value) {
-            _width = value;
-
-            if (interactiveObj != null) {
-                interactiveObj.width = value;
-            }
-        }
-
-        return value;
-    }
-    private function get_width():Float {
-        return _width;
-    }
-
-    private var _height:Float = 0;
-    private function set_height(value:Float):Float {
-        if (_height != value) {
-            _height = value;
-
-            if (interactiveObj != null) {
-                interactiveObj.height = value;
-            }
-        }
-
-        return value;
-    }
-    private function get_height():Float {
-        return _height;
-    }
+    private var __width:Float = 0;
+    private var __height:Float = 0;
 
     private function set_interactive(value:Bool):Bool {
         if (interactive != value) {
@@ -72,11 +41,20 @@ class UISprite extends Graphics
         super(parent);
     }
 
+    public function setSize(w:Float, h:Float) {
+        __width = w;
+        __height = h;
+        if (interactiveObj != null) {
+            interactiveObj.width = w;
+            interactiveObj.height = h;
+        }
+    }
+
     public function hasFocus():Bool {
         return interactiveObj != null && interactiveObj.hasFocus();
     }
 
-    public function focus() {
+    public function setFocus() {
         if (interactiveObj != null) {
             interactiveObj.focus();
         }
@@ -133,7 +111,7 @@ class UISprite extends Graphics
         else {
             super.getBoundsRec(relativeTo, out, forSize);
             if (forSize) {
-                addBounds(relativeTo, out, 0, 0, width, height);
+                addBounds(relativeTo, out, 0, 0, __width, __height);
             }
         }
     }
@@ -195,7 +173,7 @@ class UISprite extends Graphics
     private function checkInteraction() {
         if (interactive || cursor != Cursor.Default) {
             if (interactiveObj == null) {
-                interactiveObj = new Interactive(width, height, this);
+                interactiveObj = new Interactive(__width, __height, this);
                 interactiveObj.propagateEvents = !interactive;
             }
         } else if (interactiveObj == null) {

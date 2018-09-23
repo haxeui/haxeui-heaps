@@ -45,7 +45,7 @@ class ScreenBase {
             if (value.hasTextInput()) {
                 value.getTextInput().focus();
             } else {
-                value.sprite.focus();
+                value.setFocus();
             }
         }
 
@@ -78,15 +78,15 @@ class ScreenBase {
     }
 
     public function addComponent(component:Component) {
-        app.s2d.addChildAt(component.sprite, 0);//TODO
+        app.s2d.addChildAt(component, 0);//TODO
     }
 
     public function removeComponent(component:Component) {
-        app.s2d.removeChild(component.sprite);
+        app.s2d.removeChild(component);
     }
 
     private function handleSetComponentIndex(child:Component, index:Int) {
-        app.s2d.addChildAt(child.sprite, index);
+        app.s2d.addChildAt(child, index);
     }
 
     //***********************************************************************************************************

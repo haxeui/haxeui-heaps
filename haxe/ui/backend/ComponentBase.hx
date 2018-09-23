@@ -15,44 +15,41 @@ import haxe.ui.styles.Style;
 import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
-class ComponentBase {
-    public var sprite(default, null):UISprite;
+class ComponentBase extends UISprite {
     private var _eventMap:Map<String, UIEvent->Void>;
 
     public function new() {
+        super(null);
         _eventMap = new Map<String, UIEvent->Void>();
     }
 
     public function handleCreate(native:Bool) {
-        sprite = new UISprite(null);
     }
 
     private function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
         if (left != null) {
-            sprite.x = left;
+            x = left;
         }
 
         if (top != null) {
-            sprite.y = top;
+            y = top;
         }
     }
 
-    private function handleSize(width:Null<Float>, height:Null<Float>, style:Style) {
-        if (width == null || height == null || width <= 0 || height <= 0) {
+    private function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
+        if (h == null || w == null || w <= 0 || h <= 0) {
             return;
         }
 
-        sprite.width = width;
-        sprite.height = height;
-
-        StyleHelper.apply(sprite, style, sprite.x, sprite.y, width, height);
+        setSize(w, h);
+        StyleHelper.apply(this, style, x, y, __width, __height);
     }
 
     private function handleReady() {
     }
 
     private function handleClipRect(value:Rectangle) {
-        sprite.clipRect = value;
+        clipRect = value;
     }
 
     public function handlePreReposition() {
@@ -62,7 +59,7 @@ class ComponentBase {
     }
 
     private function handleVisibility(show:Bool) {
-        sprite.visible = show;
+        visible = show;
     }
 
     //***********************************************************************************************************
@@ -73,7 +70,7 @@ class ComponentBase {
         if (_textDisplay == null) {
             _textDisplay = new TextDisplay();
             _textDisplay.parentComponent = cast(this, Component);
-            sprite.addChild(_textDisplay.sprite);
+            addChild(_textDisplay.sprite);
         }
         if (text != null) {
             _textDisplay.text = text;
@@ -94,7 +91,7 @@ class ComponentBase {
         if (_textInput == null) {
             _textInput = new TextInput();
             _textInput.parentComponent = cast(this, Component);
-            sprite.addChild(_textInput.sprite);
+            addChild(_textInput.sprite);
         }
         if (text != null) {
             _textInput.text = text;
@@ -117,7 +114,7 @@ class ComponentBase {
     public function createImageDisplay():ImageDisplay {
         if (_imageDisplay == null) {
             _imageDisplay = new ImageDisplay();
-            sprite.addChild(_imageDisplay.sprite);
+            addChild(_imageDisplay.sprite);
         }
         return _imageDisplay;
     }
@@ -140,21 +137,21 @@ class ComponentBase {
     // Display tree
     //***********************************************************************************************************
     private function handleSetComponentIndex(child:Component, index:Int) {
-        sprite.addChildAt(child.sprite, index);
+        addChildAt(child, index);
     }
 
     private function handleAddComponent(child:Component):Component {
-        sprite.addChild(child.sprite);
+        addChild(child);
         return child;
     }
 
     private function handleAddComponentAt(child:Component, index:Int):Component {
-        sprite.addChildAt(child.sprite, index);
+        addChildAt(child, index);
         return child;
     }
 
     private function handleRemoveComponent(child:Component, dispose:Bool = true):Component {
-        sprite.removeChild(child.sprite);
+        removeChild(child);
         //TODO - dispose
         return child;
     }
@@ -162,7 +159,7 @@ class ComponentBase {
     private function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
         var child = cast(this, Component)._children[index];
         if (child != null) {
-            sprite.removeChild(child.sprite);
+            removeChild(child);
 
             //TODO - dispose
         }
@@ -171,23 +168,23 @@ class ComponentBase {
 
     private function applyStyle(style:Style) {
         if (style.cursor != null && style.cursor == "pointer") {
-            sprite.cursor = Cursor.Button;
-        } else if (sprite.cursor != hxd.Cursor.Default) {
-            sprite.cursor = Cursor.Default;
+            cursor = Cursor.Button;
+        } else if (cursor != hxd.Cursor.Default) {
+            cursor = Cursor.Default;
         }
 
         if (style.filter != null) {
             //TODO
         } else {
-            sprite.filter = null;
+            filter = null;
         }
 
         if (style.hidden != null) {
-            sprite.visible = !style.hidden;
+            visible = !style.hidden;
         }
 
         if (style.opacity != null) {
-            sprite.alpha = style.opacity;
+            alpha = style.opacity;
         }
     }
 
@@ -200,9 +197,9 @@ class ComponentBase {
                 | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.MOUSE_WHEEL
                 | MouseEvent.CLICK:
                 if (!_eventMap.exists(type)) {
-                    sprite.interactive = true;
+                    interactive = true;
                     _eventMap.set(type, listener);
-                    Reflect.setProperty(sprite.interactiveObj, EventMapper.HAXEUI_TO_HEAPS.get(type), __onMouseEvent.bind(_, type));
+                    Reflect.setProperty(interactiveObj, EventMapper.HAXEUI_TO_HEAPS.get(type), __onMouseEvent.bind(_, type));
                 }
         }
     }
@@ -213,11 +210,11 @@ class ComponentBase {
             | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.MOUSE_WHEEL
             | MouseEvent.CLICK:
                 _eventMap.remove(type);
-                Reflect.setProperty(sprite.interactiveObj, EventMapper.HAXEUI_TO_HEAPS.get(type), null);
+                Reflect.setProperty(interactiveObj, EventMapper.HAXEUI_TO_HEAPS.get(type), null);
         }
 
         if (Lambda.empty(_eventMap)) {
-            sprite.interactive = false;
+            interactive = false;
         }
     }
 
