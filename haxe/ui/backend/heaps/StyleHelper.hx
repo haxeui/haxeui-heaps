@@ -48,7 +48,12 @@ class StyleHelper
             var borderSize:Int = Std.int(style.borderLeftSize);
             var halfBorderSize:Float = borderSize / 2;
             s.lineStyle(borderSize, style.borderLeftColor, borderOpacity);
-            s.drawRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize);
+            if (borderRadius > 0) {
+                s.drawRoundRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize, borderRadius);
+            } else {
+                s.drawRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize);
+            }
+
             RECTANGLE_HELPER.left += borderSize;
             RECTANGLE_HELPER.top += borderSize;
             RECTANGLE_HELPER.width -= borderSize * 2;
@@ -221,7 +226,11 @@ class StyleHelper
 
                 s.lineStyle();
                 s.beginFill(style.backgroundColor, backgroundOpacity);
-                s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
+                if (borderRadius > 0) {
+                    s.drawRoundRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height, borderRadius-1);
+                } else {
+                    s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
+                }
                 s.endFill();
             }
         } else {

@@ -11,9 +11,9 @@ TODO list
     * [ ] Targets
         * [x] Javascript
         * [ ] HashLink
-* [ ] Style
+* [x] Style
     * [x] Border
-    * [ ] Border radius
+    * [x] Border radius
     * [x] Background color
     * [x] Background image
     * [x] Filters
@@ -24,4 +24,3 @@ TODO list
     * [x] Font file supported
     * [ ] Bitmap font supported
 * [x] Images
-* [ ] Native components?

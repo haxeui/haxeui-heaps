@@ -166,8 +166,50 @@ class UISprite extends Graphics
         }
     }
 
-    public function drawRoundRect(x:Float, y:Float, width:Float, height:Float) {
+    public function drawRoundRect(x:Float, y:Float, width:Float, height:Float, radius:Float) {
+        flush();
 
+        var angleStart:Float = 0;
+        var angleLength:Float = Math.PI / 2;
+        var nsegments:Int = Math.ceil(Math.abs(radius * angleLength / 4));
+        if( nsegments < 3 ) nsegments = 3;
+        var angle = angleLength / (nsegments - 1);
+
+        if (radius > width/2) {
+            radius = width/2;
+        }
+        if (radius > height/2) {
+            radius = height/2;
+        }
+
+        radius = Math.floor(radius / 2);
+
+        var insetX:Float = x + radius;
+        var insetY:Float = y + radius;
+        var insetW:Float = width - 2 * radius;
+        var insetH:Float = height - 2 * radius;
+
+        inline function drawArc(x:Float, y:Float, aStart:Float) {
+            for( i in 1...nsegments ) {
+                var a = i * angle + aStart;
+                lineTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
+            }
+        }
+
+        moveTo(insetX, y);
+        lineTo(insetX + insetW, y);
+        drawArc(insetX + insetW, insetY, -Math.PI/2);
+
+        lineTo(x + width, insetY + insetH);
+        drawArc(insetX + insetW, insetY + insetH, 0);
+
+        lineTo(insetX, y + height);
+        drawArc(insetX, insetY + insetH, Math.PI/2);
+
+        lineTo(x, insetY);
+        drawArc(insetX, insetY, -Math.PI);
+
+        flush();
     }
 
     private function checkInteraction() {
