@@ -66,17 +66,7 @@ class TextDisplayBase {
     }
     
     private function validateDisplay() {
-        if (_displayData.multiline) {
-            if (sprite.maxWidth != _width) {
-                sprite.maxWidth = _width;
-            }
-
-//            if (sprite.maxHeight != _height) {
-//                sprite.height = _height;
-//            }
-        } else if (sprite.maxWidth != null) {
-            sprite.maxWidth = null;
-        }
+        sprite.maxWidth = _width;
     }
     
     private function measureText() {
