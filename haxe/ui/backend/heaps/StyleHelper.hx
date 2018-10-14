@@ -102,10 +102,10 @@ class StyleHelper
                     && style.backgroundImageClipBottom != null
                     && style.backgroundImageClipRight != null) {
 
-                    tile = tile.sub(style.backgroundImageClipLeft,
-                        style.backgroundImageClipTop,
-                        style.backgroundImageClipRight - style.backgroundImageClipLeft,
-                        style.backgroundImageClipBottom - style.backgroundImageClipTop);
+                    tile = tile.sub(Std.int(style.backgroundImageClipLeft),
+                        Std.int(style.backgroundImageClipTop),
+                        Std.int(style.backgroundImageClipRight - style.backgroundImageClipLeft),
+                        Std.int(style.backgroundImageClipBottom - style.backgroundImageClipTop));
                 }
 
                 if (style.backgroundImageSliceTop != null
