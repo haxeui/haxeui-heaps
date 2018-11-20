@@ -4,7 +4,7 @@ class TimerBase {
     static private var __timers:Array<TimerBase> = [];
 
     static public function update() {
-        var currentTime:Float = hxd.Timer.oldTime;
+        var currentTime:Float = hxd.Timer.lastTimeStamp;
         var count:Int = __timers.length;
         for (i in 0...count) {
             var timer:TimerBase = __timers[i];
@@ -27,7 +27,7 @@ class TimerBase {
 
     public function new(delay:Int, callback:Void->Void) {
         this.callback = callback;
-        _start = hxd.Timer.oldTime + delay;
+        _start = hxd.Timer.lastTimeStamp + delay;
         __timers.push(this);
     }
 
