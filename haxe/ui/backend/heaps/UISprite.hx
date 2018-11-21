@@ -2,7 +2,7 @@ package haxe.ui.backend.heaps;
 
 import h2d.Graphics;
 import h2d.Interactive;
-import h2d.Sprite;
+import h2d.Object;
 import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
@@ -37,7 +37,7 @@ class UISprite extends Graphics
         return value;
     }
 
-    public function new(parent:Sprite) {
+    public function new(parent:Object) {
         super(parent);
     }
 
