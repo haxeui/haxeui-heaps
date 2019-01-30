@@ -3,10 +3,10 @@ package haxe.ui.backend.heaps;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.backend.heaps.shader.StyleShader;
 import haxe.ui.styles.Style;
-import haxe.ui.util.filters.Blur;
-import haxe.ui.util.filters.DropShadow;
-import haxe.ui.util.filters.Filter;
-import haxe.ui.util.Rectangle;
+import haxe.ui.filters.Blur;
+import haxe.ui.filters.DropShadow;
+import haxe.ui.filters.Filter;
+import haxe.ui.geom.Rectangle;
 
 class StyleHelper
 {
@@ -169,8 +169,6 @@ class StyleHelper
                 styleShader.radius = style.borderRadius;
                 styleShader.halfSize.set(w * 0.5, h * 0.5);
             }
-
-            trace(s.getDebugShaderCode(false));
         } else if(styleShader != null) {
             s.removeShader(styleShader);
         }

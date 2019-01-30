@@ -2,12 +2,12 @@ package haxe.ui.backend;
 
 import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.containers.dialogs.Dialog;
+import haxe.ui.containers.dialogs.Dialog2 in Dialog;
 import haxe.ui.containers.dialogs.DialogButton;
 import haxe.ui.core.Component;
-import haxe.ui.core.KeyboardEvent;
-import haxe.ui.core.MouseEvent;
-import haxe.ui.core.UIEvent;
+import haxe.ui.events.KeyboardEvent;
+import haxe.ui.events.MouseEvent;
+import haxe.ui.events.UIEvent;
 import hxd.Event.EventKind;
 
 @:access(h2d.Layers)

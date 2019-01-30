@@ -4,6 +4,7 @@ import h2d.Drawable;
 import h2d.Interactive;
 import h2d.Sprite;
 import haxe.ui.backend.heaps.shader.StyleShader;
+import haxe.ui.geom.Rectangle;
 import hxd.Cursor;
 
 class UISprite extends Drawable

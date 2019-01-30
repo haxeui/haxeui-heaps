@@ -3,7 +3,7 @@ package haxe.ui.backend;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.backend.heaps.shader.ScissorShader;
 import haxe.ui.core.Component;
-import haxe.ui.util.Rectangle;
+import haxe.ui.geom.Rectangle;
 
 class ImageDisplayBase {
     public var sprite:h2d.Bitmap;

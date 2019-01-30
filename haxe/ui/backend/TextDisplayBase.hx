@@ -66,7 +66,7 @@ class TextDisplayBase {
     }
     
     private function validateDisplay() {
-        sprite.maxWidth = _width;
+        sprite.maxWidth = _width != 0 ? _width : _textWidth;
     }
     
     private function measureText() {

@@ -21,6 +21,10 @@ class TextInputBase extends TextDisplayBase {
         cast(sprite, h2d.TextInput).focus();
     }
 
+    public function blur() {
+
+    }
+
     private override function createText():h2d.Text {
         return new h2d.TextInput(hxd.res.DefaultFont.get());
     }

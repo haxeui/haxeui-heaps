@@ -1,18 +1,17 @@
 package haxe.ui.backend;
 
-import haxe.ui.core.Screen;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.StyleHelper;
 import haxe.ui.backend.heaps.UISprite;
 import haxe.ui.core.Component;
 import haxe.ui.core.ImageDisplay;
-import haxe.ui.core.MouseEvent;
+import haxe.ui.core.Screen;
 import haxe.ui.core.TextDisplay;
 import haxe.ui.core.TextInput;
-import haxe.ui.core.UIEvent;
+import haxe.ui.events.MouseEvent;
+import haxe.ui.events.UIEvent;
+import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
-import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
 class ComponentBase extends UISprite {
