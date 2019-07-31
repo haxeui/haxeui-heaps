@@ -7,20 +7,12 @@ import haxe.ui.backend.heaps.util.FontDetect;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
 
-class AssetsBase {
-    public function new() {
-
-    }
-
+class AssetsImpl extends AssetsBase2 {
     public function embedFontSupported():Bool {
         return #if (lime || flash || js) true #else false #end;
     }
 
-    private function getTextDelegate(resourceId:String):String {
-        return null;
-    }
-
-    private function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
+    private override function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
         var loader:hxd.res.Loader = hxd.Res.loader;
         if (loader != null) {
             if (loader.exists(resourceId)) {
@@ -40,14 +32,14 @@ class AssetsBase {
         }
     }
 
-    private function getImageFromHaxeResource(resourceId:String, callback:String->ImageInfo->Void) {
+    private override function getImageFromHaxeResource(resourceId:String, callback:String->ImageInfo->Void) {
         var bytes = Resource.getBytes(resourceId);
         imageFromBytes(bytes, function(imageInfo) {
             callback(resourceId, imageInfo);
         });
     }
 
-    public function imageFromBytes(bytes:Bytes, callback:ImageInfo->Void) {
+    public override function imageFromBytes(bytes:Bytes, callback:ImageInfo->Void) {
         if (bytes == null) {
             callback(null);
             return;
@@ -65,7 +57,7 @@ class AssetsBase {
         callback(imageInfo);
     }
 
-    private function getFontInternal(resourceId:String, callback:FontInfo->Void) {
+    private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
         FontDetect.onFontLoaded(resourceId, function(f) {
             var fontInfo = {
                 data: f
@@ -74,9 +66,5 @@ class AssetsBase {
         }, function(f) {
             callback(null);
         });
-    }
-
-    private function getFontFromHaxeResource(resourceId:String, callback:String->FontInfo->Void) {
-        callback(resourceId, null);
     }
 }

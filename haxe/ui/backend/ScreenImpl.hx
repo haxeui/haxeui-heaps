@@ -11,8 +11,12 @@ import haxe.ui.events.UIEvent;
 import hxd.Event.EventKind;
 
 @:access(h2d.Layers)
-class ScreenBase {
+class ScreenImpl extends ScreenBase2 {
     private var _mapping:Map<String, UIEvent->Void>;
+
+    public function new() {
+        _mapping = new Map<String, UIEvent->Void>();
+    }
 
     public var app(get, null):HeapsApp;
     private function get_app():HeapsApp {
@@ -27,10 +31,6 @@ class ScreenBase {
         return app;
     }
 
-    public function new() {
-        _mapping = new Map<String, UIEvent->Void>();
-    }
-
     public function init() {
         var s2d:h2d.Scene = app.s2d;
         if (!Lambda.empty(_mapping)) {
@@ -39,8 +39,7 @@ class ScreenBase {
         }
     }
 
-    public var focus(default, set):Component;
-    private function set_focus(value:Component):Component {
+    private override function set_focus(value:Component):Component {
         if (value != null) {
             if (value.hasTextInput()) {
                 value.getTextInput().focus();
@@ -52,56 +51,28 @@ class ScreenBase {
         return value;
     }
 
-    private var _options:ToolkitOptions;
-    public var options(get, set):ToolkitOptions;
-    private function get_options():ToolkitOptions {
-        return _options;
-    }
-    private function set_options(value:ToolkitOptions):ToolkitOptions {
-        _options = value;
-        return value;
-    }
-
-    public var width(get, null):Float;
-    private function get_width():Float {
+    private override function get_width():Float {
         return app.s2d.width;
     }
 
-    public var height(get, null):Float;
-    private function get_height():Float {
+    private override function get_height():Float {
         return app.s2d.height;
     }
 
-    public var dpi(get, null):Float;
-    private function get_dpi():Float {
+    private override function get_dpi():Float {
         return hxd.System.screenDPI;
     }
 
-    public function addComponent(component:Component) {
+    public override function addComponent(component:Component) {
         app.s2d.addChildAt(component, 0);//TODO
     }
 
-    public function removeComponent(component:Component) {
+    public override function removeComponent(component:Component) {
         app.s2d.removeChild(component);
     }
 
-    private function handleSetComponentIndex(child:Component, index:Int) {
+    private override function handleSetComponentIndex(child:Component, index:Int) {
         app.s2d.addChildAt(child, index);
-    }
-
-    //***********************************************************************************************************
-    // Dialogs
-    //***********************************************************************************************************
-    public function messageDialog(message:String, title:String = null, options:Dynamic = null, callback:DialogButton->Void = null):Dialog {
-        return null;
-    }
-
-    public function showDialog(content:Component, options:Dynamic = null, callback:DialogButton->Void = null):Dialog {
-        return null;
-    }
-
-    public function hideDialog(dialog:Dialog):Bool {
-        return false;
     }
 
     //***********************************************************************************************************
@@ -110,11 +81,11 @@ class ScreenBase {
     private var _mouseDownButton : Int = -1;
     private var _mainEventAdded:Bool;
 
-    private function supportsEvent(type:String):Bool {
+    private override function supportsEvent(type:String):Bool {
         return EventMapper.HAXEUI_TO_HEAPS.get(type) != null;
     }
 
-    private function mapEvent(type:String, listener:UIEvent->Void) {
+    private override function mapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
             case MouseEvent.MOUSE_MOVE | MouseEvent.MOUSE_OVER | MouseEvent.MOUSE_OUT
                 | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.CLICK
@@ -130,7 +101,7 @@ class ScreenBase {
         }
     }
 
-    private function unmapEvent(type:String, listener:UIEvent->Void) {
+    private override function unmapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
             case MouseEvent.MOUSE_MOVE | MouseEvent.MOUSE_OVER | MouseEvent.MOUSE_OUT
                 | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.CLICK

@@ -6,34 +6,19 @@ import haxe.ui.core.Component;
 import haxe.ui.core.TextDisplay.TextDisplayData;
 import haxe.ui.styles.Style;
 
-class TextDisplayBase {
-    private var _displayData:TextDisplayData = new TextDisplayData();
-
+class TextDisplayImpl extends TextBase {
     public var sprite:h2d.Text;
 
-    public var parentComponent:Component;
-    
-    private var _text:String;
-    private var _textStyle:Style;
-    
-    private var _left:Float = 0;
-    private var _top:Float = 0;
-    private var _width:Float = 0;
-    private var _height:Float = 0;
-    private var _textWidth:Float = 0;
-    private var _textHeight:Float = 0;
-    
-    private var _fontInfo:FontInfo;
-    
     public function new() {
+        super();
         sprite = createText();
     }
 
-    private function validateData() {
+    private override function validateData() {
         sprite.text = _text;
     }
     
-    private function validateStyle():Bool {
+    private override function validateStyle():Bool {
         var measureTextRequired:Bool = false;
 
         if (_textStyle != null) {
@@ -60,16 +45,16 @@ class TextDisplayBase {
         return measureTextRequired;
     }
     
-    private function validatePosition() {
+    private override function validatePosition() {
         sprite.x = _left;
         sprite.y = _top;
     }
     
-    private function validateDisplay() {
+    private override function validateDisplay() {
         sprite.maxWidth = _width != 0 ? _width : _textWidth;
     }
     
-    private function measureText() {
+    private override function measureText() {
         _textWidth = sprite.textWidth;
         _textHeight = sprite.textHeight;
     }

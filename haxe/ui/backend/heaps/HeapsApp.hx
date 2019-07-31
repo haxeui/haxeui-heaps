@@ -11,6 +11,6 @@ class HeapsApp extends hxd.App
     }
 
     override function update(dt:Float) {
-        TimerBase.update();
+        TimerImpl.update();
     }
 }

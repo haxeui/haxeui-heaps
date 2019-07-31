@@ -2,13 +2,7 @@ package haxe.ui.backend;
 
 import haxe.ui.core.TextInput.TextInputData;
 
-class TextInputBase extends TextDisplayBase {
-    private var _inputData:TextInputData = new TextInputData();
-
-    private var _password:Bool;
-    private var _hscrollPos:Float;
-    private var _vscrollPos:Float;
-    
+class TextInputImpl extends TextDisplayImpl {
     public function new() {
         super();
     }
@@ -17,11 +11,11 @@ class TextInputBase extends TextDisplayBase {
         cast(sprite, h2d.TextInput).hasFocus();
     }
 
-    public function focus() {
+    public override function focus() {
         cast(sprite, h2d.TextInput).focus();
     }
 
-    public function blur() {
+    public override function blur() {
 
     }
 
