@@ -2,7 +2,7 @@ package haxe.ui.backend.heaps;
 
 import h2d.Drawable;
 import h2d.Interactive;
-import h2d.Sprite;
+import h2d.Object;
 import haxe.ui.backend.heaps.shader.StyleShader;
 import haxe.ui.geom.Rectangle;
 import hxd.Cursor;
@@ -39,7 +39,7 @@ class UISprite extends Drawable
         return value;
     }
 
-    public function new(parent:Sprite) {
+    public function new(parent:Object) {
         super(parent);
     }
 
