@@ -1,20 +1,20 @@
 package haxe.ui.backend;
 
-class TimerBase {
-    static private var __timers:Array<TimerBase> = [];
+class TimerImpl {
+    static private var __timers:Array<TimerImpl> = [];
 
     static public function update() {
         var currentTime:Float = hxd.Timer.lastTimeStamp;
         var count:Int = __timers.length;
         for (i in 0...count) {
-            var timer:TimerBase = __timers[i];
+            var timer:TimerImpl = __timers[i];
             if (timer._start <= currentTime && !timer._stopped) {
                 timer.callback();
             }
         }
 
         while(--count >= 0) {
-            var timer:TimerBase = __timers[count];
+            var timer:TimerImpl = __timers[count];
             if (timer._stopped) {
                 __timers.remove(timer);
             }

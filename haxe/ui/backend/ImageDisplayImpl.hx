@@ -3,32 +3,25 @@ package haxe.ui.backend;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.backend.heaps.shader.ScissorShader;
 import haxe.ui.core.Component;
-import haxe.ui.util.Rectangle;
+import haxe.ui.geom.Rectangle;
 
-class ImageDisplayBase {
+class ImageDisplayImpl extends ImageBase {
     public var sprite:h2d.Bitmap;
 
-    public var parentComponent:Component;
-
-    private var _left:Float;
-    private var _top:Float;
-    private var _imageWidth:Float;
-    private var _imageHeight:Float;
-    private var _imageInfo:ImageInfo;
-    private var _imageClipRect:Rectangle;
     private var _scissorShader:ScissorShader;
 
     public function new() {
+        super();
         sprite = new h2d.Bitmap();
     }
 
-    private function validateData() {
+    private override function validateData() {
         if (_imageInfo != null) {
             sprite.tile = h2d.Tile.fromBitmap(_imageInfo.data);
         }
     }
 
-    private function validatePosition() {
+    private override function validatePosition() {
         if (sprite.x != _left) {
             sprite.x = _left;
         }
@@ -38,7 +31,7 @@ class ImageDisplayBase {
         }
     }
 
-    private function validateDisplay() {
+    private override function validateDisplay() {
         if (sprite.tile != null) {
             var scaleX:Float = _imageWidth / sprite.tile.width;
             if (sprite.scaleX != scaleX) {

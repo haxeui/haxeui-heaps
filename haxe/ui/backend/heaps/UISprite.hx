@@ -1,22 +1,24 @@
 package haxe.ui.backend.heaps;
 
-import h2d.Graphics;
+import h2d.Drawable;
 import h2d.Interactive;
-import h2d.Object;
-import haxe.ui.util.Rectangle;
+import h2d.Sprite;
+import haxe.ui.backend.heaps.shader.StyleShader;
+import haxe.ui.geom.Rectangle;
 import hxd.Cursor;
 
-class UISprite extends Graphics
+class UISprite extends Drawable
 {
+    static private var __styleTile:h2d.Tile;
+
     public var interactive(default, set):Bool = false;
     public var interactiveObj(default, null):Interactive;
     public var clipRect:Rectangle;
     public var cursor(default, set):Cursor = Cursor.Default;
 
-    private var _backgrounds:Map<String, IBackground>;
-
     private var __width:Float = 0;
     private var __height:Float = 0;
+    private var __hasStyleShader:Bool;
 
     private function set_interactive(value:Bool):Bool {
         if (interactive != value) {
@@ -37,7 +39,7 @@ class UISprite extends Graphics
         return value;
     }
 
-    public function new(parent:Object) {
+    public function new(parent:Sprite) {
         super(parent);
     }
 
@@ -58,32 +60,6 @@ class UISprite extends Graphics
         if (interactiveObj != null) {
             interactiveObj.focus();
         }
-    }
-
-    public function addBackground(id:String, background:IBackground) {
-        if (_backgrounds == null) {
-            _backgrounds = new Map<String, IBackground>();
-        }
-
-        _backgrounds.set(id, background);
-    }
-
-    public function removeBackground(id:String) {
-        if (_backgrounds != null) {
-            _backgrounds.remove(id);
-        }
-    }
-
-    public function removeAllBackground() {
-        if (_backgrounds != null) {
-            for(k in _backgrounds.keys()) {
-                _backgrounds.remove(k);
-            }
-        }
-    }
-
-    public inline function getBackground(id:String):IBackground {
-        return _backgrounds != null ? _backgrounds.get(id) : null;
     }
 
     override function getBoundsRec(relativeTo, out:h2d.col.Bounds, forSize) {
@@ -116,47 +92,6 @@ class UISprite extends Graphics
         }
     }
 
-    override function drawRec(ctx : h2d.RenderContext) @:privateAccess {
-        if( !visible ) return;
-
-        if (clipRect != null) {
-            var x1 = absX + clipRect.left;
-            var y1 = absY + clipRect.top;
-
-            var x2 = clipRect.width * matA + clipRect.height * matC + absX + clipRect.left;
-            var y2 = clipRect.width * matB + clipRect.height * matD + absY + clipRect.top;
-
-            var tmp;
-            if (x1 > x2) {
-                tmp = x1;
-                x1 = x2;
-                x2 = tmp;
-            }
-
-            if (y1 > y2) {
-                tmp = y1;
-                y1 = y2;
-                y2 = tmp;
-            }
-
-            ctx.flush();
-            if( ctx.hasRenderZone ) {
-                var oldX = ctx.renderX, oldY = ctx.renderY, oldW = ctx.renderW, oldH = ctx.renderH;
-                ctx.setRenderZone(x1, y1, x2-x1, y2-y1);
-                super.drawRec(ctx);
-                ctx.flush();
-                ctx.setRenderZone(oldX, oldY, oldW, oldH);
-            } else {
-                ctx.setRenderZone(x1, y1, x2-x1, y2-y1);
-                super.drawRec(ctx);
-                ctx.flush();
-                ctx.clearRenderZone();
-            }
-        } else {
-            super.drawRec(ctx);
-        }
-    }
-
     override function calcAbsPos() {
         super.calcAbsPos();
 
@@ -166,50 +101,29 @@ class UISprite extends Graphics
         }
     }
 
-    public function drawRoundRect(x:Float, y:Float, width:Float, height:Float, radius:Float) {
-        flush();
-
-        var angleStart:Float = 0;
-        var angleLength:Float = Math.PI / 2;
-        var nsegments:Int = Math.ceil(Math.abs(radius * angleLength / 4));
-        if( nsegments < 3 ) nsegments = 3;
-        var angle = angleLength / (nsegments - 1);
-
-        if (radius > width/2) {
-            radius = width/2;
+    override function draw(ctx:h2d.RenderContext) {
+        if (__hasStyleShader)
+        {
+            __styleTile.scaleToSize(Std.int(__width), Std.int(__height));
+            emitTile(ctx, __styleTile);
         }
-        if (radius > height/2) {
-            radius = height/2;
+        super.draw(ctx);
+    }
+
+    override public function addShader<T:hxsl.Shader>( s : T ) : T {
+        if (!__hasStyleShader && Std.is(s, StyleShader)) {
+            __hasStyleShader = true;
+            if(__styleTile == null)
+                __styleTile = h2d.Tile.fromColor(0,1,1);
         }
+        return super.addShader(s);
+    }
 
-        radius = Math.floor(radius / 2);
-
-        var insetX:Float = x + radius;
-        var insetY:Float = y + radius;
-        var insetW:Float = width - 2 * radius;
-        var insetH:Float = height - 2 * radius;
-
-        inline function drawArc(x:Float, y:Float, aStart:Float) {
-            for( i in 1...nsegments ) {
-                var a = i * angle + aStart;
-                lineTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
-            }
+    override public function removeShader( s : hxsl.Shader ) {
+        if (__hasStyleShader && Std.is(s, StyleShader)) {
+            __hasStyleShader = false;
         }
-
-        moveTo(insetX, y);
-        lineTo(insetX + insetW, y);
-        drawArc(insetX + insetW, insetY, -Math.PI/2);
-
-        lineTo(x + width, insetY + insetH);
-        drawArc(insetX + insetW, insetY + insetH, 0);
-
-        lineTo(insetX, y + height);
-        drawArc(insetX, insetY + insetH, Math.PI/2);
-
-        lineTo(x, insetY);
-        drawArc(insetX, insetY, -Math.PI);
-
-        flush();
+        return super.removeShader(s);
     }
 
     private function checkInteraction() {
@@ -224,13 +138,4 @@ class UISprite extends Graphics
         }
     }
 
-    override function draw(ctx:h2d.RenderContext) {
-        if (_backgrounds != null) {
-            for(background in _backgrounds) {
-                background.draw(this, ctx);
-            }
-        }
-
-        super.draw(ctx);
-    }
 }

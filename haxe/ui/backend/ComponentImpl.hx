@@ -1,32 +1,28 @@
 package haxe.ui.backend;
 
-import haxe.ui.core.Screen;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.StyleHelper;
 import haxe.ui.backend.heaps.UISprite;
 import haxe.ui.core.Component;
 import haxe.ui.core.ImageDisplay;
-import haxe.ui.core.MouseEvent;
+import haxe.ui.core.Screen;
 import haxe.ui.core.TextDisplay;
 import haxe.ui.core.TextInput;
-import haxe.ui.core.UIEvent;
+import haxe.ui.events.MouseEvent;
+import haxe.ui.events.UIEvent;
+import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
-import haxe.ui.util.Rectangle;
 import hxd.Cursor;
 
-class ComponentBase extends UISprite {
+class ComponentImpl extends ComponentBase2 {
     private var _eventMap:Map<String, UIEvent->Void>;
 
     public function new() {
-        super(null);
+        super();
         _eventMap = new Map<String, UIEvent->Void>();
     }
 
-    public function handleCreate(native:Bool) {
-    }
-
-    private function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
+    private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
         if (left != null) {
             x = left;
         }
@@ -36,7 +32,7 @@ class ComponentBase extends UISprite {
         }
     }
 
-    private function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
+    private override function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
         if (h == null || w == null || w <= 0 || h <= 0) {
             return;
         }
@@ -45,118 +41,71 @@ class ComponentBase extends UISprite {
         StyleHelper.apply(this, style, x, y, __width, __height);
     }
 
-    private function handleReady() {
-    }
-
-    private function handleClipRect(value:Rectangle) {
+    private override function handleClipRect(value:Rectangle) {
         clipRect = value;
     }
 
-    public function handlePreReposition() {
-    }
-
-    public function handlePostReposition() {
-    }
-
-    private function handleVisibility(show:Bool) {
+    private override function handleVisibility(show:Bool) {
         visible = show;
     }
 
     //***********************************************************************************************************
     // Text related
     //***********************************************************************************************************
-    private var _textDisplay:TextDisplay;
-    public function createTextDisplay(text:String = null):TextDisplay {
+    public override function createTextDisplay(text:String = null):TextDisplay {
         if (_textDisplay == null) {
-            _textDisplay = new TextDisplay();
-            _textDisplay.parentComponent = cast(this, Component);
+            super.createTextDisplay(text);
             addChild(_textDisplay.sprite);
         }
-        if (text != null) {
-            _textDisplay.text = text;
-        }
+        
         return _textDisplay;
     }
 
-    public function getTextDisplay():TextDisplay {
-        return createTextDisplay();
-    }
-
-    public function hasTextDisplay():Bool {
-        return (_textDisplay != null);
-    }
-
-    private var _textInput:TextInput;
-    public function createTextInput(text:String = null):TextInput {
+    public override function createTextInput(text:String = null):TextInput {
         if (_textInput == null) {
-            _textInput = new TextInput();
-            _textInput.parentComponent = cast(this, Component);
+            super.createTextInput(text);
             addChild(_textInput.sprite);
         }
-        if (text != null) {
-            _textInput.text = text;
-        }
+        
         return _textInput;
-    }
-
-    public function getTextInput():TextInput {
-        return createTextInput();
-    }
-
-    public function hasTextInput():Bool {
-        return (_textInput != null);
     }
 
     //***********************************************************************************************************
     // Image related
     //***********************************************************************************************************
-    private var _imageDisplay:ImageDisplay;
-    public function createImageDisplay():ImageDisplay {
+    public override function createImageDisplay():ImageDisplay {
         if (_imageDisplay == null) {
-            _imageDisplay = new ImageDisplay();
+            super.createImageDisplay();
             addChild(_imageDisplay.sprite);
         }
+        
         return _imageDisplay;
-    }
-
-    public function getImageDisplay():ImageDisplay {
-        return createImageDisplay();
-    }
-
-    public function hasImageDisplay():Bool {
-        return (_imageDisplay != null);
-    }
-
-    public function removeImageDisplay() {
-        if (_imageDisplay != null) {
-            _imageDisplay = null;
-        }
     }
 
     //***********************************************************************************************************
     // Display tree
     //***********************************************************************************************************
-    private function handleSetComponentIndex(child:Component, index:Int) {
+    private override function handleSetComponentIndex(child:Component, index:Int) {
         addChildAt(child, index);
     }
 
-    private function handleAddComponent(child:Component):Component {
+    private override function handleAddComponent(child:Component):Component {
         addChild(child);
         return child;
     }
 
-    private function handleAddComponentAt(child:Component, index:Int):Component {
+    private override function handleAddComponentAt(child:Component, index:Int):Component {
         addChildAt(child, index);
         return child;
     }
 
-    private function handleRemoveComponent(child:Component, dispose:Bool = true):Component {
+    private override function handleRemoveComponent(child:Component, dispose:Bool = true):Component {
         removeChild(child);
         //TODO - dispose
         return child;
     }
 
-    private function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
+    private override function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
         var child = cast(this, Component)._children[index];
         if (child != null) {
             removeChild(child);
@@ -166,7 +115,7 @@ class ComponentBase extends UISprite {
         return child;
     }
 
-    private function applyStyle(style:Style) {
+    private override function applyStyle(style:Style) {
         if (style.cursor != null && style.cursor == "pointer") {
             cursor = Cursor.Button;
         } else if (cursor != hxd.Cursor.Default) {
@@ -191,7 +140,7 @@ class ComponentBase extends UISprite {
     //***********************************************************************************************************
     // Events
     //***********************************************************************************************************
-    private function mapEvent(type:String, listener:UIEvent->Void) {
+    private override function mapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
             case MouseEvent.MOUSE_MOVE | MouseEvent.MOUSE_OVER | MouseEvent.MOUSE_OUT
                 | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.MOUSE_WHEEL
@@ -204,7 +153,7 @@ class ComponentBase extends UISprite {
         }
     }
 
-    private function unmapEvent(type:String, listener:UIEvent->Void) {
+    private override function unmapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
             case MouseEvent.MOUSE_MOVE | MouseEvent.MOUSE_OVER | MouseEvent.MOUSE_OUT
             | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.MOUSE_WHEEL

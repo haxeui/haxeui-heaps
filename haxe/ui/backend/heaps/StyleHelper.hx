@@ -1,240 +1,176 @@
 package haxe.ui.backend.heaps;
 
-import h2d.Tile;
 import haxe.ui.assets.ImageInfo;
-import haxe.ui.backend.heaps.BackgroundTile;
+import haxe.ui.backend.heaps.shader.StyleShader;
 import haxe.ui.styles.Style;
-import haxe.ui.util.ColorUtil;
-import haxe.ui.util.filters.Blur;
-import haxe.ui.util.filters.DropShadow;
-import haxe.ui.util.filters.Filter;
-import haxe.ui.util.Rectangle;
+import haxe.ui.filters.Blur;
+import haxe.ui.filters.DropShadow;
+import haxe.ui.filters.Filter;
+import haxe.ui.geom.Rectangle;
 
 class StyleHelper
 {
-    private static var GRADIENT_SEGMENTS:Int = 10;
-    private static var GRADIENT_CACHE:Map<String, Tile> = new Map<String, Tile>();
     private static var RECTANGLE_HELPER:Rectangle = new Rectangle();
-
-    private static var ID_BACKGROUND_COLOR:String = "backgroundColor";
-    private static var ID_BACKGROUND_IMAGE:String = "backgroundImage";
-    private static var ID_BACKGROUND_IMAGE_SLICE:String = "backgroundImageSlice";
 
     public static function apply(s:UISprite, style:Style, x:Float, y:Float, w:Float, h:Float):Void {
         if (w <= 0 || h <= 0) {
             return;
         }
 
-        RECTANGLE_HELPER.left = 0;
-        RECTANGLE_HELPER.top = 0;
-        RECTANGLE_HELPER.width = w;
-        RECTANGLE_HELPER.height = h;
-
         if (style.opacity != null) {
             s.alpha = style.opacity;
         }
 
-        var borderRadius:Float = style.borderRadius != null ? style.borderRadius : 0;
-        var borderOpacity:Float = style.borderOpacity != null ? style.borderOpacity : 1;
-        if (style.borderLeftSize != null && style.borderLeftSize != 0
+        var borderOpacity:Int = Std.int((style.borderOpacity != null ? style.borderOpacity : 1) * 255);
+        var backgroundOpacity:Int = Std.int((style.backgroundOpacity != null ? style.backgroundOpacity : 1) * 255);
+
+        var hasFullBorder:Bool = borderOpacity > 0
+            && style.borderLeftSize != null && style.borderLeftSize != 0
             && style.borderLeftSize == style.borderRightSize
             && style.borderLeftSize == style.borderBottomSize
             && style.borderLeftSize == style.borderTopSize
             && style.borderLeftColor != null
             && style.borderLeftColor == style.borderRightColor
             && style.borderLeftColor == style.borderBottomColor
-            && style.borderLeftColor == style.borderTopColor) { // full border
+            && style.borderLeftColor == style.borderTopColor;
+        var hasPartialBorder:Bool = !hasFullBorder
+            && ((style.borderTopSize != null && style.borderTopSize > 0)
+                || (style.borderBottomSize != null && style.borderBottomSize > 0)
+                || (style.borderLeftSize != null && style.borderLeftSize > 0)
+                || (style.borderRightSize != null && style.borderRightSize > 0));
+        var hasBackgroundImage:Bool = backgroundOpacity > 0 && style.backgroundImage != null;
+        var hasBackgroundGradient:Bool = !hasBackgroundImage && backgroundOpacity > 0 && style.backgroundColor != null && style.backgroundColorEnd != null;
+        var hasFlatBackground:Bool = !hasBackgroundImage && backgroundOpacity > 0 && style.backgroundColor != null;
 
-            var borderSize:Int = Std.int(style.borderLeftSize);
-            var halfBorderSize:Float = borderSize / 2;
-            s.lineStyle(borderSize, style.borderLeftColor, borderOpacity);
-            if (borderRadius > 0) {
-                s.drawRoundRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize, borderRadius);
+        var styleShader:StyleShader = s.getShader(StyleShader);
+        if (hasFlatBackground || hasBackgroundGradient || hasBackgroundImage || hasFullBorder) {
+            if (styleShader == null) {
+                styleShader = s.addShader(new StyleShader());
+            }
+
+            backgroundOpacity = backgroundOpacity << 24;
+            borderOpacity = borderOpacity << 24;
+
+            var hasRadius:Bool = style.borderRadius != null && !hasPartialBorder;
+
+            styleShader.size.set(w, h);
+            styleShader.hasRadius = hasRadius;
+            styleShader.hasBackgroundGradient = hasBackgroundGradient;
+            styleShader.hasFullBorder = hasFullBorder;
+
+            if (hasBackgroundImage) {
+                Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
+                    var tex = h3d.mat.Texture.fromBitmap(imageInfo.data);
+                    var tile = h2d.Tile.fromBitmap(imageInfo.data);
+                    var backgroundOffsetU:Float = 0;
+                    var backgroundOffsetV:Float = 0;
+                    var backgroundScaleU:Float = 1.0;
+                    var backgroundScaleV:Float = 1.0;
+                    var imageWidth:Int = imageInfo.width;
+                    var imageHeight:Int = imageInfo.height;
+                    var hasClip:Bool = style.backgroundImageClipTop != null
+                        && style.backgroundImageClipLeft != null
+                        && style.backgroundImageClipBottom != null
+                        && style.backgroundImageClipRight != null;
+                    var hasSlice:Bool = style.backgroundImageSliceTop != null
+                        && style.backgroundImageSliceLeft != null
+                        && style.backgroundImageSliceBottom != null
+                        && style.backgroundImageSliceRight != null;
+
+                    tex.filter = style.backgroundImageRepeat == "stretch" ? Linear : Nearest;
+                    tex.wrap = style.backgroundImageRepeat == "repeat" ? Repeat : Clamp;
+
+                    styleShader.backgroundImage = tex;
+                    styleShader.hasBackgroundImage = hasBackgroundImage;
+                    styleShader.hasBackgroundImageSlice = hasSlice;
+
+                    if (hasClip) {
+                        imageWidth = Std.int(style.backgroundImageClipRight - style.backgroundImageClipLeft);
+                        imageHeight = Std.int(style.backgroundImageClipBottom - style.backgroundImageClipTop);
+
+                        backgroundOffsetU = style.backgroundImageClipLeft / imageWidth;
+                        backgroundOffsetV = style.backgroundImageClipTop / imageHeight;
+                        backgroundScaleU = imageWidth / imageInfo.width;
+                        backgroundScaleV = imageHeight / imageInfo.height;
+                    }
+
+                    if (hasSlice) {
+                        styleShader.backgroundImageSliceBox.set(
+                            style.backgroundImageSliceLeft / w,
+                            style.backgroundImageSliceTop / h,
+                            1 - (imageWidth - style.backgroundImageSliceRight) / w,
+                            1 - (imageHeight - style.backgroundImageSliceBottom) / h);
+
+                        styleShader.backgroundImageSliceTexture.set(
+                            style.backgroundImageSliceLeft / imageWidth,
+                            style.backgroundImageSliceTop / imageHeight,
+                            1 - (imageWidth - style.backgroundImageSliceRight) / imageWidth,
+                            1 - (imageHeight - style.backgroundImageSliceBottom) / imageHeight
+                        );
+                    } else if (style.backgroundImageRepeat != "stretch" && !hasClip) {
+                            backgroundScaleU = w / imageInfo.width;
+                            backgroundScaleV = h / imageInfo.height;
+                    }
+
+                    styleShader.backgroundImageUV.set(backgroundOffsetU, backgroundOffsetV, backgroundScaleU, backgroundScaleV);
+                });
             } else {
-                s.drawRect(halfBorderSize, halfBorderSize, w - borderSize, h - borderSize);
-            }
-
-            RECTANGLE_HELPER.left += borderSize;
-            RECTANGLE_HELPER.top += borderSize;
-            RECTANGLE_HELPER.width -= borderSize * 2;
-            RECTANGLE_HELPER.height -= borderSize * 2;
-        } else { // compound border
-            var heightTmp:Float = RECTANGLE_HELPER.height;
-            if (style.borderTopSize != null && style.borderTopSize > 0) {
-                var halfBorderSize:Float = style.borderTopSize / 2;
-                s.lineStyle(style.borderTopSize, style.borderTopColor, borderOpacity);
-                s.moveTo(0, halfBorderSize);
-                s.lineTo(w, halfBorderSize);
-                RECTANGLE_HELPER.top += halfBorderSize;
-                RECTANGLE_HELPER.height -= style.borderTopSize;
-            }
-
-            if (style.borderBottomSize != null && style.borderBottomSize > 0) {
-                var halfBorderSize:Float = style.borderBottomSize / 2;
-                var borderHeight:Float = h - halfBorderSize;
-                s.lineStyle(style.borderBottomSize, style.borderBottomColor, borderOpacity);
-                s.moveTo(0, borderHeight);
-                s.lineTo(w, borderHeight);
-                RECTANGLE_HELPER.top += halfBorderSize;
-                RECTANGLE_HELPER.height -= style.borderBottomSize;
-            }
-
-            if (style.borderLeftSize != null && style.borderLeftSize > 0) {
-                var halfBorderSize:Float = style.borderLeftSize / 2;
-                s.lineStyle(style.borderLeftSize, style.borderLeftColor, borderOpacity);
-                s.moveTo(halfBorderSize, 0);
-                s.lineTo(halfBorderSize, h);
-                RECTANGLE_HELPER.left += halfBorderSize;
-                RECTANGLE_HELPER.width -= style.borderLeftSize;
-            }
-
-            if (style.borderRightSize != null && style.borderRightSize > 0) {
-                var halfBorderSize:Float = style.borderRightSize / 2;
-                var borderWidth:Float = w - halfBorderSize;
-                s.lineStyle(style.borderRightSize, style.borderRightColor, borderOpacity);
-                s.moveTo(borderWidth, 0);
-                s.lineTo(borderWidth, h);
-                RECTANGLE_HELPER.left += halfBorderSize;
-                RECTANGLE_HELPER.width -= style.borderRightSize;
-            }
-        }
-
-        if (style.backgroundImage != null) {
-            Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
-                var tile:Tile = Tile.fromBitmap(imageInfo.data);
-                if (style.backgroundImageClipTop != null
-                    && style.backgroundImageClipLeft != null
-                    && style.backgroundImageClipBottom != null
-                    && style.backgroundImageClipRight != null) {
-
-                    tile = tile.sub(style.backgroundImageClipLeft,
-                        style.backgroundImageClipTop,
-                        style.backgroundImageClipRight - style.backgroundImageClipLeft,
-                        style.backgroundImageClipBottom - style.backgroundImageClipTop);
+                if (hasFlatBackground) {
+                    styleShader.backgroundColor.setColor(backgroundOpacity | style.backgroundColor);
                 }
 
-                if (style.backgroundImageSliceTop != null
-                    && style.backgroundImageSliceLeft != null
-                    && style.backgroundImageSliceBottom != null
-                    && style.backgroundImageSliceRight != null) {
+                if (hasBackgroundGradient) {
+                    styleShader.backgroundColorEnd.setColor(backgroundOpacity | style.backgroundColorEnd);
+                    if (style.backgroundGradientStyle == "vertical")
+                        styleShader.backgroundDirection.set(0.0, 1.0);
+                    else
+                        styleShader.backgroundDirection.set(1.0, 0.0);
+                }
+            }
 
-                    var slice:Rectangle = new Rectangle(style.backgroundImageSliceLeft,
-                        style.backgroundImageSliceTop,
-                        style.backgroundImageSliceRight - style.backgroundImageSliceLeft,
-                        style.backgroundImageSliceBottom - style.backgroundImageSliceTop);
-
-                    s.removeBackground(ID_BACKGROUND_IMAGE);
-                    var background:BackgroundTileGroup = cast s.getBackground(ID_BACKGROUND_IMAGE_SLICE);
-                    if (background == null) {
-                        background = new BackgroundTileGroup(tile, slice,
-                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                            Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
-                        s.addBackground(ID_BACKGROUND_IMAGE_SLICE, background);
-                    } else {
-                        background.set(tile, slice,
-                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                            Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
-                    }
-
-                    RECTANGLE_HELPER.left += style.backgroundImageSliceLeft;
-                    RECTANGLE_HELPER.top += style.backgroundImageSliceTop;
-                    RECTANGLE_HELPER.width -= tile.width - style.backgroundImageSliceRight + style.backgroundImageSliceLeft;
-                    RECTANGLE_HELPER.height -= tile.height - style.backgroundImageSliceBottom + style.backgroundImageSliceTop;
+            if (hasFullBorder) {
+                styleShader.borderColor.setColor(borderOpacity | style.borderLeftColor);
+                styleShader.borderThickness = style.borderLeftSize;
+            } else if (hasPartialBorder){
+                if (style.borderTopSize != null && style.borderTopSize > 0) {
+                    styleShader.hasBorderTop = true;
+                    styleShader.borderColorTop.setColor(borderOpacity | style.borderTopColor);
+                    styleShader.borderThicknessTop = style.borderTopSize;
                 } else {
-                    var width:Int = tile.width;
-                    var height:Int = tile.height;
-                    var repeat:Bool = style.backgroundImageRepeat == "repeat";
-                    switch(style.backgroundImageRepeat) {
-                        case "repeat", "stretch":
-                            width = Std.int(RECTANGLE_HELPER.width);
-                            height = Std.int(RECTANGLE_HELPER.height);
-
-                        default:
-
-                    }
-
-                    s.smooth = style.backgroundImageRepeat == "stretch";
-
-                    s.removeBackground(ID_BACKGROUND_IMAGE_SLICE);
-                    var background:BackgroundTile = cast s.getBackground(ID_BACKGROUND_IMAGE);
-                    if (background == null) {
-                        background = new BackgroundTile(tile,
-                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                            width, height, repeat);
-                        s.addBackground(ID_BACKGROUND_IMAGE, background);
-                    } else {
-                        background.set(tile,
-                            Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                            width, height);
-                        background.repeat = repeat;
-                    }
-                }
-            });
-        } else {
-            s.removeBackground(ID_BACKGROUND_IMAGE_SLICE);
-            s.removeBackground(ID_BACKGROUND_IMAGE);
-        }
-
-        var backgroundOpacity:Float = style.backgroundOpacity != null ? style.backgroundOpacity : 1;
-        if (style.backgroundColor != null) {
-            if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
-                var gradientType:String = "vertical";
-                if (style.backgroundGradientStyle != null) {
-                    gradientType = style.backgroundGradientStyle;
+                    styleShader.hasBorderTop = false;
                 }
 
-                var gradientID:String = '${style.backgroundColor}_${style.backgroundColorEnd}_$gradientType';
-                var tile:Tile = GRADIENT_CACHE.get(gradientID);
-                if(tile == null || tile.isDisposed())
-                {
-                    var opacity:Int = Std.int(backgroundOpacity * 255) << 24;
-                    var arr:Array<Int> = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, GRADIENT_SEGMENTS);
-                    var bmp:hxd.BitmapData = null;
-                    if (gradientType == "vertical") {
-                        bmp = new hxd.BitmapData(1, GRADIENT_SEGMENTS);
-                        for (i in 0...arr.length) {
-                            bmp.setPixel(0, i, opacity | arr[i]);
-                        }
-                    } else if (gradientType == "horizontal") {
-                        bmp = new hxd.BitmapData(GRADIENT_SEGMENTS, 1);
-                        for (i in 0...arr.length) {
-                            bmp.setPixel(i, 0, opacity | arr[i]);
-                        }
-                    }
-
-                    tile = h2d.Tile.fromBitmap(bmp);
-                    bmp.dispose();
-
-                    GRADIENT_CACHE.set(gradientID, tile);
-                }
-
-                s.smooth = true;
-
-                var background:BackgroundTile = cast s.getBackground(ID_BACKGROUND_COLOR);
-                if (background == null) {
-                    background = new BackgroundTile(tile,
-                        Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                        Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
-                    s.addBackground(ID_BACKGROUND_COLOR, background);
+                if (style.borderBottomSize != null && style.borderBottomSize > 0) {
+                    styleShader.hasBorderBottom = true;
+                    styleShader.borderColorBottom.setColor(borderOpacity | style.borderBottomColor);
+                    styleShader.borderThicknessBottom = style.borderBottomSize;
                 } else {
-                    background.set(tile,
-                        Std.int(RECTANGLE_HELPER.left), Std.int(RECTANGLE_HELPER.top),
-                        Std.int(RECTANGLE_HELPER.width), Std.int(RECTANGLE_HELPER.height));
+                    styleShader.hasBorderBottom = false;
                 }
-            } else {
-                s.smooth = false;
 
-                s.lineStyle();
-                s.beginFill(style.backgroundColor, backgroundOpacity);
-                if (borderRadius > 0) {
-                    s.drawRoundRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height, borderRadius-1);
+                if (style.borderLeftSize != null && style.borderLeftSize > 0) {
+                    styleShader.hasBorderLeft = true;
+                    styleShader.borderColorLeft.setColor(borderOpacity | style.borderLeftColor);
+                    styleShader.borderThicknessLeft = style.borderLeftSize;
                 } else {
-                    s.drawRect(RECTANGLE_HELPER.left, RECTANGLE_HELPER.top, RECTANGLE_HELPER.width, RECTANGLE_HELPER.height);
+                    styleShader.hasBorderLeft = false;
                 }
-                s.endFill();
+
+                if (style.borderRightSize != null && style.borderRightSize > 0) {
+                    styleShader.hasBorderRight = true;
+                    styleShader.borderColorRight.setColor(borderOpacity | style.borderRightColor);
+                    styleShader.borderThicknessRight = style.borderRightSize;
+                } else {
+                    styleShader.hasBorderRight = false;
+                }
             }
-        } else {
-            s.removeBackground(ID_BACKGROUND_COLOR);
+
+            if (hasRadius) {
+                styleShader.radius = style.borderRadius;
+                styleShader.halfSize.set(w * 0.5, h * 0.5);
+            }
+        } else if(styleShader != null) {
+            s.removeShader(styleShader);
         }
 
         if (style.filter != null && style.filter.length > 0) {
