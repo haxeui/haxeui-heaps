@@ -3,16 +3,21 @@ package haxe.ui.backend;
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
 import haxe.ui.assets.ImageInfo;
-import haxe.ui.backend.heaps.util.FontDetect;
+import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
 
-class AssetsImpl extends AssetsBase2 {
+class AssetsImpl extends AssetsBase {
     public function embedFontSupported():Bool {
         return #if (lime || flash || js) true #else false #end;
     }
 
     private override function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
+        #if js
+        Res.initEmbed();
+        #else
+        Res.initLocal();
+        #end
         var loader:hxd.res.Loader = hxd.Res.loader;
         if (loader != null) {
             if (loader.exists(resourceId)) {
@@ -58,7 +63,8 @@ class AssetsImpl extends AssetsBase2 {
     }
 
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
-        FontDetect.onFontLoaded(resourceId, function(f) {
+        #if js
+        haxe.ui.backend.heaps.util.FontDetect.onFontLoaded(resourceId, function(f) {
             var fontInfo = {
                 data: f
             }
@@ -66,5 +72,8 @@ class AssetsImpl extends AssetsBase2 {
         }, function(f) {
             callback(null);
         });
+        #else
+        callback(null);
+        #end
     }
 }

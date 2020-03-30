@@ -31,7 +31,7 @@ class TextDisplayImpl extends TextBase {
             if ((_fontInfo != null && sprite.font.name != _fontInfo.data)
                 || sprite.font.size != fontSizeValue) {
                 var fontName:String = _fontInfo != null ? _fontInfo.data : sprite.font.name;
-                sprite.font = hxd.res.FontBuilder.getFont(FontDetect.getFontName(fontName), fontSizeValue > 0 ? fontSizeValue : Toolkit.pixelsPerRem);
+                //sprite.font = hxd.res.FontBuilder.getFont(FontDetect.getFontName(fontName), fontSizeValue > 0 ? fontSizeValue : Toolkit.pixelsPerRem);
                 measureTextRequired = true;
             }
 

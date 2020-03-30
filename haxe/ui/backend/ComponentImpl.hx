@@ -14,7 +14,7 @@ import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
 import hxd.Cursor;
 
-class ComponentImpl extends ComponentBase2 {
+class ComponentImpl extends ComponentBase {
     private var _eventMap:Map<String, UIEvent->Void>;
 
     public function new() {
@@ -168,6 +168,7 @@ class ComponentImpl extends ComponentBase2 {
     }
 
     private function __onMouseEvent(event:hxd.Event, type:String) {
+        trace("mouse event: " + type);
         var fn = _eventMap.get(type);
         if (fn != null) {
             var mouseEvent = new MouseEvent(type);

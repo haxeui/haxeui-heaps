@@ -1,17 +1,18 @@
 package haxe.ui.backend.heaps.util;
 
-import js.Browser;
-
 // port of js lib "FontDetect"
 class FontDetect {
+    #if js
     private static var _initialized = false;
     private static var span = null;
     private static var _aFallbackFonts = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy'];
     private static var _registeredFonts:Map<String, String> = new Map<String, String>();
+    #end
 
     private function new() {       
     }
     
+    #if js
     public static function init() {
         if (_initialized == true) {
             return;
@@ -19,12 +20,12 @@ class FontDetect {
         
         _initialized = true;
         
-		var body = Browser.document.body;
-		var firstChild = Browser.document.body.firstChild;
+		var body = js.Browser.document.body;
+		var firstChild = js.Browser.document.body.firstChild;
         
-		var div = Browser.document.createElement('div');
+		var div = js.Browser.document.createElement('div');
 		div.id = 'fontdetectHelper';
-		span = Browser.document.createElement('span');
+		span = js.Browser.document.createElement('span');
 		span.innerText = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 		div.appendChild(span);
 
@@ -73,9 +74,9 @@ class FontDetect {
 
         var utStart = Date.now().getTime();
         var idInterval = 0;
-        idInterval = Browser.window.setInterval(function() {
+        idInterval = js.Browser.window.setInterval(function() {
             if (isFontLoaded(cssFontName)) {
-                Browser.window.clearInterval(idInterval);
+                js.Browser.window.clearInterval(idInterval);
                 if (onLoad != null) {
                     onLoad(cssFontName);
                 }
@@ -83,7 +84,7 @@ class FontDetect {
             } else {
                 var utNow = Date.now().getTime();
                 if ((utNow - utStart) > msTimeout) {
-                    Browser.window.clearInterval(idInterval);
+                    js.Browser.window.clearInterval(idInterval);
                     if (onFail != null) {
                         onFail(cssFontName);
                     }
@@ -136,4 +137,5 @@ class FontDetect {
         js.Browser.document.getElementsByTagName('head')[0].appendChild(s);
         _registeredFonts.set(name, url);
     }
+    #end
 }

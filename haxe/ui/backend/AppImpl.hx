@@ -5,7 +5,7 @@ import haxe.ui.core.Screen;
 import haxe.ui.Preloader.PreloadItem;
 import haxe.ui.util.ColorUtil;
 
-class AppImpl extends AppBase2 {
+class AppImpl extends AppBase {
     public function new() {
     }
     

@@ -2,8 +2,6 @@ package haxe.ui.backend;
 
 import haxe.ui.backend.heaps.HeapsApp;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.containers.dialogs.Dialog2 in Dialog;
-import haxe.ui.containers.dialogs.DialogButton;
 import haxe.ui.core.Component;
 import haxe.ui.events.KeyboardEvent;
 import haxe.ui.events.MouseEvent;
@@ -11,7 +9,7 @@ import haxe.ui.events.UIEvent;
 import hxd.Event.EventKind;
 
 @:access(h2d.Layers)
-class ScreenImpl extends ScreenBase2 {
+class ScreenImpl extends ScreenBase {
     private var _mapping:Map<String, UIEvent->Void>;
 
     public function new() {
@@ -63,12 +61,14 @@ class ScreenImpl extends ScreenBase2 {
         return hxd.System.screenDPI;
     }
 
-    public override function addComponent(component:Component) {
+    public override function addComponent(component:Component):Component {
         app.s2d.addChildAt(component, 0);//TODO
+        return component;
     }
 
-    public override function removeComponent(component:Component) {
+    public override function removeComponent(component:Component):Component {
         app.s2d.removeChild(component);
+        return component;
     }
 
     private override function handleSetComponentIndex(child:Component, index:Int) {

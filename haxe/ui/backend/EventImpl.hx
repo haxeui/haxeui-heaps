@@ -3,7 +3,7 @@ import haxe.ui.events.UIEvent;
 
 @:allow(haxe.ui.backend.ComponentImpl)
 @:allow(haxe.ui.backend.ScreenImpl)
-class EventImpl extends EventBase2 {
+class EventImpl extends EventBase {
     private var _originalEvent:hxd.Event;
 
     public override function cancel() {
