@@ -1,233 +1,183 @@
 package haxe.ui.backend.heaps;
 
+import h2d.Tile;
 import haxe.ui.assets.ImageInfo;
-import haxe.ui.backend.heaps.shader.StyleShader;
-import haxe.ui.styles.Style;
-import haxe.ui.filters.Blur;
-import haxe.ui.filters.DropShadow;
-import haxe.ui.filters.Filter;
 import haxe.ui.geom.Rectangle;
+import haxe.ui.geom.Slice9;
+import haxe.ui.styles.Style;
+import haxe.ui.util.ColorUtil;
 
-class StyleHelper
-{
-    private static var RECTANGLE_HELPER:Rectangle = new Rectangle();
-
-    public static function apply(s:UISprite, style:Style, x:Float, y:Float, w:Float, h:Float):Void {
+class StyleHelper {
+    public static function apply(c:ComponentImpl, style:Style, w:Float, h:Float):Void {
+        c.clear();
+        
         if (w <= 0 || h <= 0) {
             return;
         }
 
-        if (style.opacity != null) {
-            s.alpha = style.opacity;
+        w *= Toolkit.scaleX;
+        h *= Toolkit.scaleY;
+        var borderSize:Rectangle = new Rectangle();
+        var backgroundAlpha:Float = 1;
+        if (style.backgroundOpacity != null) {
+            backgroundAlpha = style.backgroundOpacity;
+        }
+        var borderAlpha:Float = 1;
+        if (style.borderOpacity != null) {
+            borderAlpha = style.borderOpacity;
+        }
+        
+        if (style.backgroundColor != null) {
+            if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
+                var gradientType:String = "vertical";
+                if (style.backgroundGradientStyle != null) {
+                    gradientType = style.backgroundGradientStyle;
+                }
+                var arr:Array<Int> = null;
+                var n:Int = 0;
+                if (gradientType == "vertical") {
+                    arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(h));
+                    var y = 0;
+                    for (col in arr) {
+                        c.lineStyle(1, col, backgroundAlpha);
+                        c.moveTo(-1, y);
+                        c.lineTo(w, y);
+                        y++;
+                    }
+                } else if (gradientType == "horizontal") {
+                    arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(w + 1));
+                    var x = 0;
+                    for (col in arr) {
+                        c.lineStyle(1, col, backgroundAlpha);
+                        c.moveTo(x, 0);
+                        c.lineTo(x, h);
+                        x++;
+                    }
+                }
+            } else {
+                c.beginFill(style.backgroundColor, backgroundAlpha);
+                c.drawRect(-1, 0, w + 1, h);
+                c.endFill();
+            }
         }
 
-        var borderOpacity:Int = Std.int((style.borderOpacity != null ? style.borderOpacity : 1) * 255);
-        var backgroundOpacity:Int = Std.int((style.backgroundOpacity != null ? style.backgroundOpacity : 1) * 255);
+        if (style.backgroundImage != null) {
+            Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
+                var tile = TileCache.get(style.backgroundImage);
+                if (tile == null) {
+                    tile = TileCache.set(style.backgroundImage, h2d.Tile.fromBitmap(imageInfo.data));
+                }
+                
+                var trc:Rectangle = new Rectangle(0, 0, imageInfo.width, imageInfo.height);
+                if (style.backgroundImageClipTop != null
+                    && style.backgroundImageClipLeft != null
+                    && style.backgroundImageClipBottom != null
+                    && style.backgroundImageClipRight != null) {
+                        trc = new Rectangle(style.backgroundImageClipLeft,
+                                            style.backgroundImageClipTop,
+                                            style.backgroundImageClipRight - style.backgroundImageClipLeft,
+                                            style.backgroundImageClipBottom - style.backgroundImageClipTop);
+                }
+                
+                var slice:Rectangle = null;
+                if (style.backgroundImageSliceTop != null
+                    && style.backgroundImageSliceLeft != null
+                    && style.backgroundImageSliceBottom != null
+                    && style.backgroundImageSliceRight != null) {
+                    slice = new Rectangle(style.backgroundImageSliceLeft,
+                                          style.backgroundImageSliceTop,
+                                          style.backgroundImageSliceRight - style.backgroundImageSliceLeft,
+                                          style.backgroundImageSliceBottom - style.backgroundImageSliceTop);
+                }
+                
+                if (trc != null) {
+                    tile = tile.sub(trc.left, trc.top, trc.width, trc.height);
+                }
+                if (slice != null) {
+                    var rects:Slice9Rects = Slice9.buildRects(w, h, trc.width, trc.height, slice);
+                    var srcRects:Array<Rectangle> = rects.src;
+                    var dstRects:Array<Rectangle> = rects.dst;
+                    
+                    paintTile(c, tile, srcRects[0], dstRects[0]);
+                    paintTile(c, tile, srcRects[1], dstRects[1]);
+                    paintTile(c, tile, srcRects[2], dstRects[2]);
+                    
+                    srcRects[3].bottom--;
+                    paintTile(c, tile, srcRects[3], dstRects[3]);
 
-        var hasFullBorder:Bool = borderOpacity > 0
-            && style.borderLeftSize != null && style.borderLeftSize != 0
+                    srcRects[4].bottom--;
+                    paintTile(c, tile, srcRects[4], dstRects[4]);
+                    
+                    srcRects[5].bottom--;
+                    paintTile(c, tile, srcRects[5], dstRects[5]);
+                    
+                    dstRects[6].bottom++;
+                    paintTile(c, tile, srcRects[6], dstRects[6]);
+                    dstRects[7].bottom++;
+                    paintTile(c, tile, srcRects[7], dstRects[7]);
+                    dstRects[8].bottom++;
+                    paintTile(c, tile, srcRects[8], dstRects[8]);
+                } else {
+                    
+                }
+            });
+        }
+        
+        borderSize.left = style.borderLeftSize;
+        borderSize.top = style.borderTopSize;
+        borderSize.right = style.borderRightSize;
+        borderSize.bottom = style.borderBottomSize;
+        if (style.borderLeftColor != null
+            && style.borderLeftColor == style.borderRightColor
+            && style.borderLeftColor == style.borderBottomColor
+            && style.borderLeftColor == style.borderTopColor
+            
+            && style.borderLeftSize != null
             && style.borderLeftSize == style.borderRightSize
             && style.borderLeftSize == style.borderBottomSize
             && style.borderLeftSize == style.borderTopSize
-            && style.borderLeftColor != null
-            && style.borderLeftColor == style.borderRightColor
-            && style.borderLeftColor == style.borderBottomColor
-            && style.borderLeftColor == style.borderTopColor;
-        var hasPartialBorder:Bool = !hasFullBorder
-            && ((style.borderTopSize != null && style.borderTopSize > 0)
-                || (style.borderBottomSize != null && style.borderBottomSize > 0)
-                || (style.borderLeftSize != null && style.borderLeftSize > 0)
-                || (style.borderRightSize != null && style.borderRightSize > 0));
-        var hasBackgroundImage:Bool = backgroundOpacity > 0 && style.backgroundImage != null;
-        var hasBackgroundGradient:Bool = !hasBackgroundImage && backgroundOpacity > 0 && style.backgroundColor != null && style.backgroundColorEnd != null;
-        var hasFlatBackground:Bool = !hasBackgroundImage && backgroundOpacity > 0 && style.backgroundColor != null;
-
-        var styleShader:StyleShader = s.getShader(StyleShader);
-        if (hasFlatBackground || hasBackgroundGradient || hasBackgroundImage || hasFullBorder) {
-            if (styleShader == null) {
-                styleShader = s.addShader(new StyleShader());
+            ) { // full border
+            
+            c.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+            c.moveTo(0, 0);
+            c.lineTo(w, 0);
+            c.lineTo(w, h - 1);
+            c.lineTo(0, h - 1);
+            c.lineTo(0, 0);
+        } else { // compound border
+            if (style.borderTopSize != null && style.borderTopSize > 0) {
+                c.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
+                c.moveTo(0, 0);
+                c.lineTo(w, 0);
             }
-
-            backgroundOpacity = backgroundOpacity << 24;
-            borderOpacity = borderOpacity << 24;
-
-            var hasRadius:Bool = style.borderRadius != null && !hasPartialBorder;
-
-            styleShader.size.set(w, h);
-            styleShader.hasRadius = hasRadius;
-            styleShader.hasBackgroundGradient = hasBackgroundGradient;
-            styleShader.hasFullBorder = hasFullBorder;
-
-            if (hasBackgroundImage) {
-                Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
-                    var tex = h3d.mat.Texture.fromBitmap(imageInfo.data);
-                    var tile = h2d.Tile.fromBitmap(imageInfo.data);
-                    var backgroundOffsetU:Float = 0;
-                    var backgroundOffsetV:Float = 0;
-                    var backgroundScaleU:Float = 1.0;
-                    var backgroundScaleV:Float = 1.0;
-                    var imageWidth:Int = imageInfo.width;
-                    var imageHeight:Int = imageInfo.height;
-                    var hasClip:Bool = style.backgroundImageClipTop != null
-                        && style.backgroundImageClipLeft != null
-                        && style.backgroundImageClipBottom != null
-                        && style.backgroundImageClipRight != null;
-                    var hasSlice:Bool = style.backgroundImageSliceTop != null
-                        && style.backgroundImageSliceLeft != null
-                        && style.backgroundImageSliceBottom != null
-                        && style.backgroundImageSliceRight != null;
-
-                    tex.filter = style.backgroundImageRepeat == "stretch" ? Linear : Nearest;
-                    tex.wrap = style.backgroundImageRepeat == "repeat" ? Repeat : Clamp;
-
-                    styleShader.backgroundImage = tex;
-                    styleShader.hasBackgroundImage = hasBackgroundImage;
-                    styleShader.hasBackgroundImageSlice = hasSlice;
-
-                    if (hasClip) {
-                        imageWidth = Std.int(style.backgroundImageClipRight - style.backgroundImageClipLeft);
-                        imageHeight = Std.int(style.backgroundImageClipBottom - style.backgroundImageClipTop);
-
-                        backgroundOffsetU = style.backgroundImageClipLeft / imageWidth;
-                        backgroundOffsetV = style.backgroundImageClipTop / imageHeight;
-                        backgroundScaleU = imageWidth / imageInfo.width;
-                        backgroundScaleV = imageHeight / imageInfo.height;
-                    }
-
-                    if (hasSlice) {
-                        styleShader.backgroundImageSliceBox.set(
-                            style.backgroundImageSliceLeft / w,
-                            style.backgroundImageSliceTop / h,
-                            1 - (imageWidth - style.backgroundImageSliceRight) / w,
-                            1 - (imageHeight - style.backgroundImageSliceBottom) / h);
-
-                        styleShader.backgroundImageSliceTexture.set(
-                            style.backgroundImageSliceLeft / imageWidth,
-                            style.backgroundImageSliceTop / imageHeight,
-                            1 - (imageWidth - style.backgroundImageSliceRight) / imageWidth,
-                            1 - (imageHeight - style.backgroundImageSliceBottom) / imageHeight
-                        );
-                    } else if (style.backgroundImageRepeat != "stretch" && !hasClip) {
-                            backgroundScaleU = w / imageInfo.width;
-                            backgroundScaleV = h / imageInfo.height;
-                    }
-
-                    styleShader.backgroundImageUV.set(backgroundOffsetU, backgroundOffsetV, backgroundScaleU, backgroundScaleV);
-                });
-            } else {
-                if (hasFlatBackground) {
-                    styleShader.backgroundColor.setColor(backgroundOpacity | style.backgroundColor);
-                }
-
-                if (hasBackgroundGradient) {
-                    styleShader.backgroundColorEnd.setColor(backgroundOpacity | style.backgroundColorEnd);
-                    if (style.backgroundGradientStyle == "vertical")
-                        styleShader.backgroundDirection.set(0.0, 1.0);
-                    else
-                        styleShader.backgroundDirection.set(1.0, 0.0);
-                }
+            
+            if (style.borderBottomSize != null && style.borderBottomSize > 0) {
+                c.lineStyle(borderSize.bottom, style.borderBottomColor, borderAlpha);
+                c.moveTo(0, h - 1);
+                c.lineTo(w, h - 1);
             }
-
-            if (hasFullBorder) {
-                styleShader.borderColor.setColor(borderOpacity | style.borderLeftColor);
-                styleShader.borderThickness = style.borderLeftSize;
-            } else if (hasPartialBorder){
-                if (style.borderTopSize != null && style.borderTopSize > 0) {
-                    styleShader.hasBorderTop = true;
-                    styleShader.borderColorTop.setColor(borderOpacity | style.borderTopColor);
-                    styleShader.borderThicknessTop = style.borderTopSize;
-                } else {
-                    styleShader.hasBorderTop = false;
-                }
-
-                if (style.borderBottomSize != null && style.borderBottomSize > 0) {
-                    styleShader.hasBorderBottom = true;
-                    styleShader.borderColorBottom.setColor(borderOpacity | style.borderBottomColor);
-                    styleShader.borderThicknessBottom = style.borderBottomSize;
-                } else {
-                    styleShader.hasBorderBottom = false;
-                }
-
-                if (style.borderLeftSize != null && style.borderLeftSize > 0) {
-                    styleShader.hasBorderLeft = true;
-                    styleShader.borderColorLeft.setColor(borderOpacity | style.borderLeftColor);
-                    styleShader.borderThicknessLeft = style.borderLeftSize;
-                } else {
-                    styleShader.hasBorderLeft = false;
-                }
-
-                if (style.borderRightSize != null && style.borderRightSize > 0) {
-                    styleShader.hasBorderRight = true;
-                    styleShader.borderColorRight.setColor(borderOpacity | style.borderRightColor);
-                    styleShader.borderThicknessRight = style.borderRightSize;
-                } else {
-                    styleShader.hasBorderRight = false;
-                }
+            
+            if (style.borderLeftSize != null && style.borderLeftSize > 0) {
+                c.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+                c.moveTo(0, 0);
+                c.lineTo(0, h + 2);
             }
-
-            if (hasRadius) {
-                styleShader.radius = style.borderRadius;
-                styleShader.halfSize.set(w * 0.5, h * 0.5);
+            
+            if (style.borderRightSize != null && style.borderRightSize > 0) {
+                c.lineStyle(borderSize.right, style.borderRightColor, borderAlpha);
+                c.moveTo(w, 0);
+                c.lineTo(w, h);
             }
-        } else if(styleShader != null) {
-            s.removeShader(styleShader);
         }
-
-        if (style.filter != null && style.filter.length > 0) {
-            var filter:Filter = style.filter[0];
-            var nativeFilter:h2d.filter.Filter = null;
-            if (!_filterEqualTo(filter, nativeFilter)) {
-                switch (Type.getClass(filter)) {
-                    case DropShadow:
-                        var ds:DropShadow = cast(filter, DropShadow);
-                        if (ds.inner) {
-                            //TODO
-                            //nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, (ds.blurX + ds.blurY) * 0.5, Std.int(ds.strength), ds.quality);
-                        } else {
-                            nativeFilter = new h2d.filter.DropShadow(ds.distance, ds.angle, ds.color, ds.alpha, (ds.blurX + ds.blurY) * 0.5, Std.int(ds.strength), ds.quality);
-                        }
-                    case Blur:
-                        var b:Blur = cast(filter, Blur);
-                        nativeFilter = new h2d.filter.Blur(b.amount);
-                }
-
-                s.filter = nativeFilter;
-            }
-        } else if (s.filter != null) {
-            s.filter = null;
-        }
+        
     }
-
-    private static inline function _filterEqualTo(hxf:Filter, nativeFilter:h2d.filter.Filter):Bool {
-        if ((hxf != null && nativeFilter == null) || (hxf == null && nativeFilter != null)) {
-            return false;
-        }
-
-        if (hxf == null && nativeFilter == null) {
-            return true;
-        }
-
-        return switch (Type.getClass(hxf)) {
-            case DropShadow:
-                var ds:DropShadow = cast(hxf, DropShadow);
-                if (!Std.is(nativeFilter, h2d.filter.DropShadow)) {
-                    false;
-                } else {
-                    var nds:h2d.filter.DropShadow = cast(nativeFilter, h2d.filter.DropShadow);
-                    !(ds.distance != nds.distance ||
-                    ds.angle != nds.angle ||
-                    ds.color != nds.color ||
-                    ds.alpha != nds.alpha ||
-                    ds.quality != nds.quality ||
-                     Std.int(ds.strength) != nds.gain ||
-                     (ds.blurX + ds.blurY) * 0.5 != nds.radius);
-                }
-            case Blur:
-                var b:Blur = cast(hxf, Blur);
-                var nb:h2d.filter.Blur = cast(nativeFilter, h2d.filter.Blur);
-                (b.amount != nb.radius);
-            default:
-                false;
-        }
+    
+    private static function paintTile(c:ComponentImpl, tile:Tile, src:Rectangle, dst:Rectangle) {
+        var scaleX = dst.width / src.width;
+        var scaleY = dst.height / src.height;
+        var sub = tile.sub(src.left * scaleX, src.top * scaleY, src.width, src.height);
+        c.beginTileFill(dst.left, dst.top, scaleX, scaleY, sub);
+        c.drawRect(dst.left, dst.top, dst.width, dst.height);
+        c.endFill();
     }
 }
