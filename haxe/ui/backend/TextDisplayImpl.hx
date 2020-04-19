@@ -1,11 +1,5 @@
 package haxe.ui.backend;
 
-import haxe.ui.assets.FontInfo;
-import haxe.ui.backend.heaps.util.FontDetect;
-import haxe.ui.core.Component;
-import haxe.ui.core.TextDisplay.TextDisplayData;
-import haxe.ui.styles.Style;
-
 class TextDisplayImpl extends TextBase {
     public var sprite:h2d.Text;
 
@@ -38,8 +32,6 @@ class TextDisplayImpl extends TextBase {
             if (sprite.textColor != _textStyle.color) {
                 sprite.textColor = _textStyle.color;
             }
-
-            //TODO - wordWrap - multiline
         }
 
         return measureTextRequired;

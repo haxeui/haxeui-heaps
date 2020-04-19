@@ -7,32 +7,32 @@ import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
 
-class AssetsImpl extends AssetsBase {
+class AssetsImpl extends AssetsBase { 
     public function embedFontSupported():Bool {
         return #if (lime || flash || js) true #else false #end;
     }
 
     private override function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
-        #if js
-        Res.initEmbed();
-        #else
-        Res.initLocal();
-        #end
-        var loader:hxd.res.Loader = hxd.Res.loader;
-        if (loader != null) {
-            if (loader.exists(resourceId)) {
-                var image:Image = loader.load(resourceId).toImage();
-                var size:Dynamic = image.getSize();
-                var imageInfo:ImageInfo = {
-                    width: size.width,
-                    height: size.height,
-                    data: image.toBitmap()
-                };
-                callback(imageInfo);
+        try {
+            var loader:hxd.res.Loader = hxd.Res.loader;
+            if (loader != null) {
+                if (loader.exists(resourceId)) {
+                    var image:Image = loader.load(resourceId).toImage();
+                    var size:Dynamic = image.getSize();
+                    var imageInfo:ImageInfo = {
+                        width: size.width,
+                        height: size.height,
+                        data: image.toBitmap()
+                    };
+                    callback(imageInfo);
+                } else {
+                    callback(null);
+                }
             } else {
                 callback(null);
             }
-        } else {
+        } catch (e:Dynamic) {
+            trace(e);
             callback(null);
         }
     }

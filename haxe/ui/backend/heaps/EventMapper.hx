@@ -1,6 +1,5 @@
 package haxe.ui.backend.heaps;
 
-
 class EventMapper {
     public static var HAXEUI_TO_HEAPS:Map<String, String> = [
         haxe.ui.events.MouseEvent.MOUSE_MOVE => EventType.MOUSE_MOVE,

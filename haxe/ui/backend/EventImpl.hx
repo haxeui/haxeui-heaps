@@ -1,4 +1,5 @@
 package haxe.ui.backend;
+
 import haxe.ui.events.UIEvent;
 
 @:allow(haxe.ui.backend.ComponentImpl)

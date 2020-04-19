@@ -1,1 +1,0 @@
-@:build(haxe.ui.backend.macros.HeapsMacros.removeInline(["set_x", "set_y"])) h2d.Sprite

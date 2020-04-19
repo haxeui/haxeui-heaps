@@ -1,7 +1,6 @@
 package haxe.ui.backend;
-
-import haxe.ui.backend.heaps.HeapsApp;
+import hxd.App;
 
 typedef ToolkitOptions = {
-    ?app:HeapsApp
+    var app:App;
 }
