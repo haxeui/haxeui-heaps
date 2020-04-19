@@ -11,6 +11,7 @@ class ScreenImpl extends ScreenBase {
 
     public function new() {
         _mapping = new Map<String, UIEvent->Void>();
+        MainLoop.add(BackendImpl.update);
     }
     
     public var app(get, null):App;
