@@ -11,7 +11,6 @@ class ScreenImpl extends ScreenBase {
 
     public function new() {
         _mapping = new Map<String, UIEvent->Void>();
-        MainLoop.add(BackendImpl.update);
     }
     
     public var app(get, null):App;
@@ -25,6 +24,14 @@ class ScreenImpl extends ScreenBase {
         }
         
         return app;
+    }
+    
+    private override function set_options(value:ToolkitOptions):ToolkitOptions {
+        super.set_options(value);
+        if (value.manualUpdate == null || value.manualUpdate == false) {
+            MainLoop.add(BackendImpl.update);
+        }
+        return value;
     }
     
     private override function get_width():Float {
