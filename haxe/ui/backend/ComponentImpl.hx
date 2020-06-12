@@ -2,6 +2,7 @@ package haxe.ui.backend;
 
 import h2d.Interactive;
 import h2d.Mask;
+import h2d.Object;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.StyleHelper;
 import haxe.ui.core.Component;
@@ -15,10 +16,13 @@ import haxe.ui.styles.Style;
 
 class ComponentImpl extends ComponentBase { 
     private var _eventMap:Map<String, UIEvent->Void>;
+    
+    static inline var INDEX_OFFSET = 1; // offset everything because 0th-child is always the style graphics container
 
     public function new() {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
+        addChild(new Object()); // style graphics container
     }
 
     
@@ -103,7 +107,7 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     
     private override function handleSetComponentIndex(child:Component, index:Int) {
-        addChildAt(child, index);
+        addChildAt(child, index + INDEX_OFFSET);
     }
 
     private override function handleAddComponent(child:Component):Component {
@@ -112,7 +116,7 @@ class ComponentImpl extends ComponentBase {
     }
 
     private override function handleAddComponentAt(child:Component, index:Int):Component {
-        addChildAt(child, index);
+        addChildAt(child, index + INDEX_OFFSET);
         return child;
     }
 
@@ -123,7 +127,7 @@ class ComponentImpl extends ComponentBase {
     }
 
     private override function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
-        var child = _children[index];
+        var child = _children[index + INDEX_OFFSET];
         if (child != null) {
             removeChild(child);
 

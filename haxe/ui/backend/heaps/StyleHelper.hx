@@ -1,6 +1,8 @@
 package haxe.ui.backend.heaps;
 
+import h2d.Object;
 import h2d.Tile;
+import h2d.Graphics;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.geom.Slice9;
@@ -9,7 +11,8 @@ import haxe.ui.util.ColorUtil;
 
 class StyleHelper {
     public static function apply(c:ComponentImpl, style:Style, w:Float, h:Float):Void {
-        c.clear();
+        var container = c.getChildAt(0); // first child is always the style-objects container
+        container.removeChildren();
         
         if (w <= 0 || h <= 0) {
             return;
@@ -28,6 +31,9 @@ class StyleHelper {
         }
         
         if (style.backgroundColor != null) {
+            var backgroundColor = new Graphics();
+            container.addChild(backgroundColor);
+            
             if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
                 var gradientType:String = "vertical";
                 if (style.backgroundGradientStyle != null) {
@@ -39,29 +45,32 @@ class StyleHelper {
                     arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(h));
                     var y = 0;
                     for (col in arr) {
-                        c.lineStyle(1, col, backgroundAlpha);
-                        c.moveTo(-1, y);
-                        c.lineTo(w, y);
+                        backgroundColor.lineStyle(1, col, backgroundAlpha);
+                        backgroundColor.moveTo(-1, y);
+                        backgroundColor.lineTo(w, y);
                         y++;
                     }
                 } else if (gradientType == "horizontal") {
                     arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(w + 1));
                     var x = 0;
                     for (col in arr) {
-                        c.lineStyle(1, col, backgroundAlpha);
-                        c.moveTo(x, 0);
-                        c.lineTo(x, h);
+                        backgroundColor.lineStyle(1, col, backgroundAlpha);
+                        backgroundColor.moveTo(x, 0);
+                        backgroundColor.lineTo(x, h);
                         x++;
                     }
                 }
             } else {
-                c.beginFill(style.backgroundColor, backgroundAlpha);
-                c.drawRect(-1, 0, w + 1, h);
-                c.endFill();
+                backgroundColor.beginFill(style.backgroundColor, backgroundAlpha);
+                backgroundColor.drawRect(-1, 0, w + 1, h);
+                backgroundColor.endFill();
             }
         }
 
         if (style.backgroundImage != null) {
+            var backgroundImage = new Graphics();
+            container.addChild(backgroundImage);
+            
             Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
                 var tile = TileCache.get(style.backgroundImage);
                 if (tile == null) {
@@ -98,31 +107,34 @@ class StyleHelper {
                     var srcRects:Array<Rectangle> = rects.src;
                     var dstRects:Array<Rectangle> = rects.dst;
                     
-                    paintTile(c, tile, srcRects[0], dstRects[0]);
-                    paintTile(c, tile, srcRects[1], dstRects[1]);
-                    paintTile(c, tile, srcRects[2], dstRects[2]);
+                    paintTile(backgroundImage, tile, srcRects[0], dstRects[0]);
+                    paintTile(backgroundImage, tile, srcRects[1], dstRects[1]);
+                    paintTile(backgroundImage, tile, srcRects[2], dstRects[2]);
                     
                     srcRects[3].bottom--;
-                    paintTile(c, tile, srcRects[3], dstRects[3]);
+                    paintTile(backgroundImage, tile, srcRects[3], dstRects[3]);
 
                     srcRects[4].bottom--;
-                    paintTile(c, tile, srcRects[4], dstRects[4]);
+                    paintTile(backgroundImage, tile, srcRects[4], dstRects[4]);
                     
                     srcRects[5].bottom--;
-                    paintTile(c, tile, srcRects[5], dstRects[5]);
+                    paintTile(backgroundImage, tile, srcRects[5], dstRects[5]);
                     
                     dstRects[6].bottom++;
-                    paintTile(c, tile, srcRects[6], dstRects[6]);
+                    paintTile(backgroundImage, tile, srcRects[6], dstRects[6]);
                     dstRects[7].bottom++;
-                    paintTile(c, tile, srcRects[7], dstRects[7]);
+                    paintTile(backgroundImage, tile, srcRects[7], dstRects[7]);
                     dstRects[8].bottom++;
-                    paintTile(c, tile, srcRects[8], dstRects[8]);
+                    paintTile(backgroundImage, tile, srcRects[8], dstRects[8]);
                 } else {
                     
                 }
             });
         }
         
+        
+        var border = new Graphics();
+        container.addChild(border);
         borderSize.left = style.borderLeftSize;
         borderSize.top = style.borderTopSize;
         borderSize.right = style.borderRightSize;
@@ -138,46 +150,46 @@ class StyleHelper {
             && style.borderLeftSize == style.borderTopSize
             ) { // full border
             
-            c.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-            c.moveTo(0, 0);
-            c.lineTo(w, 0);
-            c.lineTo(w, h - 1);
-            c.lineTo(0, h - 1);
-            c.lineTo(0, 0);
+            border.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+            border.moveTo(0, 0);
+            border.lineTo(w, 0);
+            border.lineTo(w, h - 1);
+            border.lineTo(0, h - 1);
+            border.lineTo(0, 0);
         } else { // compound border
             if (style.borderTopSize != null && style.borderTopSize > 0) {
-                c.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
-                c.moveTo(0, 0);
-                c.lineTo(w, 0);
+                border.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
+                border.moveTo(0, 0);
+                border.lineTo(w, 0);
             }
             
             if (style.borderBottomSize != null && style.borderBottomSize > 0) {
-                c.lineStyle(borderSize.bottom, style.borderBottomColor, borderAlpha);
-                c.moveTo(0, h - 1);
-                c.lineTo(w, h - 1);
+                border.lineStyle(borderSize.bottom, style.borderBottomColor, borderAlpha);
+                border.moveTo(0, h - 1);
+                border.lineTo(w, h - 1);
             }
             
             if (style.borderLeftSize != null && style.borderLeftSize > 0) {
-                c.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-                c.moveTo(0, 0);
-                c.lineTo(0, h + 2);
+                border.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+                border.moveTo(0, 0);
+                border.lineTo(0, h + 2);
             }
             
             if (style.borderRightSize != null && style.borderRightSize > 0) {
-                c.lineStyle(borderSize.right, style.borderRightColor, borderAlpha);
-                c.moveTo(w, 0);
-                c.lineTo(w, h);
+                border.lineStyle(borderSize.right, style.borderRightColor, borderAlpha);
+                border.moveTo(w, 0);
+                border.lineTo(w, h);
             }
         }
         
     }
     
-    private static function paintTile(c:ComponentImpl, tile:Tile, src:Rectangle, dst:Rectangle) {
+    private static function paintTile(g:Graphics, tile:Tile, src:Rectangle, dst:Rectangle) {
         var scaleX = dst.width / src.width;
         var scaleY = dst.height / src.height;
         var sub = tile.sub(src.left * scaleX, src.top * scaleY, src.width, src.height);
-        c.beginTileFill(dst.left, dst.top, scaleX, scaleY, sub);
-        c.drawRect(dst.left, dst.top, dst.width, dst.height);
-        c.endFill();
+        g.beginTileFill(dst.left, dst.top, scaleX, scaleY, sub);
+        g.drawRect(dst.left, dst.top, dst.width, dst.height);
+        g.endFill();
     }
 }
