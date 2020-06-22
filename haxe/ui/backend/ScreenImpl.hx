@@ -107,17 +107,24 @@ class ScreenImpl extends ScreenBase {
                 for (c in components) {
                     if (c.hasEventListener(MouseEvent.MOUSE_OVER)) {
                         overComponent = c;
-                        c.handleMouseEvent(MouseEvent.MOUSE_OVER, event);
                         break;
                     }
                 }
                 
-                if (_currentOverComponent != null && _currentOverComponent != overComponent) {
-                    _currentOverComponent.handleMouseEvent(MouseEvent.MOUSE_OUT, event);
+                switch [_currentOverComponent, overComponent] {
+                    case [null, null]: // nothing to do
+                    case [null, current]:
+                        current.handleMouseEvent(MouseEvent.MOUSE_OVER, event);
+                    case [last, null]:
+                        last.handleMouseEvent(MouseEvent.MOUSE_OUT, event);
+                    case [last, current] if(last == current):
+                        current.handleMouseEvent(MouseEvent.MOUSE_MOVE, event);
+                    case [last, current]:
+                        last.handleMouseEvent(MouseEvent.MOUSE_OUT, event);
+                        current.handleMouseEvent(MouseEvent.MOUSE_OVER, event);
                 }
                 
                 _currentOverComponent = overComponent;
-                handleMouseEvent(MouseEvent.MOUSE_MOVE, event);
                 
             case EPush:
                 _buttonDown = event.button;
