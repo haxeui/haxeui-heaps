@@ -63,17 +63,17 @@ class AssetsImpl extends AssetsBase {
     }
 
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
-        #if js
-        haxe.ui.backend.heaps.util.FontDetect.onFontLoaded(resourceId, function(f) {
-            var fontInfo = {
-                data: f
-            }
-            callback(fontInfo);
-        }, function(f) {
-            callback(null);
-        });
-        #else
+//         #if js
+//         haxe.ui.backend.heaps.util.FontDetect.onFontLoaded(resourceId, function(f) {
+//             var fontInfo = {
+//                 data: f
+//             }
+//             callback(fontInfo);
+//         }, function(f) {
+//             callback(null);
+//         });
+//         #else
         callback(null);
-        #end
+//         #end
     }
 }
