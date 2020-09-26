@@ -29,10 +29,15 @@ class AppImpl extends AppBase {
     
     private function onHeapsInit() {
         #if js
-        hxd.Res.initLocal();
+        //hxd.Res.initLocal();
+        hxd.Res.initEmbed();
         #else
         hxd.Res.initEmbed();
         #end
+        
+        if (Toolkit.backendProperties.exists("haxe.ui.heaps.engine.background.color")) {
+            h3d.Engine.getCurrent().backgroundColor = Toolkit.backendProperties.getPropCol("haxe.ui.heaps.engine.background.color");
+        }
         _onReady();
     }
 
