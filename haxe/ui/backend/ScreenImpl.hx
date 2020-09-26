@@ -126,6 +126,7 @@ class ScreenImpl extends ScreenBase {
                 
                 _currentOverComponent = overComponent;
                 
+                handleMouseEvent(MouseEvent.MOUSE_MOVE, event);
             case EPush:
                 _buttonDown = event.button;
                 handleMouseEvent(MouseEvent.MOUSE_DOWN, event);

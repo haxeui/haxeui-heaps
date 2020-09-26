@@ -9,6 +9,7 @@ import haxe.ui.core.Component;
 import haxe.ui.core.ImageDisplay;
 import haxe.ui.core.Screen;
 import haxe.ui.core.TextDisplay;
+import haxe.ui.core.TextInput;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
 import haxe.ui.geom.Rectangle;
@@ -30,6 +31,9 @@ class ComponentImpl extends ComponentBase {
         if (left == null || top == null || left < 0 || top < 0) {
             return;
         }
+        
+        left = Std.int(left);
+        top = Std.int(top);
         
         if (_mask == null) {
             this.x = left;
@@ -88,6 +92,15 @@ class ComponentImpl extends ComponentBase {
         }
         
         return _textDisplay;
+    }
+
+    public override function createTextInput(text:String = null):TextInput {
+        if (_textInput == null) {
+            super.createTextInput(text);
+            addChild(_textInput.sprite);
+        }
+        
+        return _textInput;
     }
     
     //***********************************************************************************************************
