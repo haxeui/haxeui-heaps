@@ -1,11 +1,11 @@
 package haxe.ui.backend;
 
+import hxd.res.Image;
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
 import haxe.ui.assets.ImageInfo;
 import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
-import hxd.res.Image;
 
 class AssetsImpl extends AssetsBase { 
     public function embedFontSupported():Bool {
