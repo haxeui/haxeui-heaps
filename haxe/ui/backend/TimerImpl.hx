@@ -8,7 +8,8 @@ class TimerImpl {
         var count:Int = __timers.length;
         for (i in 0...count) {
             var timer:TimerImpl = __timers[i];
-            if (timer._start <= currentTime && !timer._stopped) {
+            if (!timer._stopped && currentTime > timer._end) {
+                timer._end = currentTime + timer._delay;
                 timer.callback();
             }
         }
@@ -22,12 +23,14 @@ class TimerImpl {
     }
 
     public var callback:Void->Void;
-    private var _start:Float;
+    private var _end:Float;
+    private var _delay:Float;
     private var _stopped:Bool;
 
     public function new(delay:Int, callback:Void->Void) {
         this.callback = callback;
-        _start = hxd.Timer.lastTimeStamp + delay;
+        _delay = delay / 1000;
+        _end = hxd.Timer.lastTimeStamp + _delay;
         __timers.push(this);
     }
 
