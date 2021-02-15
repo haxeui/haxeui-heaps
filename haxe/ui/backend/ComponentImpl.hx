@@ -116,6 +116,14 @@ class ComponentImpl extends ComponentBase {
         return _imageDisplay;
     }
     
+    public override function removeImageDisplay() {
+        if (_imageDisplay != null) {
+            removeChild(_imageDisplay.sprite);
+            _imageDisplay.dispose();
+            _imageDisplay = null;
+        }
+    }
+    
     //***********************************************************************************************************
     // Display tree
     //***********************************************************************************************************

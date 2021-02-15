@@ -42,4 +42,11 @@ class ImageDisplayImpl extends ImageBase {
             sprite.smooth = scaleX != 1 || scaleY != 1;
         }
     }
+    
+    public override function dispose() {
+        if (sprite.tile != null) {
+            sprite.tile.dispose();
+            sprite.tile = null;
+        }
+    }
 }
