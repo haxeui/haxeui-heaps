@@ -12,7 +12,6 @@ class StyleHelper {
     public static function apply(c:ComponentImpl, style:Style, w:Float, h:Float):Void {
         var container = c.getChildAt(0); // first child is always the style-objects container
         container.removeChildren();
-        
         if (w <= 0 || h <= 0) {
             return;
         }
@@ -29,10 +28,10 @@ class StyleHelper {
             borderAlpha = style.borderOpacity;
         }
         
+        var styleGraphics = new Graphics();
+        container.addChild(styleGraphics);
+        
         if (style.backgroundColor != null) {
-            var backgroundColor = new Graphics();
-            container.addChild(backgroundColor);
-            
             if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
                 var gradientType:String = "vertical";
                 if (style.backgroundGradientStyle != null) {
@@ -48,32 +47,29 @@ class StyleHelper {
                         offset = 0;
                     }
                     for (col in arr) {
-                        backgroundColor.lineStyle(1, col, backgroundAlpha);
-                        backgroundColor.moveTo(offset, y);
-                        backgroundColor.lineTo(w, y);
+                        styleGraphics.lineStyle(1, col, backgroundAlpha);
+                        styleGraphics.moveTo(offset, y);
+                        styleGraphics.lineTo(w, y);
                         y++;
                     }
                 } else if (gradientType == "horizontal") {
                     arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(w + 1));
                     var x = 0;
                     for (col in arr) {
-                        backgroundColor.lineStyle(1, col, backgroundAlpha);
-                        backgroundColor.moveTo(x, 0);
-                        backgroundColor.lineTo(x, h);
+                        styleGraphics.lineStyle(1, col, backgroundAlpha);
+                        styleGraphics.moveTo(x, 0);
+                        styleGraphics.lineTo(x, h);
                         x++;
                     }
                 }
             } else {
-                backgroundColor.beginFill(style.backgroundColor, backgroundAlpha);
-                backgroundColor.drawRect(0, 0, w, h);
-                backgroundColor.endFill();
+                styleGraphics.beginFill(style.backgroundColor, backgroundAlpha);
+                styleGraphics.drawRect(0, 0, w, h);
+                styleGraphics.endFill();
             }
         }
 
         if (style.backgroundImage != null) {
-            var backgroundImage = new Graphics();
-            container.addChild(backgroundImage);
-            
             Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
                 var tile = TileCache.get(style.backgroundImage);
                 if (tile == null) {
@@ -110,25 +106,25 @@ class StyleHelper {
                     var srcRects:Array<Rectangle> = rects.src;
                     var dstRects:Array<Rectangle> = rects.dst;
                     
-                    paintTile(backgroundImage, tile, srcRects[0], dstRects[0]);
-                    paintTile(backgroundImage, tile, srcRects[1], dstRects[1]);
-                    paintTile(backgroundImage, tile, srcRects[2], dstRects[2]);
+                    paintTile(styleGraphics, tile, srcRects[0], dstRects[0]);
+                    paintTile(styleGraphics, tile, srcRects[1], dstRects[1]);
+                    paintTile(styleGraphics, tile, srcRects[2], dstRects[2]);
                     
                     srcRects[3].bottom--;
-                    paintTile(backgroundImage, tile, srcRects[3], dstRects[3]);
+                    paintTile(styleGraphics, tile, srcRects[3], dstRects[3]);
 
                     srcRects[4].bottom--;
-                    paintTile(backgroundImage, tile, srcRects[4], dstRects[4]);
+                    paintTile(styleGraphics, tile, srcRects[4], dstRects[4]);
                     
                     srcRects[5].bottom--;
-                    paintTile(backgroundImage, tile, srcRects[5], dstRects[5]);
+                    paintTile(styleGraphics, tile, srcRects[5], dstRects[5]);
                     
                     dstRects[6].bottom++;
-                    paintTile(backgroundImage, tile, srcRects[6], dstRects[6]);
+                    paintTile(styleGraphics, tile, srcRects[6], dstRects[6]);
                     dstRects[7].bottom++;
-                    paintTile(backgroundImage, tile, srcRects[7], dstRects[7]);
+                    paintTile(styleGraphics, tile, srcRects[7], dstRects[7]);
                     dstRects[8].bottom++;
-                    paintTile(backgroundImage, tile, srcRects[8], dstRects[8]);
+                    paintTile(styleGraphics, tile, srcRects[8], dstRects[8]);
                 } else {
                     
                 }
@@ -136,8 +132,6 @@ class StyleHelper {
         }
         
         
-        var border = new Graphics();
-        container.addChild(border);
         borderSize.left = style.borderLeftSize;
         borderSize.top = style.borderTopSize;
         borderSize.right = style.borderRightSize;
@@ -153,35 +147,35 @@ class StyleHelper {
             && style.borderLeftSize == style.borderTopSize
             ) { // full border
             
-            border.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-            border.moveTo(0, 0);
-            border.lineTo(w, 0);
-            border.lineTo(w, h - 1);
-            border.lineTo(0, h - 1);
-            border.lineTo(0, 0);
+            styleGraphics.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+            styleGraphics.moveTo(0, 0);
+            styleGraphics.lineTo(w, 0);
+            styleGraphics.lineTo(w, h - 1);
+            styleGraphics.lineTo(0, h - 1);
+            styleGraphics.lineTo(0, 0);
         } else { // compound border
             if (style.borderTopSize != null && style.borderTopSize > 0) {
-                border.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
-                border.moveTo(0, 0);
-                border.lineTo(w, 0);
+                styleGraphics.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
+                styleGraphics.moveTo(0, 0);
+                styleGraphics.lineTo(w, 0);
             }
             
             if (style.borderBottomSize != null && style.borderBottomSize > 0) {
-                border.lineStyle(borderSize.bottom, style.borderBottomColor, borderAlpha);
-                border.moveTo(0, h - 1);
-                border.lineTo(w, h - 1);
+                styleGraphics.lineStyle(borderSize.bottom, style.borderBottomColor, borderAlpha);
+                styleGraphics.moveTo(0, h - 1);
+                styleGraphics.lineTo(w, h - 1);
             }
             
             if (style.borderLeftSize != null && style.borderLeftSize > 0) {
-                border.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-                border.moveTo(0, 0);
-                border.lineTo(0, h);
+                styleGraphics.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
+                styleGraphics.moveTo(0, 0);
+                styleGraphics.lineTo(0, h);
             }
             
             if (style.borderRightSize != null && style.borderRightSize > 0) {
-                border.lineStyle(borderSize.right, style.borderRightColor, borderAlpha);
-                border.moveTo(w, 0);
-                border.lineTo(w, h);
+                styleGraphics.lineStyle(borderSize.right, style.borderRightColor, borderAlpha);
+                styleGraphics.moveTo(w, 0);
+                styleGraphics.lineTo(w, h);
             }
         }
         
