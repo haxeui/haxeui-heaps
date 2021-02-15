@@ -1,8 +1,7 @@
 package haxe.ui.backend.heaps;
 
-import h2d.Object;
-import h2d.Tile;
 import h2d.Graphics;
+import h2d.Tile;
 import haxe.ui.assets.ImageInfo;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.geom.Slice9;
