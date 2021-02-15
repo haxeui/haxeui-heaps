@@ -1,10 +1,11 @@
 package haxe.ui.backend;
 
+import h2d.Scene;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.core.Component;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
-import hxd.App;
+import hxd.Window;
 
 class ScreenImpl extends ScreenBase {
     private var _mapping:Map<String, UIEvent->Void>;
@@ -13,17 +14,22 @@ class ScreenImpl extends ScreenBase {
         _mapping = new Map<String, UIEvent->Void>();
     }
     
-    public var app(get, null):App;
-    private function get_app():App {
-        if (app == null && options != null) {
-            app = options.app;
-        }
-
-        if (app == null) {
-            throw "no app specified in toolkit options";
+    private var _rootScene:Scene = null;
+    public var rootScene(get, set):Scene;
+    private function get_rootScene():Scene {
+        if (_rootScene != null) {
+            return _rootScene;
         }
         
-        return app;
+        if (options == null) {
+            return null;
+        }
+        
+        return options.rootScene;
+    }
+    private function set_rootScene(value:Scene):Scene {
+        _rootScene = value;
+        return value;
     }
     
     private override function set_options(value:ToolkitOptions):ToolkitOptions {
@@ -35,11 +41,11 @@ class ScreenImpl extends ScreenBase {
     }
     
     private override function get_width():Float {
-        return app.s2d.width;
+        return Window.getInstance().width;
     }
 
     private override function get_height():Float {
-        return app.s2d.height;
+        return Window.getInstance().height;
     }
 
     private override function get_dpi():Float {
@@ -52,7 +58,11 @@ class ScreenImpl extends ScreenBase {
             _removedComponents.remove(component);
             component.visible = true;
         } else {
-            app.s2d.addChildAt(component, 0);
+            if (rootScene == null) {
+                trace("WARNING: trying to add a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+                return component;
+            }
+            rootScene.addChildAt(component, 0);
         }
         resizeComponent(component);
         return component;
@@ -62,7 +72,11 @@ class ScreenImpl extends ScreenBase {
     public override function removeComponent(component:Component):Component {
         _topLevelComponents.remove(component);
         if (_removedComponents.indexOf(component) == -1) {
-            //app.s2d.removeChild(component);
+            if (rootScene == null) {
+                trace("WARNING: trying to remove a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+                return component;
+            }
+            rootScene.removeChild(component);
             _removedComponents.push(component);
             component.visible = false;
         }
@@ -70,7 +84,11 @@ class ScreenImpl extends ScreenBase {
     }
 
     private override function handleSetComponentIndex(component:Component, index:Int) {
-        app.s2d.addChildAt(component, index);
+        if (rootScene == null) {
+            trace("WARNING: trying to set a component index in a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+            return;
+        }
+        rootScene.addChildAt(component, index);
         resizeComponent(component);
     }
     
@@ -82,10 +100,10 @@ class ScreenImpl extends ScreenBase {
         if (_eventHandlerAdded == true) {
             return;
         }
-        
-        var s2d:h2d.Scene = app.s2d;
-        if (s2d != null && !_eventHandlerAdded) {
-            s2d.addEventListener(_onEvent);
+        //var s2d:h2d.Scene = app.s2d;
+        if (!_eventHandlerAdded) {
+            Window.getInstance().addEventTarget(_onEvent);
+            //s2d.addEventListener(_onEvent);
             _eventHandlerAdded = true;
         }
     }
@@ -94,9 +112,9 @@ class ScreenImpl extends ScreenBase {
     private var _buttonDown:Int = -1;
     private function _onEvent(event:hxd.Event) {
         var components = [];
-        var s2d:h2d.Scene = app.s2d;
+        //var s2d:h2d.Scene = app.s2d;
         for (c in _topLevelComponents) {
-            var t = c.findComponentsUnderPoint(s2d.mouseX / Toolkit.scaleX, s2d.mouseY / Toolkit.scaleY);
+            var t = c.findComponentsUnderPoint(Window.getInstance().mouseX / Toolkit.scaleX, Window.getInstance().mouseY / Toolkit.scaleY);
             components = components.concat(t);
         }
 
@@ -152,9 +170,8 @@ class ScreenImpl extends ScreenBase {
             var fn = _mapping.get(type);
             var mouseEvent = new MouseEvent(type);
             mouseEvent._originalEvent = event;
-            var s2d:h2d.Scene = app.s2d;
-            mouseEvent.screenX = s2d.mouseX / Toolkit.scaleX;
-            mouseEvent.screenY = s2d.mouseY / Toolkit.scaleY;
+            mouseEvent.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
+            mouseEvent.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
             if (_buttonDown != -1) {
                 mouseEvent.buttonDown = true;
             }

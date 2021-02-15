@@ -44,9 +44,13 @@ class StyleHelper {
                 if (gradientType == "vertical") {
                     arr = ColorUtil.buildColorArray(style.backgroundColor, style.backgroundColorEnd, Std.int(h));
                     var y = 0;
+                    var offset = -1;
+                    if (style.borderLeftSize > 0 || style.borderRightSize > 0) {
+                        offset = 0;
+                    }
                     for (col in arr) {
                         backgroundColor.lineStyle(1, col, backgroundAlpha);
-                        backgroundColor.moveTo(-1, y);
+                        backgroundColor.moveTo(offset, y);
                         backgroundColor.lineTo(w, y);
                         y++;
                     }
@@ -62,7 +66,7 @@ class StyleHelper {
                 }
             } else {
                 backgroundColor.beginFill(style.backgroundColor, backgroundAlpha);
-                backgroundColor.drawRect(-1, 0, w + 1, h);
+                backgroundColor.drawRect(0, 0, w, h);
                 backgroundColor.endFill();
             }
         }
@@ -172,7 +176,7 @@ class StyleHelper {
             if (style.borderLeftSize != null && style.borderLeftSize > 0) {
                 border.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
                 border.moveTo(0, 0);
-                border.lineTo(0, h + 2);
+                border.lineTo(0, h);
             }
             
             if (style.borderRightSize != null && style.borderRightSize > 0) {

@@ -52,7 +52,7 @@ class AppImpl extends AppBase {
     
     private override function getToolkitInit():ToolkitOptions {
         return {
-            app: _app,
+            rootScene: _app.s2d,
             manualUpdate: true
         };
     }

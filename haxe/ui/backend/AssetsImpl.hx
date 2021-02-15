@@ -2,7 +2,6 @@ package haxe.ui.backend;
 
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
-import haxe.ui.assets.ImageInfo;
 import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
@@ -12,14 +11,14 @@ class AssetsImpl extends AssetsBase {
         return #if (lime || flash || js) true #else false #end;
     }
 
-    private override function getImageInternal(resourceId:String, callback:ImageInfo->Void) {
+    private override function getImageInternal(resourceId:String, callback:haxe.ui.assets.ImageInfo->Void) {
         try {
             var loader:hxd.res.Loader = hxd.Res.loader;
             if (loader != null) {
                 if (loader.exists(resourceId)) {
                     var image:Image = loader.load(resourceId).toImage();
                     var size:Dynamic = image.getSize();
-                    var imageInfo:ImageInfo = {
+                    var imageInfo:haxe.ui.assets.ImageInfo = {
                         width: size.width,
                         height: size.height,
                         data: image.toBitmap()
@@ -37,14 +36,14 @@ class AssetsImpl extends AssetsBase {
         }
     }
 
-    private override function getImageFromHaxeResource(resourceId:String, callback:String->ImageInfo->Void) {
+    private override function getImageFromHaxeResource(resourceId:String, callback:String->haxe.ui.assets.ImageInfo->Void) {
         var bytes = Resource.getBytes(resourceId);
         imageFromBytes(bytes, function(imageInfo) {
             callback(resourceId, imageInfo);
         });
     }
 
-    public override function imageFromBytes(bytes:Bytes, callback:ImageInfo->Void) {
+    public override function imageFromBytes(bytes:Bytes, callback:haxe.ui.assets.ImageInfo->Void) {
         if (bytes == null) {
             callback(null);
             return;
@@ -54,7 +53,7 @@ class AssetsImpl extends AssetsBase {
         var image:Image = new Image(entry);
 
         var size:Dynamic = image.getSize();
-        var imageInfo:ImageInfo = {
+        var imageInfo:haxe.ui.assets.ImageInfo = {
             width: size.width,
             height: size.height,
             data: image.toBitmap()

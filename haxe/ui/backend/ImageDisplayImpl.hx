@@ -11,6 +11,9 @@ class ImageDisplayImpl extends ImageBase {
     private override function validateData() {
         if (_imageInfo != null) {
             sprite.tile = h2d.Tile.fromBitmap(_imageInfo.data);
+        } else {
+            sprite.tile.dispose();
+            sprite.tile = null;
         }
     }
 

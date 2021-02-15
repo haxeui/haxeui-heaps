@@ -14,6 +14,7 @@ import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
+import hxd.Window;
 
 class ComponentImpl extends ComponentBase { 
     private var _eventMap:Map<String, UIEvent->Void>;
@@ -24,9 +25,9 @@ class ComponentImpl extends ComponentBase {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
         addChild(new Object()); // style graphics container
+        cast(this, Component).ready();
     }
 
-    
     private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
         if (left == null || top == null || left < 0 || top < 0) {
             return;
@@ -71,7 +72,7 @@ class ComponentImpl extends ComponentBase {
                 _mask = new Mask(Std.int(value.width), Std.int(value.height), this.parentComponent);
                 _mask.addChild(this);
             }
-            this.x = -value.left;
+            this.x = -value.left + 1;
             this.y = -value.top;
             _mask.x = left - 1;
             _mask.y = top;
@@ -189,9 +190,8 @@ class ComponentImpl extends ComponentBase {
         if (fn != null) {
             var mouseEvent = new MouseEvent(type);
             mouseEvent._originalEvent = event;
-            var s2d:h2d.Scene = Screen.instance.app.s2d;
-            mouseEvent.screenX = s2d.mouseX / Toolkit.scaleX;
-            mouseEvent.screenY = s2d.mouseY / Toolkit.scaleY;
+            mouseEvent.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
+            mouseEvent.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
             if (_buttonDown != -1) {
                 mouseEvent.buttonDown = true;
             }
@@ -235,9 +235,8 @@ class ComponentImpl extends ComponentBase {
         if (fn != null) {
             var mouseEvent = new MouseEvent(type);
             mouseEvent._originalEvent = event;
-            var s2d:h2d.Scene = Screen.instance.app.s2d;
-            mouseEvent.screenX = s2d.mouseX / Toolkit.scaleX;
-            mouseEvent.screenY = s2d.mouseY / Toolkit.scaleY;
+            mouseEvent.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
+            mouseEvent.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
             if (_buttonDown != -1) {
                 mouseEvent.buttonDown = true;
             }

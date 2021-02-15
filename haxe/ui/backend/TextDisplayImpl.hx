@@ -49,6 +49,16 @@ class TextDisplayImpl extends TextBase {
     private override function measureText() {
         _textWidth = sprite.textWidth;
         _textHeight = sprite.textHeight;
+        
+        _textWidth = Math.round(_textWidth);
+        _textHeight = Math.round(_textHeight);
+        
+        if (_textWidth % 2 == 0) {
+            _textWidth++;
+        }
+        if (_textHeight % 2 == 0) {
+            _textHeight++;
+        }
     }
 
     private function createText():h2d.Text {
