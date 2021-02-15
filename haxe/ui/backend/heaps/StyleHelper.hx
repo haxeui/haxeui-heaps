@@ -10,12 +10,12 @@ import haxe.ui.util.ColorUtil;
 
 class StyleHelper {
     public static function apply(c:ComponentImpl, style:Style, w:Float, h:Float):Void {
-        var container = c.getChildAt(0); // first child is always the style-objects container
-        container.removeChildren();
         if (w <= 0 || h <= 0) {
             return;
         }
 
+        var container = c.getChildAt(0); // first child is always the style-objects container
+        
         w *= Toolkit.scaleX;
         h *= Toolkit.scaleY;
         var borderSize:Rectangle = new Rectangle();
@@ -28,8 +28,14 @@ class StyleHelper {
             borderAlpha = style.borderOpacity;
         }
         
-        var styleGraphics = new Graphics();
-        container.addChild(styleGraphics);
+        var styleGraphics:Graphics = null;
+        if (container.numChildren == 0) {
+            styleGraphics = new Graphics();
+            container.addChildAt(styleGraphics, 0);
+        } else {
+            styleGraphics = cast(container.getChildAt(0), Graphics);
+        }
+        styleGraphics.clear();
         
         if (style.backgroundColor != null) {
             if (style.backgroundColorEnd != null && style.backgroundColor != style.backgroundColorEnd) {
