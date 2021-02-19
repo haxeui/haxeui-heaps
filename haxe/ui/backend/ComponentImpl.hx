@@ -4,6 +4,7 @@ import h2d.Interactive;
 import h2d.Mask;
 import h2d.Object;
 import h2d.RenderContext;
+import haxe.ui.backend.heaps.FilterConverter;
 import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.backend.heaps.StyleHelper;
 import haxe.ui.core.Component;
@@ -168,8 +169,8 @@ class ComponentImpl extends ComponentBase {
         }
         */
 
-        if (style.filter != null) {
-            //TODO
+        if (style.filter != null && style.filter.length > 0) {
+            filter = FilterConverter.convertFilter(style.filter[0]);
         } else {
             filter = null;
         }
