@@ -7,8 +7,8 @@ private class HeapsApp extends hxd.App {
     
     private override function init() {
         super.init();
+        Screen.instance.rootScene = this.s2d;
         if (onInit != null) {
-            Screen.instance.rootScene = this.s2d;
             onInit();
         }
     }
