@@ -26,7 +26,7 @@ class ComponentImpl extends ComponentBase {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
         addChild(new Object()); // style graphics container
-        cast(this, Component).ready();
+        //cast(this, Component).ready();
     }
 
     private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
@@ -552,6 +552,21 @@ class ComponentImpl extends ComponentBase {
         clearCaches();
     }
     
+    private  override function onAdd() {
+        super.onAdd();
+        cast(this, Component).ready();        
+        if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) == -1) {
+            Screen.instance.rootComponents.push(cast this);
+        }
+    }
+    
+    private override function onRemove() {
+        super.onRemove();
+        if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) != -1) {
+            Screen.instance.rootComponents.remove(cast this);
+        }
+    }
+    
     private var lastMouseX:Float = -1;
     private var lastMouseY:Float = -1;
     
@@ -567,7 +582,7 @@ class ComponentImpl extends ComponentBase {
         var y = event.screenY;
         lastMouseX = x;
         lastMouseY = y;
-        
+
         var i = inBounds(x, y);
         if (i == false && _mouseOverFlag == true) {
             _mouseOverFlag = false;
