@@ -2,6 +2,7 @@ package haxe.ui.backend;
 
 import h2d.Scene;
 import haxe.ui.backend.heaps.EventMapper;
+import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.core.Component;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
@@ -100,103 +101,62 @@ class ScreenImpl extends ScreenBase {
     //***********************************************************************************************************
     // Events
     //***********************************************************************************************************
-    private var _eventHandlerAdded:Bool = false;
-    private function addEventHandler() {
-        if (_eventHandlerAdded == true) {
-            return;
-        }
-        if (!_eventHandlerAdded) {
-            Window.getInstance().addEventTarget(_onEvent);
-            _eventHandlerAdded = true;
-        }
-    }
-    
-    private var _currentOverComponent:Component = null;
-    private var _buttonDown:Int = -1;
-    private function _onEvent(event:hxd.Event) {
-        var components = [];
-        for (c in _topLevelComponents) {
-            var t = c.findComponentsUnderPoint(Window.getInstance().mouseX / Toolkit.scaleX, Window.getInstance().mouseY / Toolkit.scaleY);
-            components = components.concat(t);
-        }
-
-        components.reverse();
-        switch (event.kind) {
-            case EMove:
-                var overComponent = null;
-                for (c in components) {
-                    if (c.hasEventListener(MouseEvent.MOUSE_OVER)) {
-                        overComponent = c;
-                        break;
-                    }
-                }
-                
-                switch [_currentOverComponent, overComponent] {
-                    case [null, null]: // nothing to do
-                    case [null, current]:
-                        current.handleMouseEvent(MouseEvent.MOUSE_OVER, event);
-                    case [last, null]:
-                        last.handleMouseEvent(MouseEvent.MOUSE_OUT, event);
-                    case [last, current] if(last == current):
-                        current.handleMouseEvent(MouseEvent.MOUSE_MOVE, event);
-                    case [last, current]:
-                        last.handleMouseEvent(MouseEvent.MOUSE_OUT, event);
-                        current.handleMouseEvent(MouseEvent.MOUSE_OVER, event);
-                }
-                
-                _currentOverComponent = overComponent;
-                
-                handleMouseEvent(MouseEvent.MOUSE_MOVE, event);
-            case EPush:
-                _buttonDown = event.button;
-                handleMouseEvent(MouseEvent.MOUSE_DOWN, event);
-                
-            case ERelease | EReleaseOutside:
-                _buttonDown = -1;
-                handleMouseEvent(MouseEvent.MOUSE_UP, event);
-
-            case EWheel:
-                for (c in components) {
-                    if (c.hasEventListener(MouseEvent.MOUSE_WHEEL)) {
-                        c.handleMouseEvent(MouseEvent.MOUSE_WHEEL, event);
-                        break;
-                    }
-                }
-                
-            default:    
-        }
-    }
-    
-    private function handleMouseEvent(type:String, event:hxd.Event) {
-        if (_mapping.exists(type)) {
-            var fn = _mapping.get(type);
-            var mouseEvent = new MouseEvent(type);
-            mouseEvent._originalEvent = event;
-            mouseEvent.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
-            mouseEvent.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
-            if (_buttonDown != -1) {
-                mouseEvent.buttonDown = true;
-            }
-            mouseEvent.delta = event.wheelDelta;
-            fn(mouseEvent);
-            
-            event.propagate = false;
-            event.cancel = true;
-        }
-    }
-    
     private override function supportsEvent(type:String):Bool {
         return EventMapper.HAXEUI_TO_HEAPS.get(type) != null;
     }
 
     private override function mapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
-            case MouseEvent.MOUSE_MOVE | MouseEvent.MOUSE_OVER | MouseEvent.MOUSE_OUT
-                | MouseEvent.MOUSE_DOWN | MouseEvent.MOUSE_UP | MouseEvent.CLICK
-                /* | KeyboardEvent.KEY_DOWN | KeyboardEvent.KEY_UP */ :
+            case MouseEvent.MOUSE_MOVE:
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
+                    MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                 }
+                
+            case MouseEvent.MOUSE_DOWN:
+                if (_mapping.exists(type) == false) {
+                    _mapping.set(type, listener);
+                    MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                }
+                
+            case MouseEvent.MOUSE_UP:
+                if (_mapping.exists(type) == false) {
+                    _mapping.set(type, listener);
+                    MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                }
+        }
+    }
+    
+    private function __onMouseMove(event:MouseEvent) {
+        var fn = _mapping.get(MouseEvent.MOUSE_MOVE);
+        if (fn != null) {
+            var mouseEvent = new MouseEvent(MouseEvent.MOUSE_MOVE);
+            mouseEvent.screenX = event.screenX;
+            mouseEvent.screenY = event.screenY;
+            mouseEvent.buttonDown = event.data;
+            fn(mouseEvent);
+        }
+    }
+    
+    private function __onMouseDown(event:MouseEvent) {
+        var fn = _mapping.get(MouseEvent.MOUSE_DOWN);
+        if (fn != null) {
+            var mouseEvent = new MouseEvent(MouseEvent.MOUSE_DOWN);
+            mouseEvent.screenX = event.screenX;
+            mouseEvent.screenY = event.screenY;
+            mouseEvent.buttonDown = event.data;
+            fn(mouseEvent);
+        }
+    }
+    
+    private function __onMouseUp(event:MouseEvent) {
+        var fn = _mapping.get(MouseEvent.MOUSE_UP);
+        if (fn != null) {
+            var mouseEvent = new MouseEvent(MouseEvent.MOUSE_UP);
+            mouseEvent.screenX = event.screenX;
+            mouseEvent.screenY = event.screenY;
+            mouseEvent.buttonDown = event.data;
+            fn(mouseEvent);
         }
     }
 }
