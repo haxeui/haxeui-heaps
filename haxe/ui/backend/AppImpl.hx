@@ -1,4 +1,5 @@
 package haxe.ui.backend;
+import haxe.ui.core.Screen;
 
 private class HeapsApp extends hxd.App {
     public var onInit:Void->Void = null;
@@ -7,6 +8,7 @@ private class HeapsApp extends hxd.App {
     private override function init() {
         super.init();
         if (onInit != null) {
+            Screen.instance.rootScene = this.s2d;
             onInit();
         }
     }
