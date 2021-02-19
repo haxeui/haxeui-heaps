@@ -55,7 +55,12 @@ class ScreenImpl extends ScreenBase {
     public override function addComponent(component:Component):Component {
         _topLevelComponents.push(component);
         if (_removedComponents.indexOf(component) != -1) {
+            if (rootScene == null) {
+                trace("WARNING: trying to add a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+                return component;
+            }
             _removedComponents.remove(component);
+            //rootScene.addChildAt(component, 0);
             component.visible = true;
         } else {
             if (rootScene == null) {
@@ -76,7 +81,7 @@ class ScreenImpl extends ScreenBase {
                 trace("WARNING: trying to remove a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
                 return component;
             }
-            rootScene.removeChild(component);
+            //rootScene.removeChild(component);
             _removedComponents.push(component);
             component.visible = false;
         }
