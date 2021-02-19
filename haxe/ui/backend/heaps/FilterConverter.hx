@@ -10,7 +10,7 @@ class FilterConverter {
         
         var output:Filter = null;
         
-        if (Std.is(input, haxe.ui.filters.DropShadow)) {
+        if ((input is haxe.ui.filters.DropShadow)) {
             var inputDropShadow:haxe.ui.filters.DropShadow = cast(input, haxe.ui.filters.DropShadow);
             var dropShadow = new h2d.filter.DropShadow(inputDropShadow.distance, 0.785, inputDropShadow.color, inputDropShadow.alpha, 1, 1, 1, true);
             //output = dropShadow;
