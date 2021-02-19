@@ -105,10 +105,8 @@ class ScreenImpl extends ScreenBase {
         if (_eventHandlerAdded == true) {
             return;
         }
-        //var s2d:h2d.Scene = app.s2d;
         if (!_eventHandlerAdded) {
             Window.getInstance().addEventTarget(_onEvent);
-            //s2d.addEventListener(_onEvent);
             _eventHandlerAdded = true;
         }
     }
@@ -117,7 +115,6 @@ class ScreenImpl extends ScreenBase {
     private var _buttonDown:Int = -1;
     private function _onEvent(event:hxd.Event) {
         var components = [];
-        //var s2d:h2d.Scene = app.s2d;
         for (c in _topLevelComponents) {
             var t = c.findComponentsUnderPoint(Window.getInstance().mouseX / Toolkit.scaleX, Window.getInstance().mouseY / Toolkit.scaleY);
             components = components.concat(t);
