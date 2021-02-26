@@ -77,6 +77,15 @@ class StyleHelper {
 
         if (style.backgroundImage != null) {
             Toolkit.assets.getImage(style.backgroundImage, function(imageInfo:ImageInfo) {
+                var bgImageGraphics:Graphics = null;
+                if (container.numChildren == 1) {
+                    bgImageGraphics = new Graphics();
+                    container.addChildAt(bgImageGraphics, 1);
+                } else {
+                    bgImageGraphics = cast(container.getChildAt(1), Graphics);
+                }
+                bgImageGraphics.clear();
+                
                 var tile = TileCache.get(style.backgroundImage);
                 if (tile == null) {
                     tile = TileCache.set(style.backgroundImage, h2d.Tile.fromBitmap(imageInfo.data));
@@ -112,27 +121,27 @@ class StyleHelper {
                     var srcRects:Array<Rectangle> = rects.src;
                     var dstRects:Array<Rectangle> = rects.dst;
                     
-                    paintTile(styleGraphics, tile, srcRects[0], dstRects[0]);
-                    paintTile(styleGraphics, tile, srcRects[1], dstRects[1]);
-                    paintTile(styleGraphics, tile, srcRects[2], dstRects[2]);
+                    paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
+                    paintTile(bgImageGraphics, tile, srcRects[1], dstRects[1]);
+                    paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
                     
                     srcRects[3].bottom--;
-                    paintTile(styleGraphics, tile, srcRects[3], dstRects[3]);
+                    paintTile(bgImageGraphics, tile, srcRects[3], dstRects[3]);
 
                     srcRects[4].bottom--;
-                    paintTile(styleGraphics, tile, srcRects[4], dstRects[4]);
+                    paintTile(bgImageGraphics, tile, srcRects[4], dstRects[4]);
                     
                     srcRects[5].bottom--;
-                    paintTile(styleGraphics, tile, srcRects[5], dstRects[5]);
+                    paintTile(bgImageGraphics, tile, srcRects[5], dstRects[5]);
                     
                     dstRects[6].bottom++;
-                    paintTile(styleGraphics, tile, srcRects[6], dstRects[6]);
+                    paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
                     dstRects[7].bottom++;
-                    paintTile(styleGraphics, tile, srcRects[7], dstRects[7]);
+                    paintTile(bgImageGraphics, tile, srcRects[7], dstRects[7]);
                     dstRects[8].bottom++;
-                    paintTile(styleGraphics, tile, srcRects[8], dstRects[8]);
+                    paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
                 } else {
-                    
+                    paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, w, h));
                 }
             });
         }
