@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import h2d.Object;
 import h2d.Scene;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
@@ -15,21 +16,21 @@ class ScreenImpl extends ScreenBase {
         _mapping = new Map<String, UIEvent->Void>();
     }
     
-    private var _rootScene:Scene = null;
-    public var rootScene(get, set):Scene;
-    private function get_rootScene():Scene {
-        if (_rootScene != null) {
-            return _rootScene;
+    private var _root:Object = null;
+    public var root(get, set):Object;
+    private function get_root():Object {
+        if (_root != null) {
+            return _root;
         }
         
         if (options == null) {
             return null;
         }
         
-        return options.rootScene;
+        return options.root;
     }
-    private function set_rootScene(value:Scene):Scene {
-        _rootScene = value;
+    private function set_root(value:Object):Object {
+        _root = value;
         return value;
     }
     
@@ -56,19 +57,19 @@ class ScreenImpl extends ScreenBase {
     public override function addComponent(component:Component):Component {
         _topLevelComponents.push(component);
         if (_removedComponents.indexOf(component) != -1) {
-            if (rootScene == null) {
-                trace("WARNING: trying to add a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+            if (root == null) {
+                trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
                 return component;
             }
             _removedComponents.remove(component);
             //rootScene.addChildAt(component, 0);
             component.visible = true;
         } else {
-            if (rootScene == null) {
-                trace("WARNING: trying to add a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+            if (root == null) {
+                trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
                 return component;
             }
-            rootScene.addChildAt(component, 0);
+            root.addChildAt(component, 0);
         }
         resizeComponent(component);
         return component;
@@ -78,8 +79,8 @@ class ScreenImpl extends ScreenBase {
     public override function removeComponent(component:Component):Component {
         _topLevelComponents.remove(component);
         if (_removedComponents.indexOf(component) == -1) {
-            if (rootScene == null) {
-                trace("WARNING: trying to remove a component to a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+            if (root == null) {
+                trace("WARNING: trying to remove a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
                 return component;
             }
             //rootScene.removeChild(component);
@@ -90,11 +91,11 @@ class ScreenImpl extends ScreenBase {
     }
 
     private override function handleSetComponentIndex(component:Component, index:Int) {
-        if (rootScene == null) {
-            trace("WARNING: trying to set a component index in a null rootScene. Either set Screen.instance.rootScene or specify one in Toolkit.init");
+        if (root == null) {
+            trace("WARNING: trying to set a component index in a null root. Either set Screen.instance.root or specify one in Toolkit.init");
             return;
         }
-        rootScene.addChildAt(component, index);
+        root.addChildAt(component, index);
         resizeComponent(component);
     }
     

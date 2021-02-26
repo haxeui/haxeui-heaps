@@ -7,7 +7,7 @@ private class HeapsApp extends hxd.App {
     
     private override function init() {
         super.init();
-        Screen.instance.rootScene = this.s2d;
+        Screen.instance.root = this.s2d;
         if (onInit != null) {
             onInit();
         }
@@ -54,7 +54,7 @@ class AppImpl extends AppBase {
     
     private override function getToolkitInit():ToolkitOptions {
         return {
-            rootScene: _app.s2d,
+            root: _app.s2d,
             manualUpdate: true
         };
     }
