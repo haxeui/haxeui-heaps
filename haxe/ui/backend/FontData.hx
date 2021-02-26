@@ -1,3 +1,3 @@
 package haxe.ui.backend;
 
-typedef FontData = String;
+typedef FontData = hxd.res.BitmapFont;

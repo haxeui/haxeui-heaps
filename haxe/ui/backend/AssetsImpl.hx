@@ -2,6 +2,7 @@ package haxe.ui.backend;
 
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
+import haxe.ui.backend.heaps.FontCache;
 import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
@@ -62,17 +63,9 @@ class AssetsImpl extends AssetsBase {
     }
 
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
-//         #if js
-//         haxe.ui.backend.heaps.util.FontDetect.onFontLoaded(resourceId, function(f) {
-//             var fontInfo = {
-//                 data: f
-//             }
-//             callback(fontInfo);
-//         }, function(f) {
-//             callback(null);
-//         });
-//         #else
-        callback(null);
-//         #end
+        var font = FontCache.getBitmapFont(resourceId);
+        callback({
+            data: font
+        });
     }
 }
