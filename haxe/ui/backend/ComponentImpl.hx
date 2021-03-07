@@ -74,6 +74,7 @@ class ComponentImpl extends ComponentBase {
                 _mask = new Mask(Std.int(value.width), Std.int(value.height), this.parentComponent);
                 _mask.addChild(this);
             }
+            value.toInts();
             this.x = -value.left + 1;
             this.y = -value.top;
             _mask.x = left - 1;

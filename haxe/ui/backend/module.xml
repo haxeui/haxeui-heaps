@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<module id="haxeui-heaps" priority="-1">
+    <resources>
+        <resource path="/haxe/ui/backend/heaps/_module/styles" prefix="haxeui-heaps/styles" />
+    </resources>
+    <themes>
+        <global>
+            <style resource="haxeui-heaps/styles/main.css" />
+        </global>
+        <default>
+            <style resource="haxeui-heaps/styles/default/main.css" />
+        </default>
+        <dark>
+            <style resource="haxeui-heaps/styles/dark/main.css" />
+        </dark>
+    </themes>
+</module>
