@@ -1,7 +1,6 @@
 package haxe.ui.backend;
 
 import h2d.Object;
-import h2d.Scene;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.core.Component;
@@ -14,6 +13,21 @@ class ScreenImpl extends ScreenBase {
 
     public function new() {
         _mapping = new Map<String, UIEvent->Void>();
+        addResizeListener();
+    }
+    
+    private var _resizeListenerAdded:Bool = false;
+    private function addResizeListener() {
+        if (_resizeListenerAdded == true) {
+            return;
+        }
+        
+        _resizeListenerAdded = true;
+        Window.getInstance().addResizeEvent(onWindowResize);
+    }
+    
+    private function onWindowResize() {
+        resizeRootComponents();
     }
     
     private var _root:Object = null;
