@@ -1,5 +1,6 @@
 -lib hscript
 -lib haxeui-core
+-lib heaps
 
 -hl main.hl
 
