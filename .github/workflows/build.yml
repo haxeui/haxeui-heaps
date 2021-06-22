@@ -23,7 +23,7 @@ jobs:
         git clone --branch master https://github.com/haxeui/haxeui-core.git --depth=1
         haxelib dev haxeui-core haxeui-core
 
-        git clone --branch master https://github.com/HeapsIO/heaps.git --depth=1
+        git clone --branch master https://github.com/HeapsIO/heaps.git
         cd heaps
         git reset --hard 6e68248d235ed4d08fcfa1b4c3da53b8b1d465ca
         cd ..
