@@ -30,6 +30,8 @@ jobs:
 
         haxelib install hlsdl
 
+        mkdir res
+
     - name: Build app (haxe ${{ matrix.haxe-version }}, ${{ matrix.os }})
       run: |
         cp .github/workflows/build.hxml build.hxml
