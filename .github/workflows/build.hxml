@@ -1,0 +1,8 @@
+-lib hscript
+-lib haxeui-core
+
+-hl main.hl
+
+-cp .
+--no-output 
+--macro haxe.macro.Compiler.include("haxe.ui", ["haxe.ui.macros"])
