@@ -14,7 +14,7 @@ class TextDisplayImpl extends TextBase {
     }
 
     private override function validateData() {
-        sprite.text = _text;
+        sprite.text = normalizeText(_text);
     }
     
     private override function validateStyle():Bool {
@@ -24,8 +24,14 @@ class TextDisplayImpl extends TextBase {
             var textAlign:h2d.Text.Align = getAlign(_textStyle.textAlign);
             if (sprite.textAlign != textAlign) {
                 sprite.textAlign = textAlign;
+                measureTextRequired = true;
             }
 
+            if (_displayData.wordWrap != sprite.lineBreak) {
+                sprite.lineBreak = _displayData.wordWrap;
+                measureTextRequired = true;
+            }
+            
             if (_fontInfo != null && _fontInfo.data != null) {
                 var fontSizeValue = Std.int(_textStyle.fontSize);
                 if (fontSizeValue <= 0) {
@@ -48,22 +54,35 @@ class TextDisplayImpl extends TextBase {
     }
     
     private override function validatePosition() {
-        sprite.x = _left;
+        if (autoWidth == true && sprite.textAlign == h2d.Text.Align.Center) {
+            sprite.x = _left + (_width / 2) - 1; // TODO: all a bit strange
+        } else {
+            sprite.x = _left;
+        }
         sprite.y = _top;
     }
     
     private override function validateDisplay() {
-        sprite.maxWidth = _width != 0 ? _width : _textWidth;
+        if (autoWidth == false) {
+            sprite.maxWidth = _width != 0 ? _width : _textWidth;
+        } else if (sprite.textAlign == h2d.Text.Align.Center) {
+            sprite.x = _left + (_width / 2) - 1; // TODO: all a bit strange
+        }
+    }
+    
+    private var autoWidth(get, null):Bool;
+    private function get_autoWidth():Bool {
+        return parentComponent.autoWidth;
     }
     
     private override function measureText() {
         _textWidth = sprite.textWidth;
         _textHeight = sprite.textHeight;
         
-        _textWidth = Math.round(_textWidth + 2);
+        _textWidth = Math.round(_textWidth);
         _textHeight = Math.round(_textHeight);
         
-        if (_textWidth % 2 == 0) {
+        if (_textWidth % 2 != 0) {
             _textWidth++;
         }
         if (_textHeight % 2 == 0) {
@@ -72,7 +91,9 @@ class TextDisplayImpl extends TextBase {
     }
 
     private function createText():h2d.Text {
-        return new h2d.Text(hxd.res.DefaultFont.get());
+        var text = new h2d.Text(hxd.res.DefaultFont.get());
+        text.lineBreak = false;
+        return text;
     }
 
     private function getAlign(align:String):h2d.Text.Align {
@@ -82,5 +103,13 @@ class TextDisplayImpl extends TextBase {
             case "center":  h2d.Text.Align.Center;
             case _:         h2d.Text.Align.Left;    //TODO  - justify
         }
+    }
+    
+    private function normalizeText(text:String):String {
+        if (text == null) {
+            return text;
+        }
+        text = StringTools.replace(text, "\\n", "\n");
+        return text;
     }
 }
