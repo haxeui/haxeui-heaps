@@ -170,6 +170,7 @@ class ComponentImpl extends ComponentBase {
     private function dispose() {
         removeChildren();
         _interactive = null;
+        _mask = null;
         remove();
     }
     
