@@ -152,7 +152,7 @@ class ComponentImpl extends ComponentBase {
     }
 
     private override function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
-        var child = _children[index + INDEX_OFFSET];
+        var child = _children[index];
         if (child != null) {
             removeChild(child);
 
