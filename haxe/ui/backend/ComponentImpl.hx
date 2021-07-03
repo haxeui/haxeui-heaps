@@ -147,7 +147,11 @@ class ComponentImpl extends ComponentBase {
 
     private override function handleRemoveComponent(child:Component, dispose:Bool = true):Component {
         removeChild(child);
-        //TODO - dispose
+        
+        if (dispose == true) {
+            child.dispose();
+        }
+        
         return child;
     }
 
@@ -156,9 +160,17 @@ class ComponentImpl extends ComponentBase {
         if (child != null) {
             removeChild(child);
 
-            //TODO - dispose
+            if (dispose == true) {
+                child.dispose();
+            }
         }
         return child;
+    }
+    
+    private function dispose() {
+        removeChildren();
+        _interactive = null;
+        remove();
     }
     
     private override function applyStyle(style:Style) {
