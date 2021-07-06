@@ -27,7 +27,7 @@ class ComponentImpl extends ComponentBase {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
         addChild(new Object()); // style graphics container
-        cast(this, Component).ready();
+        //cast(this, Component).ready();
     }
 
     private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
@@ -572,6 +572,7 @@ class ComponentImpl extends ComponentBase {
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) == -1) {
             Screen.instance.rootComponents.push(cast this);
         }
+        cast(this, Component).ready();
     }
     
     private override function onRemove() {
