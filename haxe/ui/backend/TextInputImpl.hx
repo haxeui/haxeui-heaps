@@ -36,6 +36,12 @@ class TextInputImpl extends TextDisplayImpl {
         }
     }
 
+    private override function validateDisplay() {
+        super.validateDisplay();
+        
+        textInput.inputWidth = Math.round(textInput.maxWidth+4); // clip text input display to text component's width
+    }
+
     private override function validateStyle():Bool {
         var measureTextRequired:Bool = super.validateStyle();
 
