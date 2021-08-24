@@ -15,6 +15,9 @@ class StyleHelper {
         }
 
         var container = c.getChildAt(0); // first child is always the style-objects container
+        if ( container == null ) {
+            return; // fix crash resizing the window; container doesn't exist yet
+        }
         
         w *= Toolkit.scaleX;
         h *= Toolkit.scaleY;
