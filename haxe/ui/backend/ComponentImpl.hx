@@ -79,7 +79,7 @@ class ComponentImpl extends ComponentBase {
             this.y = -value.top;
             _mask.x = left - 1;
             _mask.y = top;
-            _mask.width = Std.int(value.width) + 1;
+            _mask.width = Std.int(value.width) + 0;
             _mask.height = Std.int(value.height);
         } else if (_mask != null) {
             _mask = null;

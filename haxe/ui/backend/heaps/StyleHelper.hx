@@ -174,7 +174,7 @@ class StyleHelper {
         } else { // compound border
             if (style.borderTopSize != null && style.borderTopSize > 0) {
                 styleGraphics.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
-                styleGraphics.moveTo(0, 0);
+                styleGraphics.moveTo(-1, 0);
                 styleGraphics.lineTo(w, 0);
             }
             
@@ -186,8 +186,8 @@ class StyleHelper {
             
             if (style.borderLeftSize != null && style.borderLeftSize > 0) {
                 styleGraphics.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-                styleGraphics.moveTo(0, 0);
-                styleGraphics.lineTo(0, h);
+                styleGraphics.moveTo(1, 0);
+                styleGraphics.lineTo(1, h);
             }
             
             if (style.borderRightSize != null && style.borderRightSize > 0) {
