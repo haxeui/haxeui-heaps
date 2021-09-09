@@ -90,7 +90,7 @@ class ScreenImpl extends ScreenBase {
     }
 
     private var _removedComponents:Array<Component> = []; // TODO: probably ill conceived
-    public override function removeComponent(component:Component):Component {
+    public override function removeComponent(component:Component, dispose:Bool = true):Component {
         rootComponents.remove(component);
         if (_removedComponents.indexOf(component) == -1) {
             if (root == null) {
