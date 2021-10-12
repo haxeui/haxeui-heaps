@@ -107,7 +107,7 @@ class TextDisplayImpl extends TextBase {
     
     private function normalizeText(text:String):String {
         if (text == null) {
-            return text;
+            return "";
         }
         text = StringTools.replace(text, "\\n", "\n");
         return text;
