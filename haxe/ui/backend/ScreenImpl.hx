@@ -23,7 +23,21 @@ class ScreenImpl extends ScreenBase {
         }
         
         _resizeListenerAdded = true;
-        Window.getInstance().addResizeEvent(onWindowResize);
+        if (Window.getInstance() != null) {
+            Window.getInstance().addResizeEvent(onWindowResize);
+        }
+    }
+    
+    private var _updateCallbackAdded:Bool = false;
+    private function addUpdateCallback() {
+        if (_updateCallbackAdded == true) {
+            return;
+        }
+        
+        if (options == null || options.manualUpdate == null || options.manualUpdate == false) {
+            _updateCallbackAdded = true;
+            MainLoop.add(BackendImpl.update);
+        }
     }
     
     private function onWindowResize() {
@@ -50,9 +64,7 @@ class ScreenImpl extends ScreenBase {
     
     private override function set_options(value:ToolkitOptions):ToolkitOptions {
         super.set_options(value);
-        if (value.manualUpdate == null || value.manualUpdate == false) {
-            MainLoop.add(BackendImpl.update);
-        }
+        addUpdateCallback();
         return value;
     }
     

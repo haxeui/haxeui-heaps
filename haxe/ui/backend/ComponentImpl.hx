@@ -130,6 +130,10 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Display tree
     //***********************************************************************************************************
+    private override function handleReady() {
+        super.handleReady();
+        @:privateAccess Screen.instance.addUpdateCallback();
+    }
     
     private override function handleSetComponentIndex(child:Component, index:Int) {
         addChildAt(child, index + INDEX_OFFSET);

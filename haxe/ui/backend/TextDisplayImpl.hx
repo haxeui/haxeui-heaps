@@ -59,7 +59,7 @@ class TextDisplayImpl extends TextBase {
         } else {
             sprite.x = _left;
         }
-        sprite.y = _top;
+        sprite.y = _top - 1;
     }
     
     private override function validateDisplay() {
