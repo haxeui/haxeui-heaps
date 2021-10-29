@@ -1,5 +1,7 @@
 package haxe.ui.backend;
 
+import haxe.ui.Toolkit;
+
 class TextDisplayImpl extends TextBase {
     public var sprite:h2d.Text;
 
@@ -11,6 +13,10 @@ class TextDisplayImpl extends TextBase {
     public function new() {
         super();
         sprite = createText();
+        sprite.visible = false;
+        Toolkit.callLater(function() { // lets avoid text apearing at 0,0 initially by showing it 1 frame later
+            sprite.visible = true;
+        });
     }
 
     private override function validateData() {
@@ -91,7 +97,7 @@ class TextDisplayImpl extends TextBase {
     }
 
     private function createText():h2d.Text {
-        var text = new h2d.Text(hxd.res.DefaultFont.get());
+        var text = new h2d.Text(hxd.res.DefaultFont.get(), parentComponent);
         text.lineBreak = false;
         return text;
     }
