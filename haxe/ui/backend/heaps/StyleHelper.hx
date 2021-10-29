@@ -174,7 +174,7 @@ class StyleHelper {
         } else { // compound border
             if (style.borderTopSize != null && style.borderTopSize > 0) {
                 styleGraphics.lineStyle(borderSize.top, style.borderTopColor, borderAlpha);
-                styleGraphics.moveTo(-1, 0);
+                styleGraphics.moveTo(0, 0);
                 styleGraphics.lineTo(w, 0);
             }
             
