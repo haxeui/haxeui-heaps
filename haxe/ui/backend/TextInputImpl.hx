@@ -1,6 +1,7 @@
 package haxe.ui.backend;
 
 import h2d.TextInput;
+import haxe.ui.events.UIEvent;
 
 class TextInputImpl extends TextDisplayImpl {
 
@@ -34,12 +35,16 @@ class TextInputImpl extends TextDisplayImpl {
         if (_inputData.onChangedCallback != null) {
             _inputData.onChangedCallback();
         }
+        
+        if (parentComponent != null) {
+            parentComponent.dispatch(new UIEvent(UIEvent.CHANGE));
+        }
     }
 
     private override function validateDisplay() {
         super.validateDisplay();
         
-        textInput.inputWidth = Math.round(textInput.maxWidth+4); // clip text input display to text component's width
+        textInput.inputWidth = Math.round(textInput.maxWidth); // clip text input display to text component's width
     }
 
     private override function validateStyle():Bool {
