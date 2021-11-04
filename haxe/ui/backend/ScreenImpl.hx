@@ -95,7 +95,7 @@ class ScreenImpl extends ScreenBase {
                 trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
                 return component;
             }
-            root.addChildAt(component, 0);
+            root.addChild(component);
         }
         resizeComponent(component);
         return component;
