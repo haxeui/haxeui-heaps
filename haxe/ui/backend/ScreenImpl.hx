@@ -112,6 +112,9 @@ class ScreenImpl extends ScreenBase {
             //rootScene.removeChild(component);
             _removedComponents.push(component);
             component.visible = false;
+            if (dispose == true && root != null) {
+                root.removeChild(component);
+            }
         }
         return component;
     }
