@@ -1,6 +1,7 @@
 package haxe.ui.backend;
 
 import h2d.Object;
+import h2d.Scene;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.core.Component;
@@ -54,13 +55,21 @@ class ScreenImpl extends ScreenBase {
         if (options == null) {
             return null;
         }
-        
         return options.root;
     }
     private function set_root(value:Object):Object {
         _root = value;
         return value;
     }
+
+    public var scene(get, null):Scene;
+    private function get_scene():Scene {
+        if (root == null) {
+            return null;
+        }
+        return root.getScene();
+    }
+    
     
     private override function set_options(value:ToolkitOptions):ToolkitOptions {
         super.set_options(value);
@@ -78,6 +87,33 @@ class ScreenImpl extends ScreenBase {
 
     private override function get_dpi():Float {
         return hxd.System.screenDPI;
+    }
+
+    private var cursorLocked:Bool = false;
+    public function setCursor(cursor:String, lock=false) {
+        if (cursorLocked) {
+            return;
+        }
+        cursorLocked = lock;
+
+        if (cursor == "pointer") {
+            hxd.System.setNativeCursor(Button);
+        } else if (cursor == "text") {
+            hxd.System.setNativeCursor(TextInput);
+        } else if (cursor == "col-resize") {
+            hxd.System.setNativeCursor(Move);
+        } else if (cursor == "row-resize") {
+            hxd.System.setNativeCursor(Move);
+        }else {
+            hxd.System.setNativeCursor(Default);
+        }
+    }
+    
+    public function lockCursor() {
+        cursorLocked = true;
+    }
+    public function unlockCursor() {
+        cursorLocked = false;
     }
     
     public override function addComponent(component:Component):Component {
@@ -114,6 +150,10 @@ class ScreenImpl extends ScreenBase {
             component.visible = false;
             if (dispose == true && root != null) {
                 root.removeChild(component);
+            }
+            
+            if (@:privateAccess component.inBounds(MouseHelper.currentMouseX, MouseHelper.currentMouseY)) {
+                setCursor(null);
             }
         }
         return component;

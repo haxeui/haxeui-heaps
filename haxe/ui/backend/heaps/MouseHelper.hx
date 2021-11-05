@@ -1,5 +1,6 @@
 package haxe.ui.backend.heaps;
 
+import haxe.ui.core.Screen;
 import haxe.ui.events.MouseEvent;
 import hxd.Window;
 
@@ -54,7 +55,32 @@ class MouseHelper {
         }
     }
     
+    private static var _isCapturing:Bool = false;
     private static function onEvent(e:hxd.Event) {
+        var scene = Screen.instance.scene;
+        if (scene != null) {
+            var xpos = Window.getInstance().mouseX / Toolkit.scaleX;
+            var ypos = Window.getInstance().mouseY / Toolkit.scaleY;
+            var b = Screen.instance.hasComponentUnderPoint(xpos, ypos);
+            if (b == true) {
+                e.cancel = true;
+                e.propagate = false;
+                if (_isCapturing == false) {
+                    _isCapturing = true;
+                    hxd.System.setNativeCursor(Default);
+                    scene.startCapture(onEvent);
+                }
+            } else {
+                if (_isCapturing == true) {
+                    _isCapturing = false;
+                    if (scene.getInteractive(xpos, ypos) != null) {
+                        hxd.System.setNativeCursor(Button);
+                    }
+                    scene.stopCapture();
+                }
+            }
+        }
+        
         switch (e.kind) {
             case EMove:
                 onMouseMove(e);
@@ -79,6 +105,7 @@ class MouseHelper {
         
         list = list.copy();
         var event = new MouseEvent(MouseEvent.MOUSE_MOVE);
+        @:privateAccess event._originalEvent = e;
         event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
         event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
         for (l in list) {
@@ -95,6 +122,7 @@ class MouseHelper {
         list = list.copy();
         
         var event = new MouseEvent(MouseEvent.MOUSE_DOWN);
+        @:privateAccess event._originalEvent = e;
         event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
         event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
         event.data = e.button;
@@ -112,6 +140,7 @@ class MouseHelper {
         list = list.copy();
         
         var event = new MouseEvent(MouseEvent.MOUSE_UP);
+        @:privateAccess event._originalEvent = e;
         event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
         event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
         event.data = e.button;
@@ -129,6 +158,7 @@ class MouseHelper {
         list = list.copy();
         
         var event = new MouseEvent(MouseEvent.MOUSE_WHEEL);
+        @:privateAccess event._originalEvent = e;
         event.delta = e.wheelDelta;
         for (l in list) {
             l(event);

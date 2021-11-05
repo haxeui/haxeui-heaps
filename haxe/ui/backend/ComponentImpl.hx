@@ -605,6 +605,7 @@ class ComponentImpl extends ComponentBase {
         var i = inBounds(x, y);
         if (i == false && _mouseOverFlag == true) {
             _mouseOverFlag = false;
+            Screen.instance.setCursor("default");
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
@@ -616,6 +617,10 @@ class ComponentImpl extends ComponentBase {
         }
         
         if (i == true) {
+            if (this.style != null) {
+                Screen.instance.setCursor(this.style.cursor);
+            }
+            
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_MOVE);
@@ -638,6 +643,7 @@ class ComponentImpl extends ComponentBase {
             }
         } else if (i == false && _mouseOverFlag == true) {
             _mouseOverFlag = false;
+            Screen.instance.setCursor("default");
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
@@ -665,6 +671,11 @@ class ComponentImpl extends ComponentBase {
             */
             if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_DOWN)) {
                 _mouseDownFlag = true;
+                
+                if (this.style != null && (this.style.cursor == "row-resize" || this.style.cursor == "col-resize")) {
+                    Screen.instance.lockCursor();
+                }
+                
                 _mouseDownButton = button;
                 var type = button == 0 ? haxe.ui.events.MouseEvent.MOUSE_DOWN: haxe.ui.events.MouseEvent.RIGHT_MOUSE_DOWN;
                 var fn:UIEvent->Void = _eventMap.get(type);
@@ -685,6 +696,7 @@ class ComponentImpl extends ComponentBase {
         
         lastMouseX = x;
         lastMouseY = y;
+        
         var i = inBounds(x, y);
         if (i == true) {
             /*
@@ -715,6 +727,11 @@ class ComponentImpl extends ComponentBase {
 				}
             }
 
+            if (_mouseDownFlag && this.style != null) {
+                Screen.instance.unlockCursor();
+                Screen.instance.setCursor(this.style.cursor);
+            }
+            
             _mouseDownFlag = false;
             var type = button == 0 ? haxe.ui.events.MouseEvent.MOUSE_UP: haxe.ui.events.MouseEvent.RIGHT_MOUSE_UP;
             var fn:UIEvent->Void = _eventMap.get(type);
@@ -723,6 +740,11 @@ class ComponentImpl extends ComponentBase {
                 mouseEvent.screenX = x / Toolkit.scaleX;
                 mouseEvent.screenY = y / Toolkit.scaleY;
                 fn(mouseEvent);
+            }
+        } else {
+            if (_mouseDownFlag) {
+                Screen.instance.unlockCursor();
+                Screen.instance.setCursor("default");
             }
         }
         _mouseDownFlag = false;
