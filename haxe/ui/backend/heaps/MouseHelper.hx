@@ -1,5 +1,6 @@
 package haxe.ui.backend.heaps;
 
+import haxe.ui.components.TextField;
 import haxe.ui.core.Screen;
 import haxe.ui.events.MouseEvent;
 import hxd.Window;
@@ -62,7 +63,17 @@ class MouseHelper {
             var xpos = Window.getInstance().mouseX / Toolkit.scaleX;
             var ypos = Window.getInstance().mouseY / Toolkit.scaleY;
             var b = Screen.instance.hasComponentUnderPoint(xpos, ypos);
-            if (b == true) {
+            var i = scene.getInteractive(xpos, ypos);
+            var isTextField = false;
+            if (i != null && (i.parent is TextField)) {
+                isTextField = true;
+            }
+            var f = scene.getFocus();
+            if (f != null && (f.parent.parent is TextField)) {
+                isTextField = true;
+            }
+            
+            if (b == true && isTextField == false) {
                 e.cancel = true;
                 e.propagate = false;
                 if (_isCapturing == false) {
@@ -73,8 +84,8 @@ class MouseHelper {
             } else {
                 if (_isCapturing == true) {
                     _isCapturing = false;
-                    if (scene.getInteractive(xpos, ypos) != null) {
-                        hxd.System.setNativeCursor(Button);
+                    if (i != null) {
+                        hxd.System.setNativeCursor(i.cursor);
                     }
                     scene.stopCapture();
                 }
