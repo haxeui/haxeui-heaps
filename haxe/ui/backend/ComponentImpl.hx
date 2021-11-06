@@ -803,6 +803,18 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Helpers
     //***********************************************************************************************************
+    private override function set_visible(value:Bool):Bool {
+        if (value == this.visible) {
+            return value;
+        }
+        super.visible = value;
+        cast(this, Component).hidden = !value;
+        return value;
+    }
+    
+    //***********************************************************************************************************
+    // Helpers
+    //***********************************************************************************************************
     private var _interactive:Interactive = null;
     private var interactive(get, set):Bool;
     private function get_interactive():Bool {
