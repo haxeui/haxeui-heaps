@@ -64,7 +64,7 @@ class ComponentImpl extends ComponentBase {
     }
     
     private override function handleVisibility(show:Bool) {
-        visible = show;
+        super.visible = show;
     }
     
     private var _mask:Mask = null;
