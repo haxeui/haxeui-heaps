@@ -62,6 +62,15 @@ class AssetsImpl extends AssetsBase {
         callback(imageInfo);
     }
 
+    public override function imageInfoFromImageData(imageData:ImageData):haxe.ui.assets.ImageInfo {
+        var imageInfo:haxe.ui.assets.ImageInfo = {
+            width: imageData.width,
+            height: imageData.height,
+            data: imageData
+        };
+        return imageInfo;
+    }
+    
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
         var font = FontCache.getBitmapFont(resourceId);
         callback({
