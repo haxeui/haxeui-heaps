@@ -61,7 +61,7 @@ class TextDisplayImpl extends TextBase {
     
     private override function validatePosition() {
         if (autoWidth == true && sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = _left + (_width / 2) - 1; // TODO: all a bit strange
+            sprite.x = _left + (_width / 2); // TODO: all a bit strange
         } else {
             sprite.x = _left;
         }
@@ -72,7 +72,7 @@ class TextDisplayImpl extends TextBase {
         if (autoWidth == false) {
             sprite.maxWidth = _width != 0 ? _width : _textWidth;
         } else if (sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = _left + (_width / 2) - 1; // TODO: all a bit strange
+            sprite.x = _left + (_width / 2); // TODO: all a bit strange
         }
     }
     
