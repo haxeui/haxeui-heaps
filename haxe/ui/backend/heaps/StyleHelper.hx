@@ -166,10 +166,10 @@ class StyleHelper {
             ) { // full border
             
             styleGraphics.lineStyle(borderSize.left, style.borderLeftColor, borderAlpha);
-            styleGraphics.moveTo(0, 0);
+            styleGraphics.moveTo(1, 0);
             styleGraphics.lineTo(w, 0);
             styleGraphics.lineTo(w, h - 1);
-            styleGraphics.lineTo(0, h - 1);
+            styleGraphics.lineTo(1, h);
             styleGraphics.lineTo(0, 0);
         } else { // compound border
             if (style.borderTopSize != null && style.borderTopSize > 0) {
