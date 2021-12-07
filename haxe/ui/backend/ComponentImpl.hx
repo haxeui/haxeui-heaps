@@ -567,6 +567,15 @@ class ComponentImpl extends ComponentBase {
     }
     
     private override function sync(ctx:RenderContext) {
+        var changed = posChanged;
+        if (changed == true) {
+            if (this.x != this.left) {
+                this.left = this.x;
+            }
+            if (this.y != this.top) {
+                this.top = this.y;
+            }
+        }
         super.sync(ctx);
         clearCaches();
     }
