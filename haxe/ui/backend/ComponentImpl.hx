@@ -39,11 +39,11 @@ class ComponentImpl extends ComponentBase {
         top = Std.int(top);
         
         if (_mask == null) {
-            this.x = left;
-            this.y = top;
+            if (this.x != left) this.x = left;
+            if (this.y != top)  this.y = top;
         } else {
-            _mask.x = left;
-            _mask.y = top;
+            if (_mask.x != left) _mask.x = left;
+            if (_mask.y != top)  _mask.y = top;
         }
         if (_interactive != null) {
             _interactive.x = 0;
