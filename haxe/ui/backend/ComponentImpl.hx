@@ -75,11 +75,11 @@ class ComponentImpl extends ComponentBase {
                 _mask.addChild(this);
             }
             value.toInts();
-            this.x = -value.left + 1;
+            this.x = -value.left;
             this.y = -value.top;
-            _mask.x = left - 1;
+            _mask.x = left;
             _mask.y = top;
-            _mask.width = Std.int(value.width) + 0;
+            _mask.width = Std.int(value.width);
             _mask.height = Std.int(value.height);
         } else if (_mask != null) {
             _mask = null;
@@ -568,7 +568,7 @@ class ComponentImpl extends ComponentBase {
     
     private override function sync(ctx:RenderContext) {
         var changed = posChanged;
-        if (changed == true) {
+        if (changed == true && _mask == null) {
             if (this.x != this.left) {
                 this.left = this.x;
             }
