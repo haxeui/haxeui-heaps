@@ -72,9 +72,16 @@ class AssetsImpl extends AssetsBase {
     }
     
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
-        var font = FontCache.getBitmapFont(resourceId);
-        callback({
-            data: font
-        });
+        try {
+            var font = FontCache.getBitmapFont(resourceId);
+            callback({
+                data: font
+            });
+        } catch (error:Dynamic) {
+            #if debug
+            trace("WARNING: problem loading font '" + resourceId + "' (" + error + ")");
+            #end
+            callback(null);
+        }
     }
 }
