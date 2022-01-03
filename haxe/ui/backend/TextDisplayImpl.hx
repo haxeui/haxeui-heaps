@@ -44,10 +44,16 @@ class TextDisplayImpl extends TextBase {
                     fontSizeValue = Toolkit.pixelsPerRem;
                     fontSizeValue = _fontInfo.data.toFont().size;
                 }
-                var font = _fontInfo.data.toSdfFont(fontSizeValue, TextDisplayImpl.channel, TextDisplayImpl.alphaCutoff, TextDisplayImpl.smoothing);
-                if (sprite.font != font) {
-                    sprite.font = font;
-                    measureTextRequired = true;
+                try {
+                    var font = _fontInfo.data.toSdfFont(fontSizeValue, TextDisplayImpl.channel, TextDisplayImpl.alphaCutoff, TextDisplayImpl.smoothing);
+                    if (sprite.font != font) {
+                        sprite.font = font;
+                        measureTextRequired = true;
+                    }
+                } catch (error:Dynamic) {
+                    #if debug
+                    trace("WARNING: problem applying font (" + error + ")");
+                    #end
                 }
             }
             
