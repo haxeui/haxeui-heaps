@@ -7,9 +7,9 @@
 `haxeui-heaps` relies on `haxeui-core` as well as `Heaps`. To install:
 
 ```
-haxelib install heaps
-haxelib install haxeui-core
-haxelib install haxeui-heaps
+haxelib git heaps https://github.com/HeapsIO/heaps
+haxelib git haxeui-core https://github.com/haxeui/haxeui-core
+haxelib git haxeui-heaps https://github.com/haxeui/haxeui-heaps
 ```
 
 ### Toolkit initialization and usage
