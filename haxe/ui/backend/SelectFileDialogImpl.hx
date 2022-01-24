@@ -2,6 +2,7 @@ package haxe.ui.backend;
 
 import haxe.ui.backend.SelectFileDialogBase.SelectedFileInfo;
 import haxe.ui.containers.dialogs.Dialog.DialogButton;
+import haxe.ui.core.Platform;
 
 using StringTools;
 
@@ -10,35 +11,38 @@ class SelectFileDialogImpl extends SelectFileDialogBase {
     
     public override function show() {
         validateOptions();
-        
-        var file = hl.UI.loadFile({title: "Select File" });
-        if (file != null) {
-            var infos:Array<SelectedFileInfo> = [];
-            infos.push({
-                name: haxe.io.Path.withoutDirectory(file),
-                fullPath: file,
-                isBinary: false
-            });
-            
-            if (options.readContents == true) {
-                for (info in infos) {
-                    if (options.readAsBinary) {
-                        info.isBinary = true;
-                        info.bytes = sys.io.File.getBytes(info.fullPath);
-                    } else {
-                        info.isBinary = false;
-                        info.text = sys.io.File.getContent(info.fullPath);
+        if (Platform.instance.isWindows) {
+            var file = hl.UI.loadFile({title: "Select File" });
+            if (file != null) {
+                var infos:Array<SelectedFileInfo> = [];
+                infos.push({
+                    name: haxe.io.Path.withoutDirectory(file),
+                    fullPath: file,
+                    isBinary: false
+                });
+                
+                if (options.readContents == true) {
+                    for (info in infos) {
+                        if (options.readAsBinary) {
+                            info.isBinary = true;
+                            info.bytes = sys.io.File.getBytes(info.fullPath);
+                        } else {
+                            info.isBinary = false;
+                            info.text = sys.io.File.getContent(info.fullPath);
+                        }
                     }
                 }
-            }
-            
-            if (callback != null) {
-                callback(DialogButton.OK, infos);
+                
+                if (callback != null) {
+                    callback(DialogButton.OK, infos);
+                }
+            } else {
+                if (callback != null) {
+                    callback(DialogButton.CANCEL, null);
+                }
             }
         } else {
-            if (callback != null) {
-                callback(DialogButton.CANCEL, null);
-            }
+            super.show();
         }
     }
     
