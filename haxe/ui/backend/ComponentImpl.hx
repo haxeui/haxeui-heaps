@@ -17,6 +17,7 @@ import haxe.ui.events.UIEvent;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
 import haxe.ui.util.MathUtil;
+import haxe.ui.validation.InvalidationFlags;
 
 class ComponentImpl extends ComponentBase { 
     private var _eventMap:Map<String, UIEvent->Void>;
@@ -568,7 +569,10 @@ class ComponentImpl extends ComponentBase {
     
     private override function sync(ctx:RenderContext) {
         var changed = posChanged;
-        if (changed == true && _mask == null) {
+        // if .x/.y property is access directly, we still want to honour it, so we will set haxeui's
+        // .left/.top to keep them on sync, but only if the components position isnt already invalid
+        // (which would mean this has come from a haxeui validation cycle)
+        if (changed == true && isComponentInvalid(InvalidationFlags.POSITION) == false && _mask == null) {
             if (this.x != this.left) {
                 this.left = this.x;
             }
