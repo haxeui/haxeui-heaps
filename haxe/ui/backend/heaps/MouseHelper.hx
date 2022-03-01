@@ -1,5 +1,6 @@
 package haxe.ui.backend.heaps;
 
+import haxe.ui.components.TextArea;
 import haxe.ui.components.TextField;
 import haxe.ui.core.Screen;
 import haxe.ui.events.MouseEvent;
@@ -65,11 +66,11 @@ class MouseHelper {
             var b = Screen.instance.hasComponentUnderPoint(xpos, ypos);
             var i = scene.getInteractive(xpos, ypos);
             var isTextField = false;
-            if (i != null && (i.parent is TextField)) {
+            if (i != null && ((i.parent is TextField) || (i.parent is TextArea))) {
                 isTextField = true;
             }
             var f = scene.getFocus();
-            if (f != null && (f.parent.parent is TextField)) {
+            if (f != null && ((f.parent.parent is TextField) || (f.parent.parent is TextArea))) {
                 isTextField = true;
             }
             
