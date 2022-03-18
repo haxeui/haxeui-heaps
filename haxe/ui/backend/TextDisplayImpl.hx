@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import h2d.Font;
 import haxe.ui.Toolkit;
 
 class TextDisplayImpl extends TextBase {
@@ -9,6 +10,8 @@ class TextDisplayImpl extends TextBase {
     public static var channel:h2d.Font.SDFChannel = 0;
     public static var alphaCutoff:Float = 0.5;
     public static var smoothing:Float = 1 / 2;
+    
+    public static var defaultFontSize:Int = 12;
     
     public function new() {
         super();
@@ -38,23 +41,26 @@ class TextDisplayImpl extends TextBase {
                 measureTextRequired = true;
             }
             
+            var font:Font = null;
             if (_fontInfo != null && _fontInfo.data != null) {
-                var fontSizeValue = Std.int(_textStyle.fontSize);
-                if (fontSizeValue <= 0) {
-                    fontSizeValue = Toolkit.pixelsPerRem;
-                    fontSizeValue = _fontInfo.data.toFont().size;
-                }
-                try {
-                    var font = _fontInfo.data.toSdfFont(fontSizeValue, TextDisplayImpl.channel, TextDisplayImpl.alphaCutoff, TextDisplayImpl.smoothing);
-                    if (sprite.font != font) {
-                        sprite.font = font;
-                        measureTextRequired = true;
-                    }
-                } catch (error:Dynamic) {
-                    #if debug
-                    trace("WARNING: problem applying font (" + error + ")");
-                    #end
-                }
+                font = _fontInfo.data.toFont().clone();
+            }
+            if (font == null) {
+                font = hxd.res.DefaultFont.get().clone();
+            }
+            if (sprite.font != font) {
+                sprite.font = font;
+                measureTextRequired = true;
+            }
+            
+            var fontSizeValue = Std.int(_textStyle.fontSize);
+            if (fontSizeValue <= 0) {
+                fontSizeValue = defaultFontSize;
+            }
+            
+            if (sprite.font.size != fontSizeValue * Toolkit.scale) {
+                sprite.font.resizeTo(Std.int(fontSizeValue * Toolkit.scale));
+                measureTextRequired = true;
             }
             
             if (sprite.textColor != _textStyle.color) {
@@ -67,7 +73,7 @@ class TextDisplayImpl extends TextBase {
     
     private override function validatePosition() {
         if (autoWidth == true && sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = _left + (_width / 2); // TODO: all a bit strange
+            sprite.x = _left + (_width * Toolkit.scaleX / 2);
         } else {
             sprite.x = _left;
         }
@@ -76,9 +82,9 @@ class TextDisplayImpl extends TextBase {
     
     private override function validateDisplay() {
         if (autoWidth == false) {
-            sprite.maxWidth = _width != 0 ? _width : _textWidth;
+            sprite.maxWidth = _width != 0 ? _width * Toolkit.scaleX : _textWidth * Toolkit.scaleX;
         } else if (sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = _left + (_width / 2); // TODO: all a bit strange
+            sprite.x = (_left) + (_width * Toolkit.scaleX / 2);
         }
     }
     
@@ -88,8 +94,8 @@ class TextDisplayImpl extends TextBase {
     }
     
     private override function measureText() {
-        _textWidth = sprite.textWidth;
-        _textHeight = sprite.textHeight;
+        _textWidth = sprite.textWidth / Toolkit.scaleX;
+        _textHeight = sprite.textHeight / Toolkit.scaleY;
         
         _textWidth = Math.round(_textWidth);
         _textHeight = Math.round(_textHeight);

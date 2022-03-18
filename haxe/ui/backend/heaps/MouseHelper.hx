@@ -59,6 +59,7 @@ class MouseHelper {
     
     private static var _isCapturing:Bool = false;
     private static function onEvent(e:hxd.Event) {
+        /*
         var scene = Screen.instance.scene;
         if (scene != null) {
             var xpos = Window.getInstance().mouseX / Toolkit.scaleX;
@@ -92,6 +93,7 @@ class MouseHelper {
                 }
             }
         }
+        */
         
         switch (e.kind) {
             case EMove:

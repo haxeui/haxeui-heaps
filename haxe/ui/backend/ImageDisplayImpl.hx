@@ -1,4 +1,5 @@
 package haxe.ui.backend;
+import haxe.ui.Toolkit;
 
 class ImageDisplayImpl extends ImageBase {
     public var sprite:h2d.Bitmap;
@@ -29,17 +30,17 @@ class ImageDisplayImpl extends ImageBase {
 
     private override function validateDisplay() {
         if (sprite.tile != null) {
-            var scaleX:Float = _imageWidth / sprite.tile.width;
+            var scaleX:Float = (_imageWidth / sprite.tile.width) * Toolkit.scaleX;
             if (sprite.scaleX != scaleX) {
                 sprite.scaleX = scaleX;
             }
 
-            var scaleY:Float = _imageHeight / sprite.tile.height;
+            var scaleY:Float = (_imageHeight / sprite.tile.height) * Toolkit.scaleY;
             if (sprite.scaleY != scaleY) {
                 sprite.scaleY = scaleY;
             }
 
-            sprite.smooth = scaleX != 1 || scaleY != 1;
+            sprite.smooth = scaleX != Toolkit.scaleX || scaleY != Toolkit.scaleY;
         }
     }
     

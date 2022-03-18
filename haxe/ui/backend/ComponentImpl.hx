@@ -4,6 +4,7 @@ import h2d.Interactive;
 import h2d.Mask;
 import h2d.Object;
 import h2d.RenderContext;
+import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.FilterConverter;
 import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.backend.heaps.StyleHelper;
@@ -40,11 +41,11 @@ class ComponentImpl extends ComponentBase {
         top = Std.int(top);
         
         if (_mask == null) {
-            if (this.x != left) this.x = left;
-            if (this.y != top)  this.y = top;
+            if (this.x != left) this.x = left * Toolkit.scaleX;
+            if (this.y != top)  this.y = top * Toolkit.scaleY;
         } else {
-            if (_mask.x != left) _mask.x = left;
-            if (_mask.y != top)  _mask.y = top;
+            if (_mask.x != left) _mask.x = left * Toolkit.scaleX;
+            if (_mask.y != top)  _mask.y = top * Toolkit.scaleY;
         }
         if (_interactive != null) {
             _interactive.x = 0;
@@ -57,6 +58,9 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
+        w *= Toolkit.scaleX;
+        h *= Toolkit.scaleY;
+        
         StyleHelper.apply(this, style, w, h);
         if (_interactive != null) {
             _interactive.width = w;
@@ -72,19 +76,48 @@ class ComponentImpl extends ComponentBase {
     private override function handleClipRect(value:Rectangle) {
         if (value != null) {
             if (_mask == null) {
-                _mask = new Mask(Std.int(value.width), Std.int(value.height), this.parentComponent);
+                _mask = new Mask(Std.int(value.width * Toolkit.scaleX), Std.int(value.height * Toolkit.scaleY), this.parentComponent);
                 _mask.addChild(this);
             }
             value.toInts();
-            this.x = -value.left;
+            this.x = -value.left + (Toolkit.scaleX - 1);
             this.y = -value.top;
-            _mask.x = left;
-            _mask.y = top;
-            _mask.width = Std.int(value.width);
-            _mask.height = Std.int(value.height);
+            _mask.x = left * Toolkit.scaleX - (Toolkit.scaleX - 1);
+            _mask.y = top * Toolkit.scaleY;
+            _mask.width = Std.int(value.width * Toolkit.scaleX);
+            _mask.height = Std.int(value.height * Toolkit.scaleY);
+            
+            var hasFilter = hasFilter();
+            if (hasFilter) {
+                this.x += 1;
+                this.y -= 4;
+                _mask.y += 4;
+                _mask.width += 3;
+            }
         } else if (_mask != null) {
             _mask = null;
         }
+    }
+    
+    /*
+     * This is a hack for now, since filters and masks dont play well together, investigate mask filters:
+            var myMaskedElementsContainer = new Object();
+            var mask = new Graphics();
+            mask.beginFill(0xFF0000, 1.0);
+            mask.drawRect(0, 0, maskWidth, maskHeight);
+            parent.addChild(mask); // Must be added before masked content
+            parent.addChild(myMaskedElementsContainer);
+            myMaskedElementsContainer.filter = new Mask(mask); // h2d.filter.Mask
+     */
+    private function hasFilter() {
+        var p = this;
+        while (p != null) {
+            if (p.style.filter != null) {
+                return true;
+            }
+            p = p.parentComponent;
+        }
+        return false;
     }
     
     //***********************************************************************************************************
@@ -483,12 +516,13 @@ class ComponentImpl extends ComponentBase {
         if (cast(this, Component).hidden == true) {
             return false;
         }
-
+        x *= Toolkit.scaleX;
+        y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX * Toolkit.scaleX;
-        var sy = screenY * Toolkit.scaleY;
-        var cx = cast(this, Component).componentWidth * Toolkit.scaleX;
-        var cy = cast(this, Component).componentHeight * Toolkit.scaleY;
+        var sx = screenX;// * Toolkit.scaleX;
+        var sy = screenY;// * Toolkit.scaleY;
+        var cx = this.width * Toolkit.scaleX;
+        var cy = this.height * Toolkit.scaleY;
 
         if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
             b = true;
@@ -499,8 +533,8 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + clip.componentClipRect.left) * Toolkit.scaleX;
-                var sy = (clip.screenY + clip.componentClipRect.top) * Toolkit.scaleY;
+                var sx = (clip.screenX + clip.componentClipRect.left);// * Toolkit.scaleX;
+                var sy = (clip.screenY + clip.componentClipRect.top);// * Toolkit.scaleY;
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
