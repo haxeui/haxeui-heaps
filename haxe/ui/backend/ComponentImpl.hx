@@ -621,7 +621,7 @@ class ComponentImpl extends ComponentBase {
     private  override function onAdd() {
         super.onAdd();
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) == -1) {
-            Screen.instance.rootComponents.push(cast this);
+            Screen.instance.addComponent(cast this);
         }
         cast(this, Component).ready();
     }
@@ -629,7 +629,7 @@ class ComponentImpl extends ComponentBase {
     private override function onRemove() {
         super.onRemove();
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) != -1) {
-            Screen.instance.rootComponents.remove(cast this);
+            Screen.instance.removeComponent(cast this, false);
         }
     }
     
