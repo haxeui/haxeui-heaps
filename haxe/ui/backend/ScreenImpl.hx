@@ -5,6 +5,7 @@ import h2d.Scene;
 import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
+import haxe.ui.backend.heaps.ScreenUtils;
 import haxe.ui.core.Component;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
@@ -87,9 +88,13 @@ class ScreenImpl extends ScreenBase {
     }
 
     private override function get_dpi():Float {
-        return hxd.System.screenDPI;
+        return ScreenUtils.dpi;
     }
 
+    private override function get_isRetina():Bool {
+        return ScreenUtils.isRetinaDisplay();
+    }
+    
     private var cursorLocked:Bool = false;
     public function setCursor(cursor:String, lock=false) {
         if (cursorLocked) {
