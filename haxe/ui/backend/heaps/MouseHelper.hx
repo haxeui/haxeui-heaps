@@ -109,8 +109,8 @@ class MouseHelper {
     }
     
     private static function onMouseMove(e:hxd.Event) {
-        currentMouseX = Window.getInstance().mouseX / Toolkit.scaleX;
-        currentMouseY = Window.getInstance().mouseY / Toolkit.scaleY;
+        currentMouseX = e.relX / Toolkit.scaleX;
+        currentMouseY = e.relY / Toolkit.scaleY;
         
         var list = _callbacks.get(MouseEvent.MOUSE_MOVE);
         if (list == null || list.length == 0) {
@@ -120,8 +120,8 @@ class MouseHelper {
         list = list.copy();
         var event = new MouseEvent(MouseEvent.MOUSE_MOVE);
         @:privateAccess event._originalEvent = e;
-        event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
-        event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
+        event.screenX = e.relX / Toolkit.scaleX;
+        event.screenY = e.relY / Toolkit.scaleY;
         for (l in list) {
             l(event);
         }
@@ -137,8 +137,8 @@ class MouseHelper {
         
         var event = new MouseEvent(MouseEvent.MOUSE_DOWN);
         @:privateAccess event._originalEvent = e;
-        event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
-        event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
+        event.screenX = e.relX / Toolkit.scaleX;
+        event.screenY = e.relY / Toolkit.scaleY;
         event.data = e.button;
         for (l in list) {
             l(event);
@@ -155,8 +155,8 @@ class MouseHelper {
         
         var event = new MouseEvent(MouseEvent.MOUSE_UP);
         @:privateAccess event._originalEvent = e;
-        event.screenX = Window.getInstance().mouseX / Toolkit.scaleX;
-        event.screenY = Window.getInstance().mouseY / Toolkit.scaleY;
+        event.screenX = e.relX / Toolkit.scaleX;
+        event.screenY = e.relY / Toolkit.scaleY;
         event.data = e.button;
         for (l in list) {
             l(event);
