@@ -2,6 +2,7 @@ package haxe.ui.backend;
 
 import h2d.Object;
 import h2d.Scene;
+import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.core.Component;
@@ -78,11 +79,11 @@ class ScreenImpl extends ScreenBase {
     }
     
     private override function get_width():Float {
-        return Window.getInstance().width;
+        return Window.getInstance().width / Toolkit.scaleX;
     }
 
     private override function get_height():Float {
-        return Window.getInstance().height;
+        return Window.getInstance().height / Toolkit.scaleY;
     }
 
     private override function get_dpi():Float {
