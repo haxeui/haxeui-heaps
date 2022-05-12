@@ -124,20 +124,22 @@ class ScreenImpl extends ScreenBase {
     
     public override function addComponent(component:Component):Component {
         rootComponents.push(component);
-        if (_removedComponents.indexOf(component) != -1) {
-            if (root == null) {
-                trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
-                return component;
+        if (component.parent == null || component.parent == root) {
+            if (_removedComponents.indexOf(component) != -1) {
+                if (root == null) {
+                    trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
+                    return component;
+                }
+                _removedComponents.remove(component);
+                //rootScene.addChildAt(component, 0);
+                component.visible = true;
+            } else {
+                if (root == null) {
+                    trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
+                    return component;
+                }
+                root.addChild(component);
             }
-            _removedComponents.remove(component);
-            //rootScene.addChildAt(component, 0);
-            component.visible = true;
-        } else {
-            if (root == null) {
-                trace("WARNING: trying to add a component to a null root. Either set Screen.instance.root or specify one in Toolkit.init");
-                return component;
-            }
-            root.addChild(component);
         }
         resizeComponent(component);
         return component;

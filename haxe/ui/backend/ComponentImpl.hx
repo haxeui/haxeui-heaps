@@ -63,8 +63,8 @@ class ComponentImpl extends ComponentBase {
         
         StyleHelper.apply(this, style, w, h);
         if (_interactive != null) {
-            _interactive.width = w;
-            _interactive.height = h;
+            //_interactive.width = w;
+            //_interactive.height = h;
         }
     }
     
@@ -439,6 +439,7 @@ class ComponentImpl extends ComponentBase {
         }
         
         var c:Component = cast(this, Component);
+        var last:Component = null;
         var xpos:Float = 0;
         var ypos:Float = 0;
         while (c != null) {
@@ -448,7 +449,17 @@ class ComponentImpl extends ComponentBase {
                 xpos -= c.componentClipRect.left;
                 ypos -= c.componentClipRect.top;
             }
+            last = c;
             c = c.parentComponent;
+        }
+        
+        if (last != null && last.parent != null) { // UI might have been added deep in a heaps hierachy, so lets get the _real_ screen pos
+            var o = last.parent;
+            while (o != null) {
+                xpos += o.x;
+                ypos += o.y;
+                o = o.parent;
+            }
         }
         
         _cachedScreenX = xpos;
@@ -868,6 +879,7 @@ class ComponentImpl extends ComponentBase {
         return (_interactive != null);
     }
     private function set_interactive(value:Bool):Bool {
+        return value;
         if (value == false) {
             _interactive = null;
         } else {
