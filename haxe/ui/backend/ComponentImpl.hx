@@ -632,6 +632,19 @@ class ComponentImpl extends ComponentBase {
 	private var _lastClickX:Float = -1;
 	private var _lastClickY:Float = -1;
     
+    private function calcCursor():String {
+        var c = null;
+        var p = this;
+        while (p != null) {
+            if (p.style != null && p.style.cursor != null) {
+                c = p.style.cursor;
+                break;
+            }
+            p = p.parentComponent;
+        }
+        return c;
+    }
+    
     private var _mouseOverFlag:Bool = false;
     private function __onMouseMove(event:MouseEvent) {
         var x = event.screenX;
@@ -655,7 +668,7 @@ class ComponentImpl extends ComponentBase {
         
         if (i == true) {
             if (this.style != null) {
-                Screen.instance.setCursor(this.style.cursor);
+                Screen.instance.setCursor(calcCursor());
             }
             
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
@@ -766,7 +779,7 @@ class ComponentImpl extends ComponentBase {
 
             if (_mouseDownFlag && this.style != null) {
                 Screen.instance.unlockCursor();
-                Screen.instance.setCursor(this.style.cursor);
+                Screen.instance.setCursor(calcCursor());
             }
             
             _mouseDownFlag = false;
