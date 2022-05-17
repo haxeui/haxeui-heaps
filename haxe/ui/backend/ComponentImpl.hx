@@ -1,6 +1,5 @@
 package haxe.ui.backend;
 
-import h2d.Interactive;
 import h2d.Mask;
 import h2d.Object;
 import h2d.RenderContext;
@@ -47,10 +46,6 @@ class ComponentImpl extends ComponentBase {
             if (_mask.x != left) _mask.x = left * Toolkit.scaleX;
             if (_mask.y != top)  _mask.y = top * Toolkit.scaleY;
         }
-        if (_interactive != null) {
-            _interactive.x = 0;
-            _interactive.y = 0;
-        }
     }
     
     private override function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
@@ -62,10 +57,6 @@ class ComponentImpl extends ComponentBase {
         h *= Toolkit.scaleY;
         
         StyleHelper.apply(this, style, w, h);
-        if (_interactive != null) {
-            //_interactive.width = w;
-            //_interactive.height = h;
-        }
     }
     
     private override function handleVisibility(show:Bool) {
@@ -207,7 +198,6 @@ class ComponentImpl extends ComponentBase {
     
     private function dispose() {
         removeChildren();
-        _interactive = null;
         _mask = null;
         remove();
     }
@@ -244,27 +234,23 @@ class ComponentImpl extends ComponentBase {
         switch (type) {
             case MouseEvent.MOUSE_MOVE:
                 if (_eventMap.exists(MouseEvent.MOUSE_MOVE) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                     _eventMap.set(MouseEvent.MOUSE_MOVE, listener);
                 }
                 
             case MouseEvent.MOUSE_OVER:
                 if (_eventMap.exists(MouseEvent.MOUSE_OVER) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                     _eventMap.set(MouseEvent.MOUSE_OVER, listener);
                 }
                 
             case MouseEvent.MOUSE_OUT:
                 if (_eventMap.exists(MouseEvent.MOUSE_OUT) == false) {
-                    interactive = true;
                     _eventMap.set(MouseEvent.MOUSE_OUT, listener);
                 }
                 
             case MouseEvent.MOUSE_DOWN:
                 if (_eventMap.exists(MouseEvent.MOUSE_DOWN) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                     _eventMap.set(MouseEvent.MOUSE_DOWN, listener);
@@ -272,14 +258,12 @@ class ComponentImpl extends ComponentBase {
                 
             case MouseEvent.MOUSE_UP:
                 if (_eventMap.exists(MouseEvent.MOUSE_UP) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                     _eventMap.set(MouseEvent.MOUSE_UP, listener);
                 }
                 
             case MouseEvent.MOUSE_WHEEL:
                 if (_eventMap.exists(MouseEvent.MOUSE_WHEEL) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                     MouseHelper.notify(MouseEvent.MOUSE_WHEEL, __onMouseWheel);
                     _eventMap.set(MouseEvent.MOUSE_WHEEL, listener);
@@ -287,7 +271,6 @@ class ComponentImpl extends ComponentBase {
                 
             case MouseEvent.CLICK:
                 if (_eventMap.exists(MouseEvent.CLICK) == false) {
-                    interactive = true;
                     _eventMap.set(MouseEvent.CLICK, listener);
 
                     if (_eventMap.exists(MouseEvent.MOUSE_DOWN) == false) {
@@ -305,7 +288,6 @@ class ComponentImpl extends ComponentBase {
                 
 			case MouseEvent.DBL_CLICK:
                 if (_eventMap.exists(MouseEvent.DBL_CLICK) == false) {
-                    interactive = true;
                     _eventMap.set(MouseEvent.DBL_CLICK, listener);
 					
                     if (_eventMap.exists(MouseEvent.MOUSE_UP) == false) {
@@ -316,7 +298,6 @@ class ComponentImpl extends ComponentBase {
                 
             case MouseEvent.RIGHT_MOUSE_DOWN:
                 if (_eventMap.exists(MouseEvent.RIGHT_MOUSE_DOWN) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                     _eventMap.set(MouseEvent.RIGHT_MOUSE_DOWN, listener);
@@ -324,14 +305,12 @@ class ComponentImpl extends ComponentBase {
 
             case MouseEvent.RIGHT_MOUSE_UP:
                 if (_eventMap.exists(MouseEvent.RIGHT_MOUSE_UP) == false) {
-                    interactive = true;
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                     _eventMap.set(MouseEvent.RIGHT_MOUSE_UP, listener);
                 }
                 
             case MouseEvent.RIGHT_CLICK:
                 if (_eventMap.exists(MouseEvent.RIGHT_CLICK) == false) {
-                    interactive = true;
                     _eventMap.set(MouseEvent.RIGHT_CLICK, listener);
 
                     if (_eventMap.exists(MouseEvent.RIGHT_MOUSE_DOWN) == false) {
@@ -867,30 +846,6 @@ class ComponentImpl extends ComponentBase {
         }
         super.visible = value;
         cast(this, Component).hidden = !value;
-        return value;
-    }
-    
-    //***********************************************************************************************************
-    // Helpers
-    //***********************************************************************************************************
-    private var _interactive:Interactive = null;
-    private var interactive(get, set):Bool;
-    private function get_interactive():Bool {
-        return (_interactive != null);
-    }
-    private function set_interactive(value:Bool):Bool {
-        return value;
-        if (value == false) {
-            _interactive = null;
-        } else {
-            if (_interactive == null) {
-                _interactive = new Interactive(width, height, this);
-                _interactive.propagateEvents = true;
-                _interactive.enableRightButton = true;
-                _interactive.x = 0;
-                _interactive.y = 0;
-            }
-        }
         return value;
     }
 }
