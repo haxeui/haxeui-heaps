@@ -176,7 +176,7 @@ class StyleHelper {
             if (style.borderRightSize != null && style.borderRightSize > 0) {
                 styleGraphics.lineStyle();
                 styleGraphics.beginFill(style.borderRightColor, borderAlpha);
-                styleGraphics.drawRect(w - borderSize.right, borderSize.right, borderSize.right, h); // right
+                styleGraphics.drawRect(w - borderSize.right, borderSize.right, borderSize.right, h - 1); // right
                 styleGraphics.endFill();
             }
             
