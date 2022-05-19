@@ -46,15 +46,15 @@ class OpenFileDialogImpl extends OpenFileDialogBase {
     
     #elseif js
 
-    private var _fileSelector:haxe.ui.backend.heaps.FileSelector = new haxe.ui.backend.heaps.FileSelector();
+    private var _fileSelector:haxe.ui.util.html5.FileSelector = new haxe.ui.util.html5.FileSelector();
     
     public override function show() {
-        var readMode = haxe.ui.backend.heaps.FileSelector.ReadMode.None;
+        var readMode = haxe.ui.util.html5.FileSelector.ReadMode.None;
         if (options.readContents == true) {
             if (options.readAsBinary == false) {
-                readMode = haxe.ui.backend.heaps.FileSelector.ReadMode.Text;
+                readMode = haxe.ui.util.html5.FileSelector.ReadMode.Text;
             } else {
-                readMode = haxe.ui.backend.heaps.FileSelector.ReadMode.Binary;
+                readMode = haxe.ui.util.html5.FileSelector.ReadMode.Binary;
             }
         }
         _fileSelector.selectFile(onFileSelected, readMode, options.multiple, options.extensions);
