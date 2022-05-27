@@ -14,7 +14,10 @@ class OpenFileDialogImpl extends OpenFileDialogBase {
             if (title == null) {
                 title = "Open File";
             }
+            var allowTimeout = hxd.System.allowTimeout;
+            hxd.System.allowTimeout = false;
             var file = hl.UI.loadFile({title: title });
+            hxd.System.allowTimeout = allowTimeout;
             if (file != null) {
                 var infos:Array<SelectedFileInfo> = [];
                 infos.push({
