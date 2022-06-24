@@ -1,48 +1,39 @@
 package haxe.ui.backend;
 
-import haxe.ui.containers.dialogs.Dialogs.SelectedFileInfo;
 import haxe.ui.core.Platform;
 
 using StringTools;
 
-class OpenFileDialogImpl extends OpenFileDialogBase {
+class SaveFileDialogImpl extends SaveFileDialogBase {
     #if hl
     
     public override function show() {
+        if (fileInfo == null || (fileInfo.text == null && fileInfo.bytes == null)) {
+            throw "Nothing to write";
+        }
+        
         if (Platform.instance.isWindows) {
             var title = options.title;
             if (title == null) {
-                title = "Open File";
+                title = "Save File";
             }
             var nativeOptions:hl.UI.FileOptions = { }
             nativeOptions.title = title;
+            nativeOptions.fileName = fileInfo.name;
             nativeOptions.filters = buildFilters();
             
             var allowTimeout = hxd.System.allowTimeout;
             hxd.System.allowTimeout = false;
-            var file = hl.UI.loadFile(nativeOptions);
+            var file = hl.UI.saveFile(nativeOptions);
             hxd.System.allowTimeout = allowTimeout;
             if (file != null) {
-                var infos:Array<SelectedFileInfo> = [];
-                infos.push({
-                    name: haxe.io.Path.withoutDirectory(file),
-                    fullPath: file,
-                    isBinary: false
-                });
-                
-                if (options.readContents == true) {
-                    for (info in infos) {
-                        if (options.readAsBinary) {
-                            info.isBinary = true;
-                            info.bytes = sys.io.File.getBytes(info.fullPath);
-                        } else {
-                            info.isBinary = false;
-                            info.text = sys.io.File.getContent(info.fullPath);
-                        }
-                    }
+                var fullPath = file;
+                if (fileInfo.text != null) {
+                    sys.io.File.saveContent(fullPath, fileInfo.text);
+                } else if (fileInfo.bytes != null) {
+                    sys.io.File.saveBytes(fullPath, fileInfo.bytes);
                 }
-                
-                dialogConfirmed(infos);
+                dialogConfirmed();
             } else {
                 dialogCancelled();
             }
@@ -50,6 +41,7 @@ class OpenFileDialogImpl extends OpenFileDialogBase {
             super.show();
         }
     }
+    
     
     private function buildFilters():Array<{name:String, exts:Array<String>}> {
         var filters = null;
@@ -79,24 +71,24 @@ class OpenFileDialogImpl extends OpenFileDialogBase {
     }
     
     #elseif js
-
-    private var _fileSelector:haxe.ui.util.html5.FileSelector = new haxe.ui.util.html5.FileSelector();
+    
+    private var _fileSaver:haxe.ui.util.html5.FileSaver = new haxe.ui.util.html5.FileSaver();
     
     public override function show() {
-        var readMode = haxe.ui.util.html5.FileSelector.ReadMode.None;
-        if (options.readContents == true) {
-            if (options.readAsBinary == false) {
-                readMode = haxe.ui.util.html5.FileSelector.ReadMode.Text;
-            } else {
-                readMode = haxe.ui.util.html5.FileSelector.ReadMode.Binary;
-            }
+        if (fileInfo == null || (fileInfo.text == null && fileInfo.bytes == null)) {
+            throw "Nothing to write";
         }
-        _fileSelector.selectFile(onFileSelected, readMode, options.multiple, options.extensions);
+        
+        if (fileInfo.text != null) {
+            _fileSaver.saveText(fileInfo.name, fileInfo.text, onSaveResult);
+        } else if (fileInfo.bytes != null) {
+            _fileSaver.saveBinary(fileInfo.name, fileInfo.bytes, onSaveResult);
+        }
     }
     
-    private function onFileSelected(cancelled:Bool, files:Array<SelectedFileInfo>) {
-        if (cancelled == false) {
-            dialogConfirmed(files);
+    private function onSaveResult(r:Bool) {
+        if (r == true) {
+            dialogConfirmed();
         } else {
             dialogCancelled();
         }
