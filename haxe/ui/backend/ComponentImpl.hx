@@ -196,7 +196,21 @@ class ComponentImpl extends ComponentBase {
         return child;
     }
     
+    private var _deallocate:Bool = false;
+    private var deallocate(null, set):Bool;
+    private function set_deallocate(value:Bool) {
+        _deallocate = value;
+        for (c in this.childComponents) {
+            c.deallocate = value;
+        }
+        return value;
+    }
+    private var _disposed:Bool = false;
     private function dispose() {
+        if (_disposed == true) {
+            return;
+        }
+        deallocate = true;
         removeChildren();
         _mask = null;
         remove();
@@ -617,9 +631,12 @@ class ComponentImpl extends ComponentBase {
     }
     
     private override function onRemove() {
-        super.onRemove();
+        if (_deallocate == true) {
+            _disposed = true;
+            super.onRemove();
+        }
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) != -1) {
-            Screen.instance.removeComponent(cast this, false);
+            Screen.instance.removeComponent(cast this, _deallocate);
         }
     }
     
