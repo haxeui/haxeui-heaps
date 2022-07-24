@@ -19,7 +19,9 @@ import haxe.ui.styles.Style;
 import haxe.ui.util.MathUtil;
 import haxe.ui.validation.InvalidationFlags;
 
-class ComponentImpl extends ComponentBase { 
+class ComponentImpl extends ComponentBase {
+    public var styleable:Bool = true;
+    
     private var _eventMap:Map<String, UIEvent->Void>;
     
     static inline var INDEX_OFFSET = 1; // offset everything because 0th-child is always the style graphics container
@@ -56,7 +58,9 @@ class ComponentImpl extends ComponentBase {
         w *= Toolkit.scaleX;
         h *= Toolkit.scaleY;
         
-        StyleHelper.apply(this, style, w, h);
+        if (this.styleable) {
+            StyleHelper.apply(this, style, w, h);
+        }
     }
     
     private override function handleVisibility(show:Bool) {
