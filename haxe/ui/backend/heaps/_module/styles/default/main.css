@@ -3,3 +3,19 @@
     border-left-width: 1px;
     border-left-size: 1px;
 }
+
+.text-tiny {
+    font-size: 12px;
+}
+
+.text-small {
+    font-size: 12px;
+}
+
+.text-normal {
+    font-size: 12px;
+}
+
+.color-picker .controls-container .label {
+    width: 65px;
+}
