@@ -1,20 +1,20 @@
 {
+    "version": "1.5.0",
     "contributors": [
         "haxeui",
         "ianharrigan"
     ],
-    "version": "1.4.0",
-    "dependencies": {
-        "haxeui-core": "",
-        "heaps": ""
-    },
-    "releasenote": "1.4.0 release",
+    "license": "MIT",
     "tags": [
         "ui",
         "gui",
         "heaps"
     ],
-    "license": "MIT",
+    "releasenote": "1.5.0 release",
+    "dependencies": {
+        "haxeui-core": "",
+        "heaps": ""
+    },
     "name": "haxeui-heaps",
     "description": "The Heaps backend of the HaxeUI framework",
     "url": "https://github.com/haxeui/haxeui-heaps"
