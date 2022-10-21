@@ -304,10 +304,10 @@ class ComponentImpl extends ComponentBase {
                     } 
                 }
                 
-			case MouseEvent.DBL_CLICK:
+            case MouseEvent.DBL_CLICK:
                 if (_eventMap.exists(MouseEvent.DBL_CLICK) == false) {
                     _eventMap.set(MouseEvent.DBL_CLICK, listener);
-					
+                    
                     if (_eventMap.exists(MouseEvent.MOUSE_UP) == false) {
                         MouseHelper.notify(MouseEvent.MOUSE_UP, __onDoubleClick);
                         _eventMap.set(MouseEvent.MOUSE_UP, listener);
@@ -392,7 +392,7 @@ class ComponentImpl extends ComponentBase {
             case MouseEvent.CLICK:
                 _eventMap.remove(type);
                 
-			case MouseEvent.DBL_CLICK:
+            case MouseEvent.DBL_CLICK:
                 _eventMap.remove(type);
                 MouseHelper.remove(MouseEvent.MOUSE_UP, __onDoubleClick);
                 
@@ -647,11 +647,11 @@ class ComponentImpl extends ComponentBase {
     private var lastMouseX:Float = -1;
     private var lastMouseY:Float = -1;
     
-	// For doubleclick detection
-	private var _lastClickTime:Float = 0;
-	private var _lastClickTimeDiff:Float = MathUtil.MAX_INT;
-	private var _lastClickX:Float = -1;
-	private var _lastClickY:Float = -1;
+    // For doubleclick detection
+    private var _lastClickTime:Float = 0;
+    private var _lastClickTimeDiff:Float = MathUtil.MAX_INT;
+    private var _lastClickX:Float = -1;
+    private var _lastClickY:Float = -1;
     
     private function calcCursor():String {
         var c = null;
@@ -775,7 +775,7 @@ class ComponentImpl extends ComponentBase {
                 return;
             }
             */
-			
+            
             if (_mouseDownFlag == true) {
                 var type = button == 0 ? haxe.ui.events.MouseEvent.CLICK: haxe.ui.events.MouseEvent.RIGHT_CLICK;
                 var fn:UIEvent->Void = _eventMap.get(type);
@@ -787,15 +787,15 @@ class ComponentImpl extends ComponentBase {
                         fn(mouseEvent);
                     });
                 }
-				
-				if (type == haxe.ui.events.MouseEvent.CLICK) {
-					_lastClickTimeDiff = Timer.stamp() - _lastClickTime;
-					_lastClickTime = Timer.stamp();
-					if (_lastClickTimeDiff >= 0.5) { // 0.5 seconds
-						_lastClickX = x;
-						_lastClickY = y;
-					}
-				}
+                
+                if (type == haxe.ui.events.MouseEvent.CLICK) {
+                    _lastClickTimeDiff = Timer.stamp() - _lastClickTime;
+                    _lastClickTime = Timer.stamp();
+                    if (_lastClickTimeDiff >= 0.5) { // 0.5 seconds
+                        _lastClickX = x;
+                        _lastClickY = y;
+                    }
+                }
             }
 
             if (_mouseDownFlag && this.style != null) {
@@ -820,8 +820,8 @@ class ComponentImpl extends ComponentBase {
         }
         _mouseDownFlag = false;
     }
-	
-	private function __onDoubleClick(event:MouseEvent) {
+    
+    private function __onDoubleClick(event:MouseEvent) {
         var button:Int = _mouseDownButton;
         var x = event.screenX;
         var y = event.screenY;
@@ -835,19 +835,19 @@ class ComponentImpl extends ComponentBase {
                 return;
             }
             */
-			
+            
             _mouseDownFlag = false;
-			var mouseDelta:Float = MathUtil.distance(x, y, _lastClickX, _lastClickY);
-			if (_lastClickTimeDiff < 0.5 && mouseDelta < 5) { // 0.5 seconds
-				var type = haxe.ui.events.MouseEvent.DBL_CLICK;
-				var fn:UIEvent->Void = _eventMap.get(type);
-				if (fn != null) {
-					var mouseEvent = new haxe.ui.events.MouseEvent(type);
-					mouseEvent.screenX = x / Toolkit.scaleX;
-					mouseEvent.screenY = y / Toolkit.scaleY;
-					fn(mouseEvent);
-				}
-			}
+            var mouseDelta:Float = MathUtil.distance(x, y, _lastClickX, _lastClickY);
+            if (_lastClickTimeDiff < 0.5 && mouseDelta < 5) { // 0.5 seconds
+                var type = haxe.ui.events.MouseEvent.DBL_CLICK;
+                var fn:UIEvent->Void = _eventMap.get(type);
+                if (fn != null) {
+                    var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                    mouseEvent.screenX = x / Toolkit.scaleX;
+                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    fn(mouseEvent);
+                }
+            }
         }
         _mouseDownFlag = false;
     }

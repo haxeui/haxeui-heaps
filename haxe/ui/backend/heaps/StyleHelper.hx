@@ -206,49 +206,49 @@ class StyleHelper {
     }
     
     // copy of draw round rect without lines as it seems to misdraw (at different scales - strange)
-	public static function drawRoundedRect(gfx:Graphics, x : Float, y : Float, w : Float, h : Float, radius : Float, nsegments = 0 ) {
-		if (radius <= 0) {
-			gfx.drawRect(x, y, w, h);
+    public static function drawRoundedRect(gfx:Graphics, x : Float, y : Float, w : Float, h : Float, radius : Float, nsegments = 0 ) {
+        if (radius <= 0) {
+            gfx.drawRect(x, y, w, h);
             return false;
-		}
+        }
         var returnVal = true;
         if (w == h && radius >= w / 2) {
             radius = (w / 2) + 1;
             returnVal = false;
         }
-		x += radius;
-		y += radius;
-		w -= radius * 2;
-		h -= radius * 2;
-		@:privateAccess gfx.flush();
-		if( nsegments == 0 )
-			nsegments = Math.ceil(Math.abs(radius * hxd.Math.degToRad(90) / 4));
-		if ( nsegments < 3 ) nsegments = 3;
-		var angle = hxd.Math.degToRad(90) / (nsegments - 1);
-		inline function corner(x, y, angleStart) {
-		for ( i in 0...nsegments) {
-			var a = i * angle + hxd.Math.degToRad(angleStart);
-			gfx.lineTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
-		}
-		}
+        x += radius;
+        y += radius;
+        w -= radius * 2;
+        h -= radius * 2;
+        @:privateAccess gfx.flush();
+        if( nsegments == 0 )
+            nsegments = Math.ceil(Math.abs(radius * hxd.Math.degToRad(90) / 4));
+        if ( nsegments < 3 ) nsegments = 3;
+        var angle = hxd.Math.degToRad(90) / (nsegments - 1);
+        inline function corner(x, y, angleStart) {
+        for ( i in 0...nsegments) {
+            var a = i * angle + hxd.Math.degToRad(angleStart);
+            gfx.lineTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
+        }
+        }
         if (Toolkit.scale == 1 && returnVal == true) {
             gfx.lineTo(x, y - radius);
             gfx.lineTo(x + w, y - radius);
         }
-		corner(x + w, y, 270);
+        corner(x + w, y, 270);
         if (Toolkit.scale == 1 && returnVal == true) {
             gfx.lineTo(x + w + radius, y + h);
         }
-		corner(x + w, y + h, 0);
+        corner(x + w, y + h, 0);
         if (Toolkit.scale == 1 && returnVal == true) {
             gfx.lineTo(x, y + h + radius);
         }
-		corner(x, y + h, 90);
+        corner(x, y + h, 90);
         if (Toolkit.scale == 1 && returnVal == true) {
             gfx.lineTo(x - radius, y);
         }
-		corner(x, y, 180);
-		@:privateAccess gfx.flush();
+        corner(x, y, 180);
+        @:privateAccess gfx.flush();
         return returnVal;
-	}
+    }
 }
