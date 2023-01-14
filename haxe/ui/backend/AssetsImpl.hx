@@ -40,9 +40,6 @@ class AssetsImpl extends AssetsBase {
     private override function getImageFromHaxeResource(resourceId:String, callback:String->haxe.ui.assets.ImageInfo->Void) {
         var bytes = Resource.getBytes(resourceId);
         imageFromBytes(bytes, function(imageInfo) {
-            if (imageInfo == null) {
-                trace("WARNING: problem loading image: ", resourceId);
-            }
             callback(resourceId, imageInfo);
         });
     }
@@ -65,7 +62,6 @@ class AssetsImpl extends AssetsBase {
             };
             callback(imageInfo);
         } catch (e:Dynamic) {
-            trace("WARNING: problem loading image from bytes: " + e);
             callback(null);
         }
     }
