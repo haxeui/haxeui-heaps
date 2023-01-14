@@ -24,11 +24,14 @@ class AppImpl extends AppBase {
     private var _app:HeapsApp;
     
     public function new() {
+        _autoHandlePreload = false;
         _app = new HeapsApp();
         _app.onInit = onHeapsInit;
         _app.onUpdate = onHeapsUpdate;
     }
     
+    private var _heapsInitialized:Bool = false;
+    private var _readyCalled:Bool = false;
     private function onHeapsInit() {
         #if js
         //hxd.Res.initLocal();
@@ -40,16 +43,25 @@ class AppImpl extends AppBase {
         if (Toolkit.backendProperties.exists("haxe.ui.heaps.engine.background.color")) {
             h3d.Engine.getCurrent().backgroundColor = Toolkit.backendProperties.getPropCol("haxe.ui.heaps.engine.background.color");
         }
-        _onReady();
+        _heapsInitialized = true;
+        if (__onReady != null) {
+            startPreload(function() {
+                _readyCalled = true;
+                __onReady();
+            });
+        }
     }
 
     private function onHeapsUpdate(dt:Float) {
         BackendImpl.update();
     }
     
-    private var _onReady:Void->Void;
+    private var __onReady:Void->Void;
     private override function init(onReady:Void->Void, onEnd:Void->Void = null) {
-        _onReady = onReady;
+        __onReady = onReady;
+        if (_heapsInitialized == true && _readyCalled == false) {
+            __onReady();
+        }
     }
     
     private override function getToolkitInit():ToolkitOptions {
