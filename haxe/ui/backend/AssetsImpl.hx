@@ -40,6 +40,9 @@ class AssetsImpl extends AssetsBase {
     private override function getImageFromHaxeResource(resourceId:String, callback:String->haxe.ui.assets.ImageInfo->Void) {
         var bytes = Resource.getBytes(resourceId);
         imageFromBytes(bytes, function(imageInfo) {
+            if (imageInfo == null) {
+                trace("WARNING: problem loading image: ", resourceId);
+            }
             callback(resourceId, imageInfo);
         });
     }
@@ -50,16 +53,21 @@ class AssetsImpl extends AssetsBase {
             return;
         }
 
-        var entry:BytesFileEntry = new BytesFileEntry("", bytes);
-        var image:Image = new Image(entry);
+        try {
+            var entry:BytesFileEntry = new BytesFileEntry("", bytes);
+            var image:Image = new Image(entry);
 
-        var size:Dynamic = image.getSize();
-        var imageInfo:haxe.ui.assets.ImageInfo = {
-            width: size.width,
-            height: size.height,
-            data: image.toBitmap()
-        };
-        callback(imageInfo);
+            var size:Dynamic = image.getSize();
+            var imageInfo:haxe.ui.assets.ImageInfo = {
+                width: size.width,
+                height: size.height,
+                data: image.toBitmap()
+            };
+            callback(imageInfo);
+        } catch (e:Dynamic) {
+            trace("WARNING: problem loading image from bytes: " + e);
+            callback(null);
+        }
     }
 
     public override function imageInfoFromImageData(imageData:ImageData):haxe.ui.assets.ImageInfo {
