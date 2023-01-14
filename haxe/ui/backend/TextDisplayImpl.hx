@@ -23,7 +23,12 @@ class TextDisplayImpl extends TextBase {
     }
 
     private override function validateData() {
-        sprite.text = normalizeText(_text);
+        if (_text != null) {
+            sprite.text = normalizeText(_text);
+        } else if (_htmlText != null) {
+            sprite.text = normalizeText(_htmlText);
+        }
+        
     }
     
     private override function validateStyle():Bool {
