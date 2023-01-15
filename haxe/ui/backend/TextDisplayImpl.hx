@@ -10,6 +10,8 @@ class TextDisplayImpl extends TextBase {
     // defaults
     public static var defaultFontSize:Int = 12;
 
+    public var isDefaultFont:Bool = true;
+
     public function new() {
         super();
         sprite = createText();
@@ -50,6 +52,8 @@ class TextDisplayImpl extends TextBase {
                     sprite.font = font;
                     measureTextRequired = true;
                 }
+
+                isDefaultFont = false;
             }
         }
 
@@ -101,7 +105,17 @@ class TextDisplayImpl extends TextBase {
         } else {
             sprite.x = _left;
         }
-        sprite.y = _top;
+
+        var offset:Float = 0;
+        if (!isDefaultFont) {
+            var currentFontSize = sprite.font.size;
+            if (currentFontSize < 0) { // no Math.fabs
+                currentFontSize = -currentFontSize;
+            }
+            offset = ((currentFontSize - sprite.font.baseLine) / 2);
+        }
+
+        sprite.y = _top + offset;
     }
     
     private override function validateDisplay() {
