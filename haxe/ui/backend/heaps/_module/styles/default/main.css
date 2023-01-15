@@ -1,3 +1,7 @@
+.property-grid .scrollview-contents {
+    padding-right: -1px;
+}
+
 .text-tiny {
     font-size: 12px;
 }
