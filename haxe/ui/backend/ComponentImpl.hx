@@ -524,6 +524,11 @@ class ComponentImpl extends ComponentBase {
         if (cast(this, Component).hidden == true) {
             return false;
         }
+
+        if (isOnScreen() == false) {
+            return false;
+        }
+
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
@@ -688,6 +693,12 @@ class ComponentImpl extends ComponentBase {
         }
         
         if (i == true) {
+            if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_OVER)) {
+                if (isInteractiveAbove(x, y)) {
+                    return;
+                }
+            }
+
             if (this.style != null) {
                 Screen.instance.setCursor(calcCursor());
             }
@@ -741,6 +752,10 @@ class ComponentImpl extends ComponentBase {
             }
             */
             if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_DOWN)) {
+                if (isInteractiveAbove(x, y)) {
+                    return;
+                }
+
                 _mouseDownFlag = true;
                 
                 if (this.style != null && (this.style.cursor == "row-resize" || this.style.cursor == "col-resize")) {
@@ -864,6 +879,10 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
+        if (isInteractiveAbove(lastMouseX, lastMouseY)) {
+            return;
+        }
+
         var mouseEvent = new MouseEvent(MouseEvent.MOUSE_WHEEL);
         mouseEvent.screenX = lastMouseX / Toolkit.scaleX;
         mouseEvent.screenY = lastMouseY / Toolkit.scaleY;
@@ -881,5 +900,48 @@ class ComponentImpl extends ComponentBase {
         super.visible = value;
         cast(this, Component).hidden = !value;
         return value;
+    }
+
+    private function calcObjectIndex(obj:Object):Int {
+        var n = 0;
+        while (obj.parent != null) {
+            n++;
+            if (obj.parent == obj.getScene()) {
+                break;
+            }
+            obj = obj.parent;
+        }
+        return obj.getScene().getChildIndex(obj);
+    }
+
+    private function isOnScreen() {
+        var obj:Object = this;
+        while (obj.parent != null) {
+            if (obj.visible == false) {
+                return false;
+            }
+            obj = obj.parent;
+            if (obj == obj.getScene()) {
+                break;
+            }
+        }
+        return true;
+    }
+
+    private function isInteractiveAbove(x:Float, y:Float) {
+        var scene = this.getScene();
+        if (scene != null) {
+            var interactive = scene.getInteractive(x, y);
+            if (interactive != null) {
+                var n1 = calcObjectIndex(interactive);
+                var n2 = calcObjectIndex(this);
+                if (n1 >= n2) {
+                    hxd.System.setNativeCursor(interactive.cursor);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
