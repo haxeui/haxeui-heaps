@@ -52,7 +52,7 @@ class StyleHelper {
                 
                 var gradientSize = 256;
                 if (gradientType == "vertical" || gradientType == "horizontal") {
-                    var tile = TileCache.getGradient(gradientType, style.backgroundColor, style.backgroundColorEnd, gradientSize);
+                    var tile = TileCache.getGradient(gradientType, style.backgroundColor, style.backgroundColorEnd, gradientSize, Std.int(backgroundAlpha * 255));
                     styleGraphics.beginTileFill(0, 0, w / gradientSize, h / gradientSize, tile);
                     if (borderRadius > 0) {
                         styleGraphics.lineStyle(style.borderLeftSize * Toolkit.scaleX, style.borderLeftColor, borderAlpha);
