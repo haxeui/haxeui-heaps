@@ -69,14 +69,18 @@ class TextDisplayImpl extends TextBase {
             }
 
             if (currentFontSize != fontSizeValue) {
+                var temp = sprite.font.clone();
+                sprite.font = null;
                 if (isBitmap) {
-                    sprite.font.resizeTo(-fontSizeValue);
+                    temp.resizeTo(-fontSizeValue);
                 } else {
-                    if (sprite.font == hxd.res.DefaultFont.get()) {
-                        sprite.font = hxd.res.DefaultFont.get().clone();
+                    if (temp == hxd.res.DefaultFont.get()) {
+                        temp = hxd.res.DefaultFont.get().clone();
                     }
-                    sprite.font.resizeTo(fontSizeValue);
+                    temp.resizeTo(fontSizeValue);
                 }
+                sprite.font = temp;
+                temp = null;
                 measureTextRequired = true;
             }
 
