@@ -69,18 +69,7 @@ class TextDisplayImpl extends TextBase {
             }
 
             if (currentFontSize != fontSizeValue) {
-                var temp = sprite.font.clone();
-                sprite.font = null;
-                if (isBitmap) {
-                    temp.resizeTo(-fontSizeValue);
-                } else {
-                    if (temp == hxd.res.DefaultFont.get()) {
-                        temp = hxd.res.DefaultFont.get().clone();
-                    }
-                    temp.resizeTo(fontSizeValue);
-                }
-                sprite.font = temp;
-                temp = null;
+                resizeFont(fontSizeValue, isBitmap);
                 measureTextRequired = true;
             }
 
@@ -103,11 +92,26 @@ class TextDisplayImpl extends TextBase {
         return measureTextRequired;
     }
     
+    private function resizeFont(fontSizeValue:Int, isBitmap:Bool) {
+        var temp = sprite.font.clone();
+        sprite.font = null;
+        if (isBitmap) {
+            temp.resizeTo(-fontSizeValue);
+        } else {
+            if (temp == hxd.res.DefaultFont.get()) {
+                temp = hxd.res.DefaultFont.get().clone();
+            }
+            temp.resizeTo(fontSizeValue);
+        }
+        sprite.font = temp;
+        temp = null;
+    }
+
     private override function validatePosition() {
         if (autoWidth == true && sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = _left + (_width * Toolkit.scaleX / 2);
+            sprite.x = (_left * Toolkit.scaleX) + (_width * Toolkit.scaleX / 2);
         } else {
-            sprite.x = _left;
+            sprite.x = (_left * Toolkit.scaleX);
         }
 
         var offset:Float = 0;
@@ -119,7 +123,7 @@ class TextDisplayImpl extends TextBase {
             offset = ((currentFontSize - sprite.font.baseLine) / 2);
         }
 
-        sprite.y = _top + offset;
+        sprite.y = (_top * Toolkit.scaleY) + offset;
     }
     
     private override function validateDisplay() {

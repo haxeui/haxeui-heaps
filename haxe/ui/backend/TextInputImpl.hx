@@ -47,6 +47,20 @@ class TextInputImpl extends TextDisplayImpl {
         textInput.inputWidth = Math.round(textInput.maxWidth); // clip text input display to text component's width
     }
 
+    private override function resizeFont(fontSizeValue:Int, isBitmap:Bool) {
+        var temp = sprite.font.clone();
+        if (isBitmap) {
+            temp.resizeTo(-fontSizeValue);
+        } else {
+            if (temp == hxd.res.DefaultFont.get()) {
+                temp = hxd.res.DefaultFont.get().clone();
+            }
+            temp.resizeTo(fontSizeValue);
+        }
+        sprite.font = temp;
+        temp = null;
+    }
+
     private override function validateStyle():Bool {
         var measureTextRequired:Bool = super.validateStyle();
 
