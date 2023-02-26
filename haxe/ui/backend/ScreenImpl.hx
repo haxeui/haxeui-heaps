@@ -5,9 +5,11 @@ import h2d.Scene;
 import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.EventMapper;
 import haxe.ui.backend.heaps.MouseHelper;
+import haxe.ui.backend.heaps.KeyboardHelper;
 import haxe.ui.backend.heaps.ScreenUtils;
 import haxe.ui.core.Component;
 import haxe.ui.events.MouseEvent;
+import haxe.ui.events.KeyboardEvent;
 import haxe.ui.events.UIEvent;
 import hxd.Window;
 
@@ -190,17 +192,26 @@ class ScreenImpl extends ScreenBase {
                     _mapping.set(type, listener);
                     MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                 }
-                
             case MouseEvent.MOUSE_DOWN:
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
                     MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
                 }
-                
             case MouseEvent.MOUSE_UP:
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                }
+
+           case KeyboardEvent.KEY_DOWN:     
+                if (_mapping.exists(type) == false) {
+                    _mapping.set(type, listener);
+                    KeyboardHelper.notify(KeyboardEvent.KEY_DOWN, __onKeyDown);
+                }
+           case KeyboardEvent.KEY_UP:     
+                if (_mapping.exists(type) == false) {
+                    _mapping.set(type, listener);
+                    KeyboardHelper.notify(KeyboardEvent.KEY_UP, __onKeyUp);
                 }
         }
     }
@@ -236,5 +247,31 @@ class ScreenImpl extends ScreenBase {
             mouseEvent.buttonDown = event.data;
             fn(mouseEvent);
         }
+    }
+
+    private function __onKeyDown(event:KeyboardEvent) {
+        var fn = _mapping.get(KeyboardEvent.KEY_DOWN);
+        if (fn != null) {
+            var keyboardEvent = new KeyboardEvent(KeyboardEvent.KEY_DOWN);
+            keyboardEvent.keyCode = event.keyCode;
+            fn(keyboardEvent);
+        }
+    }
+
+    private function __onKeyUp(event:KeyboardEvent) {
+        var fn = _mapping.get(KeyboardEvent.KEY_UP);
+        if (fn != null) {
+            var keyboardEvent = new KeyboardEvent(KeyboardEvent.KEY_UP);
+            keyboardEvent.keyCode = event.keyCode;
+            fn(keyboardEvent);
+        }
+        /* TODO? Not sure if its important
+        var fn = _mapping.get(KeyboardEvent.KEY_PRESS);
+        if (fn != null) {
+            var keyboardEvent = new KeyboardEvent(KeyboardEvent.KEY_PRESS);
+            keyboardEvent.keyCode = event.keyCode;
+            fn(keyboardEvent);
+        }
+        */
     }
 }
