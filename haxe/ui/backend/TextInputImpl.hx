@@ -1,5 +1,7 @@
 package haxe.ui.backend;
 
+import haxe.ui.events.FocusEvent;
+import haxe.ui.core.InteractiveComponent;
 import h2d.TextInput;
 import haxe.ui.events.UIEvent;
 
@@ -15,11 +17,16 @@ class TextInputImpl extends TextDisplayImpl {
         textInput = new TextInput(hxd.res.DefaultFont.get());
         textInput.lineBreak = false;
         textInput.onChange = onChange;
+        textInput.onClick = function(e) {
+            cast(parentComponent, InteractiveComponent).focus = true;
+        }
         return textInput;
     }
 
     public override function focus() {
-        textInput.focus();
+        Toolkit.callLater(function() {
+            textInput.focus();
+        });
     }
 
     public override function blur() {
