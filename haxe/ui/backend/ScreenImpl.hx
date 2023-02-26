@@ -254,6 +254,9 @@ class ScreenImpl extends ScreenBase {
         if (fn != null) {
             var keyboardEvent = new KeyboardEvent(KeyboardEvent.KEY_DOWN);
             keyboardEvent.keyCode = event.keyCode;
+            keyboardEvent.shiftKey = event.shiftKey;
+            keyboardEvent.ctrlKey = event.ctrlKey;
+            keyboardEvent.altKey = event.altKey;
             fn(keyboardEvent);
         }
     }
@@ -263,6 +266,9 @@ class ScreenImpl extends ScreenBase {
         if (fn != null) {
             var keyboardEvent = new KeyboardEvent(KeyboardEvent.KEY_UP);
             keyboardEvent.keyCode = event.keyCode;
+            keyboardEvent.shiftKey = event.shiftKey;
+            keyboardEvent.ctrlKey = event.ctrlKey;
+            keyboardEvent.altKey = event.altKey;
             fn(keyboardEvent);
         }
         /* TODO? Not sure if its important

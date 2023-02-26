@@ -1,5 +1,6 @@
 package haxe.ui.backend.heaps;
 
+import hxd.Key;
 import haxe.ui.events.KeyboardEvent;
 import hxd.Window;
 
@@ -56,14 +57,29 @@ class KeyboardHelper {
         }
     }
 
+    private static var _shiftDown:Bool = false;
+    private static var _ctrlDown:Bool = false;
+    private static var _altDown:Bool = false;
     private static function onKeyDown(e:hxd.Event) {
         var list = _callbacks.get(KeyboardEvent.KEY_DOWN);
         if (list == null || list.length == 0) {
             return;
         }
         
+        switch (e.keyCode) {
+            case Key.SHIFT:
+                _shiftDown = true;
+            case Key.ALT:
+                _altDown = true;
+            case Key.CTRL:    
+                _ctrlDown = true;
+        }
+
         list = list.copy();
         var event = new KeyboardEvent(KeyboardEvent.KEY_DOWN);
+        event.shiftKey = _shiftDown;
+        event.ctrlKey = _ctrlDown;
+        event.altKey = _altDown;
         @:privateAccess event._originalEvent = e;
         event.keyCode = e.keyCode;
         for (l in list) {
@@ -77,8 +93,20 @@ class KeyboardHelper {
             return;
         }
         
+        switch (e.keyCode) {
+            case Key.SHIFT:
+                _shiftDown = false;
+            case Key.ALT:
+                _altDown = false;
+            case Key.CTRL:    
+                _ctrlDown = false;
+        }
+
         list = list.copy();
         var event = new KeyboardEvent(KeyboardEvent.KEY_UP);
+        event.shiftKey = _shiftDown;
+        event.ctrlKey = _ctrlDown;
+        event.altKey = _altDown;
         @:privateAccess event._originalEvent = e;
         event.keyCode = e.keyCode;
         for (l in list) {
