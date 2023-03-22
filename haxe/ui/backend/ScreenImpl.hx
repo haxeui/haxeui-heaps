@@ -4,12 +4,12 @@ import h2d.Object;
 import h2d.Scene;
 import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.EventMapper;
-import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.backend.heaps.KeyboardHelper;
+import haxe.ui.backend.heaps.MouseHelper;
 import haxe.ui.backend.heaps.ScreenUtils;
 import haxe.ui.core.Component;
-import haxe.ui.events.MouseEvent;
 import haxe.ui.events.KeyboardEvent;
+import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
 import hxd.Window;
 

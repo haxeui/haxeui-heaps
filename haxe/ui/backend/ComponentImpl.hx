@@ -40,13 +40,19 @@ class ComponentImpl extends ComponentBase {
         
         left = Std.int(left);
         top = Std.int(top);
-        
+
+        var toolkitScaleX:Float = 1;
+        var toolkitScaleY:Float = 1;
+        if (parentComponent != null) {
+            toolkitScaleX = Toolkit.scaleX;
+            toolkitScaleY = Toolkit.scaleY;
+        }
         if (_mask == null) {
-            if (this.x != left) this.x = left * Toolkit.scaleX;
-            if (this.y != top)  this.y = top * Toolkit.scaleY;
+            if (this.x != left) this.x = left * toolkitScaleX;
+            if (this.y != top)  this.y = top * toolkitScaleY;
         } else {
-            if (_mask.x != left) _mask.x = left * Toolkit.scaleX;
-            if (_mask.y != top)  _mask.y = top * Toolkit.scaleY;
+            if (_mask.x != left) _mask.x = left * toolkitScaleX;
+            if (_mask.y != top)  _mask.y = top * toolkitScaleY;
         }
     }
     
@@ -459,8 +465,8 @@ class ComponentImpl extends ComponentBase {
             }
         }
         
-        _cachedScreenX = xpos;
-        _cachedScreenY = ypos;
+        _cachedScreenX = xpos * Toolkit.scaleX;
+        _cachedScreenY = ypos * Toolkit.scaleY;
     }
     
     private var screenX(get, null):Float;
@@ -621,10 +627,10 @@ class ComponentImpl extends ComponentBase {
         // (which would mean this has come from a haxeui validation cycle)
         if (changed == true && isComponentInvalid(InvalidationFlags.POSITION) == false && _mask == null) {
             if (this.x != this.left) {
-                this.left = this.x;
+                this.left = this.x / Toolkit.scaleX;
             }
             if (this.y != this.top) {
-                this.top = this.y;
+                this.top = this.y / Toolkit.scaleY;
             }
         }
         super.sync(ctx);
