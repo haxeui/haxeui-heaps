@@ -941,7 +941,7 @@ class ComponentImpl extends ComponentBase {
             if (interactive != null) {
                 var n1 = calcObjectIndex(interactive);
                 var n2 = calcObjectIndex(this);
-                if (n1 >= n2) {
+                if (n1 > n2) {
                     hxd.System.setNativeCursor(interactive.cursor);
                     return true;
                 }
