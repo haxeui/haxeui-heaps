@@ -30,17 +30,17 @@ class ImageDisplayImpl extends ImageBase {
 
     private override function validateDisplay() {
         if (sprite.tile != null) {
-            var scaleX:Float = (_imageWidth / sprite.tile.width) * Toolkit.scaleX;
+            var scaleX:Float = (_imageWidth / sprite.tile.width);
             if (sprite.scaleX != scaleX) {
                 sprite.scaleX = scaleX;
             }
 
-            var scaleY:Float = (_imageHeight / sprite.tile.height) * Toolkit.scaleY;
+            var scaleY:Float = (_imageHeight / sprite.tile.height);
             if (sprite.scaleY != scaleY) {
                 sprite.scaleY = scaleY;
             }
 
-            sprite.smooth = scaleX != Toolkit.scaleX || scaleY != Toolkit.scaleY;
+            sprite.smooth = false;//scaleX != Toolkit.scaleX || scaleY != Toolkit.scaleY;
         }
     }
     

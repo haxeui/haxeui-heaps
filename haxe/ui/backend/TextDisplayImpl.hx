@@ -58,12 +58,12 @@ class TextDisplayImpl extends TextBase {
         }
 
         if (_textStyle != null) {
-            var fontSizeValue = Std.int(_textStyle.fontSize * Toolkit.scale);
+            var fontSizeValue = Std.int(_textStyle.fontSize);
             if (fontSizeValue <= 0) {
-                fontSizeValue = Std.int(defaultFontSize * Toolkit.scale);
+                fontSizeValue = Std.int(defaultFontSize);
             }
 
-            var currentFontSize = sprite.font.size * Toolkit.scale;
+            var currentFontSize = sprite.font.size;
             if (currentFontSize < 0) { // no Math.fabs
                 currentFontSize = -currentFontSize;
             }
@@ -109,9 +109,9 @@ class TextDisplayImpl extends TextBase {
 
     private override function validatePosition() {
         if (autoWidth == true && sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = (_left * Toolkit.scaleX) + (_width * Toolkit.scaleX / 2);
+            sprite.x = (_left) + (_width / 2);
         } else {
-            sprite.x = (_left * Toolkit.scaleX);
+            sprite.x = (_left);
         }
 
         var offset:Float = 0;
@@ -123,14 +123,14 @@ class TextDisplayImpl extends TextBase {
             offset = ((currentFontSize - sprite.font.baseLine) / 2);
         }
 
-        sprite.y = (_top * Toolkit.scaleY) + offset;
+        sprite.y = (_top) + offset;
     }
     
     private override function validateDisplay() {
         if (autoWidth == false) {
-            sprite.maxWidth = _width != 0 ? _width * Toolkit.scaleX : _textWidth * Toolkit.scaleX;
+            sprite.maxWidth = _width != 0 ? _width : _textWidth;
         } else if (sprite.textAlign == h2d.Text.Align.Center) {
-            sprite.x = (_left) + (_width * Toolkit.scaleX / 2);
+            sprite.x = (_left) + (_width / 2);
         }
     }
     
@@ -140,8 +140,8 @@ class TextDisplayImpl extends TextBase {
     }
     
     private override function measureText() {
-        _textWidth = sprite.textWidth / Toolkit.scaleX;
-        _textHeight = sprite.textHeight / Toolkit.scaleY;
+        _textWidth = sprite.textWidth;
+        _textHeight = sprite.textHeight;
         
         _textWidth = Math.round(_textWidth);
         _textHeight = Math.round(_textHeight);

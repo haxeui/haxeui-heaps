@@ -41,18 +41,12 @@ class ComponentImpl extends ComponentBase {
         left = Std.int(left);
         top = Std.int(top);
 
-        var toolkitScaleX:Float = 1;
-        var toolkitScaleY:Float = 1;
-        if (parentComponent != null) {
-            toolkitScaleX = Toolkit.scaleX;
-            toolkitScaleY = Toolkit.scaleY;
-        }
         if (_mask == null) {
-            if (this.x != left) this.x = left * toolkitScaleX;
-            if (this.y != top)  this.y = top * toolkitScaleY;
+            if (this.x != left) this.x = left;
+            if (this.y != top)  this.y = top;
         } else {
-            if (_mask.x != left) _mask.x = left * toolkitScaleX;
-            if (_mask.y != top)  _mask.y = top * toolkitScaleY;
+            if (_mask.x != left) _mask.x = left;
+            if (_mask.y != top)  _mask.y = top;
         }
     }
     
@@ -61,9 +55,6 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
-        w *= Toolkit.scaleX;
-        h *= Toolkit.scaleY;
-        
         if (this.styleable) {
             StyleHelper.apply(this, style, w, h);
         }
@@ -81,12 +72,12 @@ class ComponentImpl extends ComponentBase {
                 _mask.addChild(this);
             }
             value.toInts();
-            this.x = -value.left + (Toolkit.scaleX - 1);
+            this.x = -value.left;
             this.y = -value.top;
-            _mask.x = left * Toolkit.scaleX - (Toolkit.scaleX - 1);
-            _mask.y = top * Toolkit.scaleY;
-            _mask.width = Std.int(value.width * Toolkit.scaleX);
-            _mask.height = Std.int(value.height * Toolkit.scaleY);
+            _mask.x = left;
+            _mask.y = top;
+            _mask.width = Std.int(value.width);
+            _mask.height = Std.int(value.height);
             
             var hasFilter = hasFilter();
             if (hasFilter) {
@@ -465,8 +456,18 @@ class ComponentImpl extends ComponentBase {
             }
         }
         
-        _cachedScreenX = xpos * Toolkit.scaleX;
-        _cachedScreenY = ypos * Toolkit.scaleY;
+        xpos *= Toolkit.scaleX;
+        ypos *= Toolkit.scaleY;
+
+        if (Toolkit.scaleX != 1) {
+            xpos -= last.left;
+        }
+        if (Toolkit.scaleY != 1) {
+            ypos -= last.top;
+        }
+
+        _cachedScreenX = xpos;
+        _cachedScreenY = ypos;
     }
     
     private var screenX(get, null):Float;
@@ -538,8 +539,8 @@ class ComponentImpl extends ComponentBase {
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX;// * Toolkit.scaleX;
-        var sy = screenY;// * Toolkit.scaleY;
+        var sx = screenX;
+        var sy = screenY;
         var cx = this.width * Toolkit.scaleX;
         var cy = this.height * Toolkit.scaleY;
 
@@ -552,8 +553,8 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + clip.componentClipRect.left);// * Toolkit.scaleX;
-                var sy = (clip.screenY + clip.componentClipRect.top);// * Toolkit.scaleY;
+                var sx = (clip.screenX + (clip.componentClipRect.left * Toolkit.scaleX));
+                var sy = (clip.screenY + (clip.componentClipRect.top * Toolkit.scaleY));
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
@@ -627,10 +628,10 @@ class ComponentImpl extends ComponentBase {
         // (which would mean this has come from a haxeui validation cycle)
         if (changed == true && isComponentInvalid(InvalidationFlags.POSITION) == false && _mask == null) {
             if (this.x != this.left) {
-                this.left = this.x / Toolkit.scaleX;
+                this.left = this.x;
             }
             if (this.y != this.top) {
-                this.top = this.y / Toolkit.scaleY;
+                this.top = this.y;
             }
         }
         super.sync(ctx);
@@ -691,8 +692,8 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
             }
             return;
@@ -712,8 +713,8 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_MOVE);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
             }
         }
@@ -724,8 +725,8 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OVER);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OVER);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     fn(mouseEvent);
                 }
             }
@@ -735,8 +736,8 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
             }
         }
@@ -773,8 +774,8 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     fn(mouseEvent);
                 }
             }
@@ -802,8 +803,8 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     Toolkit.callLater(function() {
                         fn(mouseEvent);
                     });
@@ -829,8 +830,8 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(type);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
             }
         } else {
@@ -864,8 +865,8 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     fn(mouseEvent);
                 }
             }
@@ -890,8 +891,8 @@ class ComponentImpl extends ComponentBase {
         }
 
         var mouseEvent = new MouseEvent(MouseEvent.MOUSE_WHEEL);
-        mouseEvent.screenX = lastMouseX / Toolkit.scaleX;
-        mouseEvent.screenY = lastMouseY / Toolkit.scaleY;
+        mouseEvent.screenX = lastMouseX;
+        mouseEvent.screenY = lastMouseY;
         mouseEvent.delta = Math.max(-1, Math.min(1, -delta));
         fn(mouseEvent);
     }

@@ -51,22 +51,40 @@ class StyleHelper {
                 }
                 
                 var gradientSize = 256;
-                if (gradientType == "vertical" || gradientType == "horizontal") {
+                if (borderRadius == 0) {
+                    if (gradientType == "vertical" || gradientType == "horizontal") {
+                        var tile = TileCache.getGradient(gradientType, style.backgroundColor, style.backgroundColorEnd, gradientSize, Std.int(backgroundAlpha * 255));
+                        styleGraphics.beginTileFill(0, 0, w / gradientSize, h / gradientSize, tile);
+                        if (borderRadius > 0) {
+                            styleGraphics.lineStyle(style.borderLeftSize * 2, style.borderLeftColor, borderAlpha);
+                        }
+                        styleGraphics.drawRect(0, 0, w, h);
+                        styleGraphics.endFill();
+                    }
+                } else {
+                    styleGraphics.beginFill(style.borderLeftColor);
+                    styleGraphics.drawRoundedRect(0, 0, w, h, borderRadius, 10);
+                    styleGraphics.endFill();
+
                     var tile = TileCache.getGradient(gradientType, style.backgroundColor, style.backgroundColorEnd, gradientSize, Std.int(backgroundAlpha * 255));
                     styleGraphics.beginTileFill(0, 0, w / gradientSize, h / gradientSize, tile);
-                    if (borderRadius > 0) {
-                        styleGraphics.lineStyle(style.borderLeftSize * Toolkit.scaleX, style.borderLeftColor, borderAlpha);
-                    }
-                    drawRoundedRect(styleGraphics, 0, 0, w, h, borderRadius, 100);
+                    styleGraphics.drawRoundedRect(style.borderLeftSize, style.borderLeftSize, w - (style.borderLeftSize * 2), h - (style.borderLeftSize * 2), borderRadius, 100);
                     styleGraphics.endFill();
                 }
             } else {
-                styleGraphics.beginFill(style.backgroundColor, backgroundAlpha);
-                if (borderRadius > 0) {
-                    styleGraphics.lineStyle(style.borderLeftSize * Toolkit.scaleX, style.borderLeftColor, borderAlpha);
+                if (borderRadius == 0) {
+                    styleGraphics.beginFill(style.backgroundColor, backgroundAlpha);
+                    styleGraphics.drawRect(0, 0, w, h);
+                    styleGraphics.endFill();
+                } else {
+                    styleGraphics.beginFill(style.borderLeftColor);
+                    styleGraphics.drawRoundedRect(0, 0, w, h, borderRadius, 10);
+                    styleGraphics.endFill();
+
+                    styleGraphics.beginFill(style.backgroundColor, backgroundAlpha);
+                    styleGraphics.drawRoundedRect(style.borderLeftSize, style.borderLeftSize, w - (style.borderLeftSize * 2), h - (style.borderLeftSize * 2), borderRadius, 100);
+                    styleGraphics.endFill();
                 }
-                drawRoundedRect(styleGraphics, 0, 0, w, h, borderRadius, 100);
-                styleGraphics.endFill();
             }
         }
 
@@ -142,56 +160,57 @@ class StyleHelper {
         }
         
         
-        borderSize.left = style.borderLeftSize * Toolkit.scaleX;
-        borderSize.top = style.borderTopSize * Toolkit.scaleY;
-        borderSize.right = style.borderRightSize * Toolkit.scaleX;
-        borderSize.bottom = style.borderBottomSize * Toolkit.scaleY;
-        if (style.borderLeftColor != null
-            && style.borderLeftColor == style.borderRightColor
-            && style.borderLeftColor == style.borderBottomColor
-            && style.borderLeftColor == style.borderTopColor
-            
-            && style.borderLeftSize != null
-            && style.borderLeftSize == style.borderRightSize
-            && style.borderLeftSize == style.borderBottomSize
-            && style.borderLeftSize == style.borderTopSize
-            ) { // full border
+        borderSize.left = style.borderLeftSize;
+        borderSize.top = style.borderTopSize;
+        borderSize.right = style.borderRightSize;
+        borderSize.bottom = style.borderBottomSize;
+        if (borderRadius == 0) {
+            if (style.borderLeftColor != null
+                && style.borderLeftColor == style.borderRightColor
+                && style.borderLeftColor == style.borderBottomColor
+                && style.borderLeftColor == style.borderTopColor
                 
-                styleGraphics.lineStyle();
-                styleGraphics.beginFill(style.borderLeftColor, borderAlpha);
-                styleGraphics.drawRect(borderRadius, 0 - Std.int(borderSize.left / 2), w - borderRadius * 2, borderSize.left); // top
-                styleGraphics.drawRect(w - borderSize.left + Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // right
-                styleGraphics.drawRect(borderRadius, h - borderSize.left + Std.int(borderSize.left / 2), w - borderRadius * 2, borderSize.left); // bottom
-                styleGraphics.drawRect(0 - Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // left
-                styleGraphics.endFill();
-        } else { // compound border
-            if (style.borderLeftSize != null && style.borderLeftSize > 0) {
-                styleGraphics.lineStyle();
-                styleGraphics.beginFill(style.borderLeftColor, borderAlpha);
-                //styleGraphics.drawRect(0, 0, borderSize.left, h); // left
-                styleGraphics.drawRect(0 - Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // left
-                styleGraphics.endFill();
-            }
-            
-            if (style.borderRightSize != null && style.borderRightSize > 0) {
-                styleGraphics.lineStyle();
-                styleGraphics.beginFill(style.borderRightColor, borderAlpha);
-                styleGraphics.drawRect(w - borderSize.right, borderSize.right, borderSize.right, h - 1); // right
-                styleGraphics.endFill();
-            }
-            
-            if (style.borderTopSize != null && style.borderTopSize > 0) {
-                styleGraphics.lineStyle();
-                styleGraphics.beginFill(style.borderTopColor, borderAlpha);
-                styleGraphics.drawRect(0, 0, w, borderSize.top); // top
-                styleGraphics.endFill();
-            }
-            
-            if (style.borderBottomSize != null && style.borderBottomSize > 0) {
-                styleGraphics.lineStyle();
-                styleGraphics.beginFill(style.borderBottomColor, borderAlpha);
-                styleGraphics.drawRect(borderSize.left, h - borderSize.bottom, w - (borderSize.left + borderSize.right), borderSize.bottom); // bottom
-                styleGraphics.endFill();
+                && style.borderLeftSize != null
+                && style.borderLeftSize == style.borderRightSize
+                && style.borderLeftSize == style.borderBottomSize
+                && style.borderLeftSize == style.borderTopSize
+                ) { // full border
+                    styleGraphics.lineStyle();
+                    styleGraphics.beginFill(style.borderLeftColor, borderAlpha);
+                    styleGraphics.drawRect(borderRadius, 0 - Std.int(borderSize.left / 2), w - borderRadius * 2, borderSize.left); // top
+                    styleGraphics.drawRect(w - borderSize.left + Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // right
+                    styleGraphics.drawRect(borderRadius, h - borderSize.left + Std.int(borderSize.left / 2), w - borderRadius * 2, borderSize.left); // bottom
+                    styleGraphics.drawRect(0 - Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // left
+                    styleGraphics.endFill();
+            } else { // compound border
+                if (style.borderLeftSize != null && style.borderLeftSize > 0) {
+                    styleGraphics.lineStyle();
+                    styleGraphics.beginFill(style.borderLeftColor, borderAlpha);
+                    //styleGraphics.drawRect(0, 0, borderSize.left, h); // left
+                    styleGraphics.drawRect(0 - Std.int(borderSize.left / 2), borderRadius, borderSize.left, h - borderRadius * 2); // left
+                    styleGraphics.endFill();
+                }
+                
+                if (style.borderRightSize != null && style.borderRightSize > 0) {
+                    styleGraphics.lineStyle();
+                    styleGraphics.beginFill(style.borderRightColor, borderAlpha);
+                    styleGraphics.drawRect(w - borderSize.right, borderSize.right, borderSize.right, h - 1); // right
+                    styleGraphics.endFill();
+                }
+                
+                if (style.borderTopSize != null && style.borderTopSize > 0) {
+                    styleGraphics.lineStyle();
+                    styleGraphics.beginFill(style.borderTopColor, borderAlpha);
+                    styleGraphics.drawRect(0, 0, w, borderSize.top); // top
+                    styleGraphics.endFill();
+                }
+                
+                if (style.borderBottomSize != null && style.borderBottomSize > 0) {
+                    styleGraphics.lineStyle();
+                    styleGraphics.beginFill(style.borderBottomColor, borderAlpha);
+                    styleGraphics.drawRect(borderSize.left, h - borderSize.bottom, w - (borderSize.left + borderSize.right), borderSize.bottom); // bottom
+                    styleGraphics.endFill();
+                }
             }
         }
     }
@@ -203,52 +222,5 @@ class StyleHelper {
         g.beginTileFill(dst.left, dst.top, scaleX, scaleY, sub);
         g.drawRect(dst.left, dst.top, dst.width, dst.height);
         g.endFill();
-    }
-    
-    // copy of draw round rect without lines as it seems to misdraw (at different scales - strange)
-    public static function drawRoundedRect(gfx:Graphics, x : Float, y : Float, w : Float, h : Float, radius : Float, nsegments = 0 ) {
-        if (radius <= 0) {
-            gfx.drawRect(x, y, w, h);
-            return false;
-        }
-        var returnVal = true;
-        if (w == h && radius >= w / 2) {
-            radius = (w / 2) + 1;
-            returnVal = false;
-        }
-        x += radius;
-        y += radius;
-        w -= radius * 2;
-        h -= radius * 2;
-        @:privateAccess gfx.flush();
-        if( nsegments == 0 )
-            nsegments = Math.ceil(Math.abs(radius * hxd.Math.degToRad(90) / 4));
-        if ( nsegments < 3 ) nsegments = 3;
-        var angle = hxd.Math.degToRad(90) / (nsegments - 1);
-        inline function corner(x, y, angleStart) {
-        for ( i in 0...nsegments) {
-            var a = i * angle + hxd.Math.degToRad(angleStart);
-            gfx.lineTo(x + Math.cos(a) * radius, y + Math.sin(a) * radius);
-        }
-        }
-        if (Toolkit.scale == 1 && returnVal == true) {
-            gfx.lineTo(x, y - radius);
-            gfx.lineTo(x + w, y - radius);
-        }
-        corner(x + w, y, 270);
-        if (Toolkit.scale == 1 && returnVal == true) {
-            gfx.lineTo(x + w + radius, y + h);
-        }
-        corner(x + w, y + h, 0);
-        if (Toolkit.scale == 1 && returnVal == true) {
-            gfx.lineTo(x, y + h + radius);
-        }
-        corner(x, y + h, 90);
-        if (Toolkit.scale == 1 && returnVal == true) {
-            gfx.lineTo(x - radius, y);
-        }
-        corner(x, y, 180);
-        @:privateAccess gfx.flush();
-        return returnVal;
     }
 }
