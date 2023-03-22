@@ -107,36 +107,89 @@ class StyleHelper {
                                           style.backgroundImageSliceRight - style.backgroundImageSliceLeft,
                                           style.backgroundImageSliceBottom - style.backgroundImageSliceTop);
                 }
-                
+
                 if (trc != null) {
                     tile = tile.sub(trc.left, trc.top, trc.width, trc.height);
                 }
+                
                 if (slice != null) {
                     var rects:Slice9Rects = Slice9.buildRects(w, h, trc.width, trc.height, slice);
                     var srcRects:Array<Rectangle> = rects.src;
                     var dstRects:Array<Rectangle> = rects.dst;
                     
-                    paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
-                    paintTile(bgImageGraphics, tile, srcRects[1], dstRects[1]);
-                    paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
-                    
-                    srcRects[3].bottom--;
-                    paintTile(bgImageGraphics, tile, srcRects[3], dstRects[3]);
+					if (style.backgroundImageRepeat == "repeat") {
+						// The image is slightly scaled down to make sure there is no visible clip one the sides
+						var scaleX = dstRects[4].width / ( srcRects[4].width * Math.ceil(dstRects[4].width / srcRects[4].width) );
+						var scaleY = dstRects[4].height / ( srcRects[4].height * Math.ceil(dstRects[4].height / srcRects[4].height) );
 
-                    srcRects[4].bottom--;
-                    paintTile(bgImageGraphics, tile, srcRects[4], dstRects[4]);
-                    
-                    srcRects[5].bottom--;
-                    paintTile(bgImageGraphics, tile, srcRects[5], dstRects[5]);
-                    
-                    dstRects[6].bottom++;
-                    paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
-                    dstRects[7].bottom++;
-                    paintTile(bgImageGraphics, tile, srcRects[7], dstRects[7]);
-                    dstRects[8].bottom++;
-                    paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
+						paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
+						paintTileRepeat(bgImageGraphics, tile, srcRects[1], scaleX, 1, dstRects[1]);
+						paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
+						
+						srcRects[3].bottom--;
+						paintTileRepeat(bgImageGraphics, tile, srcRects[3], 1, scaleY, dstRects[3]);
+
+						srcRects[4].bottom--;
+						paintTileRepeat(bgImageGraphics, tile, srcRects[4], scaleX, scaleY, dstRects[4]);
+
+						srcRects[5].bottom--;
+						paintTileRepeat(bgImageGraphics, tile, srcRects[5], 1, scaleY, dstRects[5]);
+
+						dstRects[6].bottom++;
+						paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
+						dstRects[7].bottom++;
+						paintTileRepeat(bgImageGraphics, tile, srcRects[7], scaleX, 1, dstRects[7]);
+						dstRects[8].bottom++;
+						paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
+					}
+					else {
+						paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
+						paintTile(bgImageGraphics, tile, srcRects[1], dstRects[1]);
+						paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
+						
+						srcRects[3].bottom--;
+						paintTile(bgImageGraphics, tile, srcRects[3], dstRects[3]);
+
+						srcRects[4].bottom--;
+						paintTile(bgImageGraphics, tile, srcRects[4], dstRects[4]);
+
+						srcRects[5].bottom--;
+						paintTile(bgImageGraphics, tile, srcRects[5], dstRects[5]);
+
+						dstRects[6].bottom++;
+						paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
+						dstRects[7].bottom++;
+						paintTile(bgImageGraphics, tile, srcRects[7], dstRects[7]);
+						dstRects[8].bottom++;
+						paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
+					}                  
                 } else {
-                    paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, w, h));
+					var scaleX:Float = 1;
+					var scaleY:Float = 1;
+
+					if (style.backgroundImageRepeat == null || style.backgroundImageRepeat == "stretch") {
+						scaleX = w / trc.width;
+						scaleY = h / trc.height;
+					}
+					else {
+						if (style.backgroundWidth != null) {
+							scaleX = style.backgroundWidth / trc.width;
+						} else if (style.backgroundWidthPercent != null) {
+							scaleX = ((w / trc.width) * style.backgroundWidthPercent) / 100;
+						}
+						if (style.backgroundHeight != null) {
+							scaleY = style.backgroundHeight / trc.height;
+						} else if (style.backgroundHeightPercent != null) {
+							scaleY = ((h / trc.height) * style.backgroundHeightPercent) / 100;
+						}
+					}
+
+					if (style.backgroundImageRepeat == "repeat") {
+						paintTileRepeat(bgImageGraphics, tile, trc, scaleX, scaleY, new Rectangle(0, 0, w, h));
+					}
+					else {
+                    	paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, trc.width * scaleX, trc.height * scaleY));
+					}
                 }
             });
         }
@@ -205,7 +258,50 @@ class StyleHelper {
         g.endFill();
     }
     
-    // copy of draw round rect without lines as it seems to misdraw (at different scales - strange)
+	// Used to repeat part (src) of an image (tile) with a given scale (srcScaleX, srcScaleY) inside a target (dst)
+	private static function paintTileRepeat(g:Graphics, tile:Tile, src:Rectangle, srcScaleX:Float, srcScaleY:Float, dst:Rectangle) {
+		var scaledw = srcScaleX * src.width;
+		var scaledh = srcScaleY * src.height;
+		var wCount = dst.width / scaledw;
+		var hCount = dst.height / scaledh;
+
+		var iwCount = Math.ceil(wCount);
+		var ihCount = Math.ceil(hCount);
+
+		var lastw = iwCount - 1;
+		var lasth = ihCount - 1;
+		
+		// Full images
+		for (iwCurr in 0...lastw) {
+			for (ihCurr in 0...lasth) {
+				paintTile(g, tile, src, new Rectangle(dst.left + iwCurr * scaledw, dst.top + ihCurr * scaledh, scaledw, scaledh));
+			}
+		}
+
+		var localRect = src.copy();
+		// Images clipped in width
+		var clippedw = (wCount - lastw) * scaledw;
+		localRect.width = (wCount - lastw) * src.width;
+		for (ihCurr in 0...lasth) {
+			paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + ihCurr * scaledh, clippedw, scaledh));
+		}
+
+		// Images clipped in height
+		var clippedh = (hCount - lasth) * scaledh;
+		localRect.width = src.width;
+		localRect.height = (hCount - lasth) * src.height;
+		for (iwCurr in 0...lastw) {
+			paintTile(g, tile, localRect, new Rectangle(dst.left + iwCurr * scaledw, dst.top + lasth * scaledh, scaledw, clippedh));
+		}
+
+		// Image clipped in both
+		localRect.width = (wCount - lastw) * src.width;
+		if (localRect.width > 1 && localRect.height > 1) {
+			paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + lasth * scaledh, clippedw, clippedh));
+		}
+	}
+
+	// copy of draw round rect without lines as it seems to misdraw (at different scales - strange)
     public static function drawRoundedRect(gfx:Graphics, x : Float, y : Float, w : Float, h : Float, radius : Float, nsegments = 0 ) {
         if (radius <= 0) {
             gfx.drawRect(x, y, w, h);
