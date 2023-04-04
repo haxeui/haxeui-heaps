@@ -31,7 +31,7 @@ class AppImpl extends AppBase {
     }
     
     private var _heapsInitialized:Bool = false;
-    private var _readyCalled:Bool = false;
+    private var _heapsReadyCalled:Bool = false;
     private function onHeapsInit() {
         #if js
         //hxd.Res.initLocal();
@@ -46,7 +46,7 @@ class AppImpl extends AppBase {
         _heapsInitialized = true;
         if (__onReady != null) {
             startPreload(function() {
-                _readyCalled = true;
+                _heapsReadyCalled = true;
                 __onReady();
             });
         }
@@ -59,7 +59,7 @@ class AppImpl extends AppBase {
     private var __onReady:Void->Void;
     private override function init(onReady:Void->Void, onEnd:Void->Void = null) {
         __onReady = onReady;
-        if (_heapsInitialized == true && _readyCalled == false) {
+        if (_heapsInitialized == true && _heapsReadyCalled == false) {
             __onReady();
         }
     }
