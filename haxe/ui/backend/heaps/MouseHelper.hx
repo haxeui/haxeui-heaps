@@ -118,12 +118,17 @@ class MouseHelper {
         }
         
         list = list.copy();
+        list.reverse();
+
         var event = new MouseEvent(MouseEvent.MOUSE_MOVE);
         @:privateAccess event._originalEvent = e;
         event.screenX = e.relX / Toolkit.scaleX;
         event.screenY = e.relY / Toolkit.scaleY;
         for (l in list) {
             l(event);
+			if (event.canceled) {
+				break;
+			}
         }
     }
     
@@ -134,7 +139,8 @@ class MouseHelper {
         }
         
         list = list.copy();
-        
+        list.reverse();
+       
         var event = new MouseEvent(MouseEvent.MOUSE_DOWN);
         @:privateAccess event._originalEvent = e;
         event.screenX = e.relX / Toolkit.scaleX;
@@ -142,6 +148,9 @@ class MouseHelper {
         event.data = e.button;
         for (l in list) {
             l(event);
+			if (event.canceled) {
+				break;
+			}
         }
     }
     
@@ -152,6 +161,7 @@ class MouseHelper {
         }
         
         list = list.copy();
+		list.reverse();
         
         var event = new MouseEvent(MouseEvent.MOUSE_UP);
         @:privateAccess event._originalEvent = e;
@@ -160,6 +170,9 @@ class MouseHelper {
         event.data = e.button;
         for (l in list) {
             l(event);
+			if (event.canceled) {
+				break;
+			}
         }
     }
     
@@ -170,12 +183,16 @@ class MouseHelper {
         }
         
         list = list.copy();
+		list.reverse();
         
         var event = new MouseEvent(MouseEvent.MOUSE_WHEEL);
         @:privateAccess event._originalEvent = e;
         event.delta = e.wheelDelta;
         for (l in list) {
             l(event);
+			if (event.canceled) {
+				break;
+			}
         }
     }
 }
