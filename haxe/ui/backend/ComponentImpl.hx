@@ -695,6 +695,7 @@ class ComponentImpl extends ComponentBase {
                 mouseEvent.screenX = x;
                 mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
             return;
         }
@@ -716,6 +717,7 @@ class ComponentImpl extends ComponentBase {
                 mouseEvent.screenX = x;
                 mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         }
         
@@ -728,6 +730,7 @@ class ComponentImpl extends ComponentBase {
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
             }
         } else if (i == false && _mouseOverFlag == true) {
@@ -739,6 +742,7 @@ class ComponentImpl extends ComponentBase {
                 mouseEvent.screenX = x;
                 mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         }
     }    
@@ -777,6 +781,7 @@ class ComponentImpl extends ComponentBase {
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
             }
         }
@@ -807,6 +812,7 @@ class ComponentImpl extends ComponentBase {
                     mouseEvent.screenY = y;
                     Toolkit.callLater(function() {
                         fn(mouseEvent);
+                        event.canceled = mouseEvent.canceled;
                     });
                 }
                 
@@ -833,6 +839,7 @@ class ComponentImpl extends ComponentBase {
                 mouseEvent.screenX = x;
                 mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         } else {
             if (_mouseDownFlag) {
@@ -868,6 +875,7 @@ class ComponentImpl extends ComponentBase {
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
             }
         }
@@ -895,6 +903,7 @@ class ComponentImpl extends ComponentBase {
         mouseEvent.screenY = lastMouseY;
         mouseEvent.delta = Math.max(-1, Math.min(1, -delta));
         fn(mouseEvent);
+        event.canceled = mouseEvent.canceled;
     }
     
     //***********************************************************************************************************
