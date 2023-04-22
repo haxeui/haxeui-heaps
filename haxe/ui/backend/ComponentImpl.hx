@@ -339,6 +339,35 @@ class ComponentImpl extends ComponentBase {
                         _eventMap.set(MouseEvent.RIGHT_MOUSE_UP, listener);
                     }
                 }
+
+            case MouseEvent.MIDDLE_MOUSE_DOWN:
+                if (_eventMap.exists(MouseEvent.MIDDLE_MOUSE_DOWN) == false) {
+                    MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                    MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                    _eventMap.set(MouseEvent.MIDDLE_MOUSE_DOWN, listener);
+                }
+
+            case MouseEvent.MIDDLE_MOUSE_UP:
+                if (_eventMap.exists(MouseEvent.MIDDLE_MOUSE_UP) == false) {
+                    MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                    _eventMap.set(MouseEvent.MIDDLE_MOUSE_UP, listener);
+                }
+                
+            case MouseEvent.MIDDLE_CLICK:
+                if (_eventMap.exists(MouseEvent.MIDDLE_CLICK) == false) {
+                    _eventMap.set(MouseEvent.MIDDLE_CLICK, listener);
+
+                    if (_eventMap.exists(MouseEvent.MIDDLE_MOUSE_DOWN) == false) {
+                        MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                        MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                        _eventMap.set(MouseEvent.MIDDLE_MOUSE_DOWN, listener);
+                    }
+
+                    if (_eventMap.exists(MouseEvent.MIDDLE_MOUSE_UP) == false) {
+                        MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                        _eventMap.set(MouseEvent.MIDDLE_MOUSE_UP, listener);
+                    }
+                }
         }
     }
 
@@ -408,6 +437,23 @@ class ComponentImpl extends ComponentBase {
                 }
                 
             case MouseEvent.RIGHT_CLICK:
+                _eventMap.remove(type);
+                
+            case MouseEvent.MIDDLE_MOUSE_DOWN:
+                _eventMap.remove(type);
+                if (_eventMap.exists(MouseEvent.MOUSE_DOWN) == false
+                    && _eventMap.exists(MouseEvent.MIDDLE_MOUSE_DOWN) == false) {
+                    MouseHelper.remove(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                }
+
+            case MouseEvent.MIDDLE_MOUSE_UP:
+                _eventMap.remove(type);
+                if (_eventMap.exists(MouseEvent.MOUSE_UP) == false
+                    && _eventMap.exists(MouseEvent.MIDDLE_MOUSE_UP) == false) {
+                    MouseHelper.remove(MouseEvent.MOUSE_UP, __onMouseUp);
+                }
+                
+            case MouseEvent.MIDDLE_CLICK:
                 _eventMap.remove(type);
         }
     }
@@ -774,10 +820,16 @@ class ComponentImpl extends ComponentBase {
                 }
                 
                 _mouseDownButton = button;
-                var type = button == 0 ? haxe.ui.events.MouseEvent.MOUSE_DOWN: haxe.ui.events.MouseEvent.RIGHT_MOUSE_DOWN;
+                var type = switch(button) {
+                    case 0: haxe.ui.events.MouseEvent.MOUSE_DOWN;
+                    case 1: haxe.ui.events.MouseEvent.RIGHT_MOUSE_DOWN;
+                    case 2: haxe.ui.events.MouseEvent.MIDDLE_MOUSE_DOWN;
+                    case _: haxe.ui.events.MouseEvent.MOUSE_DOWN;
+                }
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                    mouseEvent.data = button;
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
@@ -804,10 +856,16 @@ class ComponentImpl extends ComponentBase {
             */
             
             if (_mouseDownFlag == true) {
-                var type = button == 0 ? haxe.ui.events.MouseEvent.CLICK: haxe.ui.events.MouseEvent.RIGHT_CLICK;
+                var type = switch(button) {
+                    case 0: haxe.ui.events.MouseEvent.CLICK;
+                    case 1: haxe.ui.events.MouseEvent.RIGHT_CLICK;
+                    case 2: haxe.ui.events.MouseEvent.MIDDLE_CLICK;
+                    case _: haxe.ui.events.MouseEvent.CLICK;
+                }
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                    mouseEvent.data = button;
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     Toolkit.callLater(function() {
@@ -832,10 +890,16 @@ class ComponentImpl extends ComponentBase {
             }
             
             _mouseDownFlag = false;
-            var type = button == 0 ? haxe.ui.events.MouseEvent.MOUSE_UP: haxe.ui.events.MouseEvent.RIGHT_MOUSE_UP;
+            var type = switch(button) {
+                case 0: haxe.ui.events.MouseEvent.MOUSE_UP;
+                case 1: haxe.ui.events.MouseEvent.RIGHT_MOUSE_UP;
+                case 2: haxe.ui.events.MouseEvent.MIDDLE_MOUSE_UP;
+                case _: haxe.ui.events.MouseEvent.MOUSE_UP;
+            }
             var fn:UIEvent->Void = _eventMap.get(type);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                mouseEvent.data = button;
                 mouseEvent.screenX = x;
                 mouseEvent.screenY = y;
                 fn(mouseEvent);
@@ -872,6 +936,7 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                    mouseEvent.data = button;
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
@@ -905,7 +970,7 @@ class ComponentImpl extends ComponentBase {
         fn(mouseEvent);
         event.canceled = mouseEvent.canceled;
     }
-    
+
     //***********************************************************************************************************
     // Helpers
     //***********************************************************************************************************
