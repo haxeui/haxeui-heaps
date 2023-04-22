@@ -27,7 +27,7 @@ class SaveFileDialogImpl extends SaveFileDialogBase {
             var file = hl.UI.saveFile(nativeOptions);
             hxd.System.allowTimeout = allowTimeout;
             if (file != null) {
-                var fullPath = file;
+                fullPath = file;
                 if (fileInfo.text != null) {
                     sys.io.File.saveContent(fullPath, fileInfo.text);
                 } else if (fileInfo.bytes != null) {

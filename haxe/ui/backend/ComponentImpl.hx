@@ -40,13 +40,13 @@ class ComponentImpl extends ComponentBase {
         
         left = Std.int(left);
         top = Std.int(top);
-        
+
         if (_mask == null) {
-            if (this.x != left) this.x = left * Toolkit.scaleX;
-            if (this.y != top)  this.y = top * Toolkit.scaleY;
+            if (this.x != left) this.x = left;
+            if (this.y != top)  this.y = top;
         } else {
-            if (_mask.x != left) _mask.x = left * Toolkit.scaleX;
-            if (_mask.y != top)  _mask.y = top * Toolkit.scaleY;
+            if (_mask.x != left) _mask.x = left;
+            if (_mask.y != top)  _mask.y = top;
         }
     }
     
@@ -55,9 +55,6 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
-        w *= Toolkit.scaleX;
-        h *= Toolkit.scaleY;
-        
         if (this.styleable) {
             StyleHelper.apply(this, style, w, h);
         }
@@ -75,12 +72,12 @@ class ComponentImpl extends ComponentBase {
                 _mask.addChild(this);
             }
             value.toInts();
-            this.x = -value.left + (Toolkit.scaleX - 1);
+            this.x = -value.left;
             this.y = -value.top;
-            _mask.x = left * Toolkit.scaleX - (Toolkit.scaleX - 1);
-            _mask.y = top * Toolkit.scaleY;
-            _mask.width = Std.int(value.width * Toolkit.scaleX);
-            _mask.height = Std.int(value.height * Toolkit.scaleY);
+            _mask.x = left;
+            _mask.y = top;
+            _mask.width = Std.int(value.width);
+            _mask.height = Std.int(value.height);
             
             var hasFilter = hasFilter();
             if (hasFilter) {
@@ -304,10 +301,10 @@ class ComponentImpl extends ComponentBase {
                     } 
                 }
                 
-			case MouseEvent.DBL_CLICK:
+            case MouseEvent.DBL_CLICK:
                 if (_eventMap.exists(MouseEvent.DBL_CLICK) == false) {
                     _eventMap.set(MouseEvent.DBL_CLICK, listener);
-					
+                    
                     if (_eventMap.exists(MouseEvent.MOUSE_UP) == false) {
                         MouseHelper.notify(MouseEvent.MOUSE_UP, __onDoubleClick);
                         _eventMap.set(MouseEvent.MOUSE_UP, listener);
@@ -392,7 +389,7 @@ class ComponentImpl extends ComponentBase {
             case MouseEvent.CLICK:
                 _eventMap.remove(type);
                 
-			case MouseEvent.DBL_CLICK:
+            case MouseEvent.DBL_CLICK:
                 _eventMap.remove(type);
                 MouseHelper.remove(MouseEvent.MOUSE_UP, __onDoubleClick);
                 
@@ -459,6 +456,16 @@ class ComponentImpl extends ComponentBase {
             }
         }
         
+        xpos *= Toolkit.scaleX;
+        ypos *= Toolkit.scaleY;
+
+        if (Toolkit.scaleX != 1) {
+            xpos -= last.left;
+        }
+        if (Toolkit.scaleY != 1) {
+            ypos -= last.top;
+        }
+
         _cachedScreenX = xpos;
         _cachedScreenY = ypos;
     }
@@ -524,11 +531,16 @@ class ComponentImpl extends ComponentBase {
         if (cast(this, Component).hidden == true) {
             return false;
         }
+
+        if (isOnScreen() == false) {
+            return false;
+        }
+
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX;// * Toolkit.scaleX;
-        var sy = screenY;// * Toolkit.scaleY;
+        var sx = screenX;
+        var sy = screenY;
         var cx = this.width * Toolkit.scaleX;
         var cy = this.height * Toolkit.scaleY;
 
@@ -541,8 +553,8 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + clip.componentClipRect.left);// * Toolkit.scaleX;
-                var sy = (clip.screenY + clip.componentClipRect.top);// * Toolkit.scaleY;
+                var sx = (clip.screenX + (clip.componentClipRect.left * Toolkit.scaleX));
+                var sy = (clip.screenY + (clip.componentClipRect.top * Toolkit.scaleY));
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
@@ -647,11 +659,11 @@ class ComponentImpl extends ComponentBase {
     private var lastMouseX:Float = -1;
     private var lastMouseY:Float = -1;
     
-	// For doubleclick detection
-	private var _lastClickTime:Float = 0;
-	private var _lastClickTimeDiff:Float = MathUtil.MAX_INT;
-	private var _lastClickX:Float = -1;
-	private var _lastClickY:Float = -1;
+    // For doubleclick detection
+    private var _lastClickTime:Float = 0;
+    private var _lastClickTimeDiff:Float = MathUtil.MAX_INT;
+    private var _lastClickX:Float = -1;
+    private var _lastClickY:Float = -1;
     
     private function calcCursor():String {
         var c = null;
@@ -680,14 +692,21 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
             return;
         }
         
         if (i == true) {
+            if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_OVER)) {
+                if (isInteractiveAbove(x, y)) {
+                    return;
+                }
+            }
+
             if (this.style != null) {
                 Screen.instance.setCursor(calcCursor());
             }
@@ -695,9 +714,10 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_MOVE);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         }
         
@@ -707,9 +727,10 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OVER);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OVER);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
             }
         } else if (i == false && _mouseOverFlag == true) {
@@ -718,9 +739,10 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         }
     }    
@@ -741,6 +763,10 @@ class ComponentImpl extends ComponentBase {
             }
             */
             if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_DOWN)) {
+                if (isInteractiveAbove(x, y)) {
+                    return;
+                }
+
                 _mouseDownFlag = true;
                 
                 if (this.style != null && (this.style.cursor == "row-resize" || this.style.cursor == "col-resize")) {
@@ -752,9 +778,10 @@ class ComponentImpl extends ComponentBase {
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
             }
         }
@@ -775,27 +802,28 @@ class ComponentImpl extends ComponentBase {
                 return;
             }
             */
-			
+            
             if (_mouseDownFlag == true) {
                 var type = button == 0 ? haxe.ui.events.MouseEvent.CLICK: haxe.ui.events.MouseEvent.RIGHT_CLICK;
                 var fn:UIEvent->Void = _eventMap.get(type);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                    mouseEvent.screenX = x / Toolkit.scaleX;
-                    mouseEvent.screenY = y / Toolkit.scaleY;
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
                     Toolkit.callLater(function() {
                         fn(mouseEvent);
+                        event.canceled = mouseEvent.canceled;
                     });
                 }
-				
-				if (type == haxe.ui.events.MouseEvent.CLICK) {
-					_lastClickTimeDiff = Timer.stamp() - _lastClickTime;
-					_lastClickTime = Timer.stamp();
-					if (_lastClickTimeDiff >= 0.5) { // 0.5 seconds
-						_lastClickX = x;
-						_lastClickY = y;
-					}
-				}
+                
+                if (type == haxe.ui.events.MouseEvent.CLICK) {
+                    _lastClickTimeDiff = Timer.stamp() - _lastClickTime;
+                    _lastClickTime = Timer.stamp();
+                    if (_lastClickTimeDiff >= 0.5) { // 0.5 seconds
+                        _lastClickX = x;
+                        _lastClickY = y;
+                    }
+                }
             }
 
             if (_mouseDownFlag && this.style != null) {
@@ -808,9 +836,10 @@ class ComponentImpl extends ComponentBase {
             var fn:UIEvent->Void = _eventMap.get(type);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(type);
-                mouseEvent.screenX = x / Toolkit.scaleX;
-                mouseEvent.screenY = y / Toolkit.scaleY;
+                mouseEvent.screenX = x;
+                mouseEvent.screenY = y;
                 fn(mouseEvent);
+                event.canceled = mouseEvent.canceled;
             }
         } else {
             if (_mouseDownFlag) {
@@ -820,8 +849,8 @@ class ComponentImpl extends ComponentBase {
         }
         _mouseDownFlag = false;
     }
-	
-	private function __onDoubleClick(event:MouseEvent) {
+    
+    private function __onDoubleClick(event:MouseEvent) {
         var button:Int = _mouseDownButton;
         var x = event.screenX;
         var y = event.screenY;
@@ -835,19 +864,20 @@ class ComponentImpl extends ComponentBase {
                 return;
             }
             */
-			
+            
             _mouseDownFlag = false;
-			var mouseDelta:Float = MathUtil.distance(x, y, _lastClickX, _lastClickY);
-			if (_lastClickTimeDiff < 0.5 && mouseDelta < 5) { // 0.5 seconds
-				var type = haxe.ui.events.MouseEvent.DBL_CLICK;
-				var fn:UIEvent->Void = _eventMap.get(type);
-				if (fn != null) {
-					var mouseEvent = new haxe.ui.events.MouseEvent(type);
-					mouseEvent.screenX = x / Toolkit.scaleX;
-					mouseEvent.screenY = y / Toolkit.scaleY;
-					fn(mouseEvent);
-				}
-			}
+            var mouseDelta:Float = MathUtil.distance(x, y, _lastClickX, _lastClickY);
+            if (_lastClickTimeDiff < 0.5 && mouseDelta < 5) { // 0.5 seconds
+                var type = haxe.ui.events.MouseEvent.DBL_CLICK;
+                var fn:UIEvent->Void = _eventMap.get(type);
+                if (fn != null) {
+                    var mouseEvent = new haxe.ui.events.MouseEvent(type);
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
+                    fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
+                }
+            }
         }
         _mouseDownFlag = false;
     }
@@ -864,11 +894,16 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
+        if (isInteractiveAbove(lastMouseX, lastMouseY)) {
+            return;
+        }
+
         var mouseEvent = new MouseEvent(MouseEvent.MOUSE_WHEEL);
-        mouseEvent.screenX = lastMouseX / Toolkit.scaleX;
-        mouseEvent.screenY = lastMouseY / Toolkit.scaleY;
+        mouseEvent.screenX = lastMouseX;
+        mouseEvent.screenY = lastMouseY;
         mouseEvent.delta = Math.max(-1, Math.min(1, -delta));
         fn(mouseEvent);
+        event.canceled = mouseEvent.canceled;
     }
     
     //***********************************************************************************************************
@@ -881,5 +916,48 @@ class ComponentImpl extends ComponentBase {
         super.visible = value;
         cast(this, Component).hidden = !value;
         return value;
+    }
+
+    private function calcObjectIndex(obj:Object):Int {
+        var n = 0;
+        while (obj.parent != null) {
+            n++;
+            if (obj.parent == obj.getScene()) {
+                break;
+            }
+            obj = obj.parent;
+        }
+        return obj.getScene().getChildIndex(obj);
+    }
+
+    private function isOnScreen() {
+        var obj:Object = this;
+        while (obj.parent != null) {
+            if (obj.visible == false) {
+                return false;
+            }
+            obj = obj.parent;
+            if (obj == obj.getScene()) {
+                break;
+            }
+        }
+        return true;
+    }
+
+    private function isInteractiveAbove(x:Float, y:Float) {
+        var scene = this.getScene();
+        if (scene != null) {
+            var interactive = scene.getInteractive(x, y);
+            if (interactive != null) {
+                var n1 = calcObjectIndex(interactive);
+                var n2 = calcObjectIndex(this);
+                if (n1 > n2) {
+                    hxd.System.setNativeCursor(interactive.cursor);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

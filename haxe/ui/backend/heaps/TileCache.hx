@@ -19,19 +19,20 @@ class TileCache {
         return _cache.exists(resourceId);
     }
     
-    public static function getGradient(type:String, startCol:Int, endCol:Int, size:Int = 256):Tile {
-        var key = type + "_" + startCol + "_" + endCol + "_" + size;
+    public static function getGradient(type:String, startCol:Int, endCol:Int, size:Int = 256, alpha:Int = 255):Tile {
+        var key = type + "_" + startCol + "_" + endCol + "_" + size + "_" + alpha;
         if (_cache.exists(key)) {
             return _cache.get(key);
         }
-        
+
+        var alphaMask = alpha << 24;
         var arr = ColorUtil.buildColorArray(startCol, endCol, size);
         var tile:Tile = null;
         if (type == "vertical") {
             var gradient = new hxd.BitmapData(1, size);
             var y = 0;
             for (col in arr) {
-                gradient.line(0, y, 1, y, 0xFF000000 | col);
+                gradient.line(0, y, 1, y, alphaMask | col);
                 y++;
             }
             tile = h2d.Tile.fromBitmap(gradient);
@@ -39,7 +40,7 @@ class TileCache {
             var gradient = new hxd.BitmapData(size, 1);
             var x = 0;
             for (col in arr) {
-                gradient.line(x, 0, x, 1, 0xFF000000 | col);
+                gradient.line(x, 0, x, 1, alphaMask | col);
                 x++;
             }
             tile = h2d.Tile.fromBitmap(gradient);

@@ -1,7 +1,5 @@
-.property-group .dropdown {
-    border-color: #ABABAB;
-    border-left-width: 1px;
-    border-left-size: 1px;
+.property-grid .scrollview-contents {
+    padding-right: -1px;
 }
 
 .text-tiny {

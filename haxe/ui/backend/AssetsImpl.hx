@@ -2,7 +2,6 @@ package haxe.ui.backend;
 
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
-import haxe.ui.backend.heaps.FontCache;
 import hxd.Res;
 import hxd.fs.BytesFileSystem.BytesFileEntry;
 import hxd.res.Image;
@@ -50,16 +49,20 @@ class AssetsImpl extends AssetsBase {
             return;
         }
 
-        var entry:BytesFileEntry = new BytesFileEntry("", bytes);
-        var image:Image = new Image(entry);
+        try {
+            var entry:BytesFileEntry = new BytesFileEntry("", bytes);
+            var image:Image = new Image(entry);
 
-        var size:Dynamic = image.getSize();
-        var imageInfo:haxe.ui.assets.ImageInfo = {
-            width: size.width,
-            height: size.height,
-            data: image.toBitmap()
-        };
-        callback(imageInfo);
+            var size:Dynamic = image.getSize();
+            var imageInfo:haxe.ui.assets.ImageInfo = {
+                width: size.width,
+                height: size.height,
+                data: image.toBitmap()
+            };
+            callback(imageInfo);
+        } catch (e:Dynamic) {
+            callback(null);
+        }
     }
 
     public override function imageInfoFromImageData(imageData:ImageData):haxe.ui.assets.ImageInfo {
@@ -73,8 +76,9 @@ class AssetsImpl extends AssetsBase {
     
     private override function getFontInternal(resourceId:String, callback:FontInfo->Void) {
         try {
-            var font = FontCache.getBitmapFont(resourceId);
+            var font = hxd.Res.loader.loadCache(resourceId, hxd.res.BitmapFont);
             callback({
+                name: resourceId,
                 data: font
             });
         } catch (error:Dynamic) {
