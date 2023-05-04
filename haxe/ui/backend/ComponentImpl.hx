@@ -34,7 +34,7 @@ class ComponentImpl extends ComponentBase {
     }
 
     private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
-        if (left == null || top == null || left < 0 || top < 0) {
+        if (left == null || top == null) {
             return;
         }
         
