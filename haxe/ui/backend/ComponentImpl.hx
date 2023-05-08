@@ -492,7 +492,7 @@ class ComponentImpl extends ComponentBase {
             last = c;
             c = c.parentComponent;
         }
-
+        
         if (last != null && last.parent != null) { // UI might have been added deep in a heaps hierachy, so lets get the _real_ screen pos
             var o = last.parent;
             while (o != null) {
