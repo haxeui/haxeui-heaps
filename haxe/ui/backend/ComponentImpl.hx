@@ -492,7 +492,7 @@ class ComponentImpl extends ComponentBase {
             last = c;
             c = c.parentComponent;
         }
-        
+
         if (last != null && last.parent != null) { // UI might have been added deep in a heaps hierachy, so lets get the _real_ screen pos
             var o = last.parent;
             while (o != null) {
@@ -505,12 +505,8 @@ class ComponentImpl extends ComponentBase {
         xpos *= Toolkit.scaleX;
         ypos *= Toolkit.scaleY;
 
-        if (Toolkit.scaleX != 1) {
-            xpos -= last.left;
-        }
-        if (Toolkit.scaleY != 1) {
-            ypos -= last.top;
-        }
+        xpos += last.left * (1-Toolkit.scaleX);
+        ypos += last.top * (1-Toolkit.scaleY);
 
         _cachedScreenX = xpos;
         _cachedScreenY = ypos;
