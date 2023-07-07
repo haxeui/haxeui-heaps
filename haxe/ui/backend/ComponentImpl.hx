@@ -66,6 +66,9 @@ class ComponentImpl extends ComponentBase {
     
     private var _mask:Mask = null;
     private override function handleClipRect(value:Rectangle) {
+        if (this.parentComponent == null) {
+            return;
+        }
         if (value != null) {
             if (_mask == null) {
                 _mask = new Mask(Std.int(value.width * Toolkit.scaleX), Std.int(value.height * Toolkit.scaleY), this.parentComponent);
