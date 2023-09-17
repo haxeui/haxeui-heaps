@@ -46,6 +46,7 @@ class ScreenImpl extends ScreenBase {
     }
     
     private function onWindowResize() {
+        MouseHelper.updateScale(true);
         resizeRootComponents();
     }
     
@@ -63,6 +64,7 @@ class ScreenImpl extends ScreenBase {
     }
     private function set_root(value:Object):Object {
         _root = value;
+        MouseHelper.updateScale();
         return value;
     }
 
