@@ -108,31 +108,10 @@ class MouseHelper {
         }
     }
     
-    private static var scaleX:Null<Float> = null;
-    private static var scaleY:Null<Float> = null;
-    public static function updateScale(force:Bool = false) {
-        if (force) {
-            scaleX = null;
-            scaleY = null;
-        }
-        if (scaleX != null && scaleY != null) {
-            return;
-        }
-
-        switch (Screen.instance.scene.scaleMode) {
-            case LetterBox(width, height, integerScale, horizontalAlign, verticalAlign):
-                scaleX = hxd.Window.getInstance().width / width;
-                scaleY = hxd.Window.getInstance().height / height;
-            case _:    
-                scaleX = 1;
-                scaleY = 1;
-        }
-    }
-
     private static function onMouseMove(e:hxd.Event) {
-        currentMouseX = e.relX / (Toolkit.scaleX * scaleX);
-        currentMouseY = e.relY / (Toolkit.scaleY * scaleY);
-        
+        Screen.instance.scene.camera.eventToCamera(e);
+        currentMouseX = e.relX / (Toolkit.scaleX);
+        currentMouseY = e.relY / (Toolkit.scaleY);
         var list = _callbacks.get(MouseEvent.MOUSE_MOVE);
         if (list == null || list.length == 0) {
             return;
@@ -143,8 +122,8 @@ class MouseHelper {
 
         var event = new MouseEvent(MouseEvent.MOUSE_MOVE);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX * scaleX);
-        event.screenY = e.relY / (Toolkit.scaleY * scaleY);
+        event.screenX = e.relX / (Toolkit.scaleX);
+        event.screenY = e.relY / (Toolkit.scaleY);
         for (l in list) {
             l(event);
 			if (event.canceled) {
@@ -154,6 +133,7 @@ class MouseHelper {
     }
     
     private static function onMouseDown(e:hxd.Event) {
+        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_DOWN);
         if (list == null || list.length == 0) {
             return;
@@ -164,8 +144,8 @@ class MouseHelper {
        
         var event = new MouseEvent(MouseEvent.MOUSE_DOWN);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX * scaleX);
-        event.screenY = e.relY / (Toolkit.scaleX * scaleX);
+        event.screenX = e.relX / (Toolkit.scaleX);
+        event.screenY = e.relY / (Toolkit.scaleX);
         event.data = e.button;
         for (l in list) {
             l(event);
@@ -176,6 +156,7 @@ class MouseHelper {
     }
     
     private static function onMouseUp(e:hxd.Event) {
+        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_UP);
         if (list == null || list.length == 0) {
             return;
@@ -186,8 +167,8 @@ class MouseHelper {
         
         var event = new MouseEvent(MouseEvent.MOUSE_UP);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX * scaleX);
-        event.screenY = e.relY / (Toolkit.scaleX * scaleX);
+        event.screenX = e.relX / (Toolkit.scaleX);
+        event.screenY = e.relY / (Toolkit.scaleX);
         event.data = e.button;
         for (l in list) {
             l(event);
@@ -198,6 +179,7 @@ class MouseHelper {
     }
     
     private static function onMouseWheel(e:hxd.Event) {
+        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_WHEEL);
         if (list == null || list.length == 0) {
             return;
