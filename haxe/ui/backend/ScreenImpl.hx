@@ -46,7 +46,6 @@ class ScreenImpl extends ScreenBase {
     }
     
     private function onWindowResize() {
-        trace("window resized");
         MouseHelper.updateScale(true);
         resizeRootComponents();
         if (_mapping.exists(UIEvent.RESIZE)) {
