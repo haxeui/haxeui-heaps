@@ -189,7 +189,39 @@ class ScreenImpl extends ScreenBase {
         return EventMapper.HAXEUI_TO_HEAPS.get(type) != null;
     }
 
+    private var _deferredEvents:Array<{type:String, listener:UIEvent->Void}> = null;
+    private function mapDeferredEvents() {
+        if (hxd.Window.getInstance() == null) {
+            return;
+        }
+
+        if (_deferredEvents == null) {
+            return;
+        }
+
+        while (_deferredEvents.length > 0) {
+            var info = _deferredEvents.shift();
+            mapEvent(info.type, info.listener);
+            if (_deferredEvents == null) {
+                break;
+            }
+        }
+        _deferredEvents = null;
+    }
+
     private override function mapEvent(type:String, listener:UIEvent->Void) {
+        if (hxd.Window.getInstance() == null) {
+            if (_deferredEvents == null) {
+                _deferredEvents = [];
+            }
+            _deferredEvents.push({
+                type: type,
+                listener: listener
+            });
+            return;
+        }
+        mapDeferredEvents();
+
         switch (type) {
             case MouseEvent.MOUSE_MOVE:
                 if (_mapping.exists(type) == false) {
