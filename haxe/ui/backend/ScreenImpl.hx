@@ -27,9 +27,9 @@ class ScreenImpl extends ScreenBase {
             return;
         }
         
-        _resizeListenerAdded = true;
         if (Window.getInstance() != null) {
             Window.getInstance().addResizeEvent(onWindowResize);
+            _resizeListenerAdded = true;
         }
     }
     
@@ -46,8 +46,12 @@ class ScreenImpl extends ScreenBase {
     }
     
     private function onWindowResize() {
+        trace("window resized");
         MouseHelper.updateScale(true);
         resizeRootComponents();
+        if (_mapping.exists(UIEvent.RESIZE)) {
+            _mapping.get(UIEvent.RESIZE)(new UIEvent(UIEvent.RESIZE));
+        }
     }
     
     private var _root:Object = null;
@@ -186,6 +190,9 @@ class ScreenImpl extends ScreenBase {
     // Events
     //***********************************************************************************************************
     private override function supportsEvent(type:String):Bool {
+        if (type == UIEvent.RESIZE) {
+            return true;
+        }
         return EventMapper.HAXEUI_TO_HEAPS.get(type) != null;
     }
 
@@ -199,6 +206,7 @@ class ScreenImpl extends ScreenBase {
             return;
         }
 
+        addResizeListener();
         while (_deferredEvents.length > 0) {
             var info = _deferredEvents.shift();
             mapEvent(info.type, info.listener);
@@ -238,17 +246,43 @@ class ScreenImpl extends ScreenBase {
                     _mapping.set(type, listener);
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                 }
-
-           case KeyboardEvent.KEY_DOWN:     
+            case KeyboardEvent.KEY_DOWN:     
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
                     KeyboardHelper.notify(KeyboardEvent.KEY_DOWN, __onKeyDown);
                 }
-           case KeyboardEvent.KEY_UP:     
+            case KeyboardEvent.KEY_UP:     
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
                     KeyboardHelper.notify(KeyboardEvent.KEY_UP, __onKeyUp);
                 }
+            case UIEvent.RESIZE:
+                if (_mapping.exists(type) == false) {
+                    _mapping.set(type, listener);
+                    addResizeListener();
+                }
+        }
+    }
+
+    private override function unmapEvent(type:String, listener:UIEvent->Void) {
+        switch (type) {
+            case MouseEvent.MOUSE_MOVE:
+                _mapping.remove(type);
+                MouseHelper.remove(MouseEvent.MOUSE_MOVE, __onMouseMove);
+            case MouseEvent.MOUSE_DOWN:
+                _mapping.remove(type);
+                MouseHelper.remove(MouseEvent.MOUSE_DOWN, __onMouseDown);
+            case MouseEvent.MOUSE_UP:
+                _mapping.remove(type);
+                MouseHelper.remove(MouseEvent.MOUSE_UP, __onMouseUp);
+            case KeyboardEvent.KEY_DOWN:     
+                _mapping.remove(type);
+                KeyboardHelper.remove(KeyboardEvent.KEY_DOWN, __onKeyDown);
+            case KeyboardEvent.KEY_UP:     
+                _mapping.remove(type);
+                KeyboardHelper.remove(KeyboardEvent.KEY_UP, __onKeyUp);
+            case UIEvent.RESIZE:
+                _mapping.remove(type);
         }
     }
     
