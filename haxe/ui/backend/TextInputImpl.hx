@@ -1,9 +1,12 @@
 package haxe.ui.backend;
 
-import haxe.ui.events.FocusEvent;
-import haxe.ui.core.InteractiveComponent;
 import h2d.TextInput;
+import haxe.ui.core.InteractiveComponent;
+import haxe.ui.events.FocusEvent;
+import haxe.ui.events.KeyboardEvent;
 import haxe.ui.events.UIEvent;
+import hxd.Event;
+import hxd.Key;
 
 class TextInputImpl extends TextDisplayImpl {
 
@@ -85,4 +88,93 @@ class TextInputImpl extends TextDisplayImpl {
         return measureTextRequired;
     }
     
+    private var _onKeyDown:KeyboardEvent->Void = null;
+    public var onKeyDown(null, set):KeyboardEvent->Void;
+    private function set_onKeyDown(value:KeyboardEvent->Void):KeyboardEvent->Void {
+        _onKeyDown = value;
+        if (_onKeyDown == null && _onKeyUp == null && _onKeyPress == null) {
+            unregisterInernalEvents();
+            return value;
+        }
+        registerInternalEvents();
+        return value;
+    }
+
+    private var _onKeyUp:KeyboardEvent->Void = null;
+    public var onKeyUp(null, set):KeyboardEvent->Void;
+    private function set_onKeyUp(value:KeyboardEvent->Void):KeyboardEvent->Void {
+        _onKeyUp = value;
+        if (_onKeyDown == null && _onKeyUp == null && _onKeyPress == null) {
+            unregisterInernalEvents();
+            return value;
+        }
+        registerInternalEvents();
+        return value;
+    }
+
+    private var _onKeyPress:KeyboardEvent->Void = null;
+    public var onKeyPress(null, set):KeyboardEvent->Void;
+    private function set_onKeyPress(value:KeyboardEvent->Void):KeyboardEvent->Void {
+        _onKeyPress = value;
+        if (_onKeyDown == null && _onKeyUp == null && _onKeyPress == null) {
+            unregisterInernalEvents();
+            return value;
+        }
+        registerInternalEvents();
+        return value;
+    }
+
+    private var _internalEventsRegistered = false;
+    private function registerInternalEvents() {
+        if (_internalEventsRegistered) {
+            return;
+        }
+        _internalEventsRegistered = true;
+        textInput.onKeyDown = onKeyDownInternal;
+        textInput.onKeyUp = onKeyUpInternal;
+    }
+
+    // heaps doesnt have a keypress event, so we'll hold onto down keys in order to dispatch the press event
+    private var _downKeys:Map<Int, Bool> = new Map<Int, Bool>();
+    private function unregisterInernalEvents() {
+        textInput.onKeyDown = null;
+        textInput.onKeyUp = null;
+        _internalEventsRegistered = false;
+    }
+
+    private function onKeyDownInternal(e:Event) {
+        _downKeys.set(e.keyCode, true);
+        dispatchEvent(KeyboardEvent.KEY_DOWN, e.keyCode);
+    }
+
+    private function onKeyUpInternal(e:Event) {
+        var hadDownKey = (_downKeys.exists(e.keyCode) && _downKeys.get(e.keyCode) == true);
+        _downKeys.remove(e.keyCode);
+        dispatchEvent(KeyboardEvent.KEY_UP, e.keyCode);
+        if (hadDownKey) {
+            dispatchEvent(KeyboardEvent.KEY_PRESS, e.keyCode);
+        }
+    }
+
+    private function dispatchEvent(type:String, keyCode:Int) {
+        var event = new KeyboardEvent(type);
+        event.keyCode = keyCode;
+        event.altKey = Key.isDown(Key.ALT);
+        event.shiftKey = Key.isDown(Key.SHIFT);
+        event.ctrlKey = Key.isDown(Key.CTRL); 
+        switch (type) {
+            case KeyboardEvent.KEY_DOWN:
+                if (_onKeyDown != null) {
+                    _onKeyDown(event);
+                }
+            case KeyboardEvent.KEY_UP:
+                if (_onKeyUp != null) {
+                    _onKeyUp(event);
+                }
+            case KeyboardEvent.KEY_PRESS:
+                if (_onKeyPress != null) {
+                    _onKeyPress(event);
+                }
+        }
+    }
 }

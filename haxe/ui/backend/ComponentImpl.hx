@@ -12,6 +12,7 @@ import haxe.ui.core.ImageDisplay;
 import haxe.ui.core.Screen;
 import haxe.ui.core.TextDisplay;
 import haxe.ui.core.TextInput;
+import haxe.ui.events.KeyboardEvent;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
 import haxe.ui.geom.Rectangle;
@@ -370,6 +371,24 @@ class ComponentImpl extends ComponentBase {
                         MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                         _eventMap.set(MouseEvent.MIDDLE_MOUSE_UP, listener);
                     }
+                }
+
+            case KeyboardEvent.KEY_DOWN:
+                if (hasTextInput() && !_eventMap.exists(KeyboardEvent.KEY_DOWN)) {
+                    _eventMap.set(KeyboardEvent.KEY_DOWN, listener);
+                    getTextInput().onKeyDown = listener;
+                }
+
+            case KeyboardEvent.KEY_UP:
+                if (hasTextInput() && !_eventMap.exists(KeyboardEvent.KEY_UP)) {
+                    _eventMap.set(KeyboardEvent.KEY_UP, listener);
+                    getTextInput().onKeyUp = listener;
+                }
+
+            case KeyboardEvent.KEY_PRESS:
+                if (hasTextInput() && !_eventMap.exists(KeyboardEvent.KEY_PRESS)) {
+                    _eventMap.set(KeyboardEvent.KEY_PRESS, listener);
+                    getTextInput().onKeyPress = listener;
                 }
         }
     }
