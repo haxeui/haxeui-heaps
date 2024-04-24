@@ -1,24 +1,29 @@
 package haxe.ui.backend.heaps;
 
 import h2d.Tile;
+import haxe.ui.geom.Rectangle;
 import haxe.ui.util.ColorUtil;
 
 class TileCache {
     private static var _cache:Map<String, Tile> = new Map<String, Tile>();
     
-    public static function set(resourceId:String, tile:Tile):Tile {
-        _cache.set(resourceId, tile);
+    public static function set(resourceId:String, tile:Tile, trc:Rectangle = null):Tile {
+        _cache.set(buildCacheKey(resourceId, trc), tile);
         return tile;
     }
     
-    public static function get(resourceId:String):Tile {
-        return _cache.get(resourceId);
+    public static function get(resourceId:String, trc:Rectangle = null):Tile {
+        return _cache.get(buildCacheKey(resourceId, trc));
     }
     
-    public static function exists(resourceId:String):Bool {
-        return _cache.exists(resourceId);
+    private static inline function buildCacheKey(resourceId:String, trc:Rectangle = null):String {
+        var key = resourceId;
+        if (trc != null) {
+            key += "_" + trc.left + "_" + trc.top + "_" + trc.width + "_" + trc.height;
+        }
+        return key;
     }
-    
+
     public static function getGradient(type:String, startCol:Int, endCol:Int, size:Int = 256, alpha:Int = 255):Tile {
         var key = type + "_" + startCol + "_" + endCol + "_" + size + "_" + alpha;
         if (_cache.exists(key)) {

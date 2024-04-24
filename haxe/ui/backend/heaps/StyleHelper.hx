@@ -105,12 +105,7 @@ class StyleHelper {
                     bgImageGraphics = cast(container.getChildAt(1), Graphics);
                 }
                 bgImageGraphics.clear();
-                
-                var tile = TileCache.get(style.backgroundImage);
-                if (tile == null) {
-                    tile = TileCache.set(style.backgroundImage, h2d.Tile.fromBitmap(imageInfo.data));
-                }
-                
+
                 var trc:Rectangle = new Rectangle(0, 0, imageInfo.width, imageInfo.height);
                 if (style.backgroundImageClipTop != null
                     && style.backgroundImageClipLeft != null
@@ -122,6 +117,24 @@ class StyleHelper {
                                             style.backgroundImageClipBottom - style.backgroundImageClipTop);
                 }
                 
+                var tile = TileCache.get(style.backgroundImage);
+                if (tile == null) {
+                    tile = h2d.Tile.fromBitmap(imageInfo.data);
+                    tile.getTexture().filter = Linear;
+                    TileCache.set(style.backgroundImage, tile);
+                }
+
+                if (trc != null) {
+                    /*
+                    var subTile = TileCache.get(style.backgroundImage, trc);
+                    if (subTile == null) {
+                        subTile = tile.sub(trc.left, trc.top, trc.width, trc.height);
+                        TileCache.set(style.backgroundImage, subTile, trc);
+                    }
+                    tile = subTile;
+                    */
+                }
+
                 var slice:Rectangle = null;
                 if (style.backgroundImageSliceTop != null
                     && style.backgroundImageSliceLeft != null
@@ -133,9 +146,6 @@ class StyleHelper {
                                           style.backgroundImageSliceBottom - style.backgroundImageSliceTop);
                 }
                 
-                if (trc != null) {
-                    tile = tile.sub(trc.left, trc.top, trc.width, trc.height);
-                }
                 if (slice != null) {
                     var rects:Slice9Rects = Slice9.buildRects(w, h, trc.width, trc.height, slice);
                     var srcRects:Array<Rectangle> = rects.src;
@@ -146,46 +156,46 @@ class StyleHelper {
                         var scaleX = dstRects[4].width / ( srcRects[4].width * Math.ceil(dstRects[4].width / srcRects[4].width) );
                         var scaleY = dstRects[4].height / ( srcRects[4].height * Math.ceil(dstRects[4].height / srcRects[4].height) );
                         
-                        paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
-                        paintTileRepeat(bgImageGraphics, tile, srcRects[1], scaleX, 1, dstRects[1]);
-                        paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
+                        paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0], style.backgroundImage);
+                        paintTileRepeat(bgImageGraphics, tile, srcRects[1], scaleX, 1, dstRects[1], style.backgroundImage);
+                        paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2], style.backgroundImage);
                         
                         srcRects[3].bottom--;
-                        paintTileRepeat(bgImageGraphics, tile, srcRects[3], 1, scaleY, dstRects[3]);
+                        paintTileRepeat(bgImageGraphics, tile, srcRects[3], 1, scaleY, dstRects[3], style.backgroundImage);
                         
                         srcRects[4].bottom--;
-                        paintTileRepeat(bgImageGraphics, tile, srcRects[4], scaleX, scaleY, dstRects[4]);
+                        paintTileRepeat(bgImageGraphics, tile, srcRects[4], scaleX, scaleY, dstRects[4], style.backgroundImage);
                         
                         srcRects[5].bottom--;
-                        paintTileRepeat(bgImageGraphics, tile, srcRects[5], 1, scaleY, dstRects[5]);
+                        paintTileRepeat(bgImageGraphics, tile, srcRects[5], 1, scaleY, dstRects[5], style.backgroundImage);
                         
                         dstRects[6].bottom++;
-                        paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
+                        paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6], style.backgroundImage);
                         dstRects[7].bottom++;
-                        paintTileRepeat(bgImageGraphics, tile, srcRects[7], scaleX, 1, dstRects[7]);
+                        paintTileRepeat(bgImageGraphics, tile, srcRects[7], scaleX, 1, dstRects[7], style.backgroundImage);
                         dstRects[8].bottom++;
-                        paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
+                        paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8], style.backgroundImage);
                     }
                     else {
-                        paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0]);
-                        paintTile(bgImageGraphics, tile, srcRects[1], dstRects[1]);
-                        paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2]);
+                        paintTile(bgImageGraphics, tile, srcRects[0], dstRects[0], style.backgroundImage);
+                        paintTile(bgImageGraphics, tile, srcRects[1], dstRects[1], style.backgroundImage);
+                        paintTile(bgImageGraphics, tile, srcRects[2], dstRects[2], style.backgroundImage);
                         
                         srcRects[3].bottom--;
-                        paintTile(bgImageGraphics, tile, srcRects[3], dstRects[3]);
+                        paintTile(bgImageGraphics, tile, srcRects[3], dstRects[3], style.backgroundImage);
                         
                         srcRects[4].bottom--;
-                        paintTile(bgImageGraphics, tile, srcRects[4], dstRects[4]);
+                        paintTile(bgImageGraphics, tile, srcRects[4], dstRects[4], style.backgroundImage);
                         
                         srcRects[5].bottom--;
-                        paintTile(bgImageGraphics, tile, srcRects[5], dstRects[5]);
+                        paintTile(bgImageGraphics, tile, srcRects[5], dstRects[5], style.backgroundImage);
                         
                         dstRects[6].bottom++;
-                        paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6]);
+                        paintTile(bgImageGraphics, tile, srcRects[6], dstRects[6], style.backgroundImage);
                         dstRects[7].bottom++;
-                        paintTile(bgImageGraphics, tile, srcRects[7], dstRects[7]);
+                        paintTile(bgImageGraphics, tile, srcRects[7], dstRects[7], style.backgroundImage);
                         dstRects[8].bottom++;
-                        paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8]);
+                        paintTile(bgImageGraphics, tile, srcRects[8], dstRects[8], style.backgroundImage);
                     }
                 } else {
                     var scaleX:Float = 1;
@@ -209,10 +219,10 @@ class StyleHelper {
                     }
                     
                     if (style.backgroundImageRepeat == "repeat") {
-                        paintTileRepeat(bgImageGraphics, tile, trc, scaleX, scaleY, new Rectangle(0, 0, w, h));
+                        paintTileRepeat(bgImageGraphics, tile, trc, scaleX, scaleY, new Rectangle(0, 0, w, h), style.backgroundImage);
                     }
                     else {
-                        paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, trc.width * scaleX, trc.height * scaleY));
+                        paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, trc.width * scaleX, trc.height * scaleY), style.backgroundImage);
                     }
                 }
             });
@@ -613,17 +623,22 @@ class StyleHelper {
         } // End borders
     }
     
-    private static function paintTile(g:Graphics, tile:Tile, src:Rectangle, dst:Rectangle) {
+    private static function paintTile(g:Graphics, tile:Tile, src:Rectangle, dst:Rectangle, backgroundImage:String) {
         var scaleX = dst.width / src.width;
         var scaleY = dst.height / src.height;
-        var sub = tile.sub(src.left * scaleX, src.top * scaleY, src.width, src.height);
+        var sub = TileCache.get(backgroundImage + "_" + scaleX + "_" + scaleY, src);
+        if (sub == null) {
+            sub = tile.sub(src.left * scaleX, src.top * scaleY, src.width, src.height);
+            TileCache.set(backgroundImage + "_" + scaleX + "_" + scaleY, sub, src);
+        }
+        g.smooth = true;
         g.beginTileFill(dst.left, dst.top, scaleX, scaleY, sub);
         g.drawRect(dst.left, dst.top, dst.width, dst.height);
         g.endFill();
     }
   
     // Used to repeat part (src) of an image (tile) with a given scale (srcScaleX, srcScaleY) inside a target (dst)
-    private static function paintTileRepeat(g:Graphics, tile:Tile, src:Rectangle, srcScaleX:Float, srcScaleY:Float, dst:Rectangle) {
+    private static function paintTileRepeat(g:Graphics, tile:Tile, src:Rectangle, srcScaleX:Float, srcScaleY:Float, dst:Rectangle, backgroundImage:String) {
         var scaledw = srcScaleX * src.width;
         var scaledh = srcScaleY * src.height;
         var wCount = dst.width / scaledw;
@@ -638,7 +653,7 @@ class StyleHelper {
         // Full images
         for (iwCurr in 0...lastw) {
             for (ihCurr in 0...lasth) {
-                paintTile(g, tile, src, new Rectangle(dst.left + iwCurr * scaledw, dst.top + ihCurr * scaledh, scaledw, scaledh));
+                paintTile(g, tile, src, new Rectangle(dst.left + iwCurr * scaledw, dst.top + ihCurr * scaledh, scaledw, scaledh), backgroundImage);
             }
         }
         
@@ -647,7 +662,7 @@ class StyleHelper {
         var clippedw = (wCount - lastw) * scaledw;
         localRect.width = (wCount - lastw) * src.width;
         for (ihCurr in 0...lasth) {
-            paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + ihCurr * scaledh, clippedw, scaledh));
+            paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + ihCurr * scaledh, clippedw, scaledh), backgroundImage);
         }
         
         // Images clipped in height
@@ -655,13 +670,13 @@ class StyleHelper {
         localRect.width = src.width;
         localRect.height = (hCount - lasth) * src.height;
         for (iwCurr in 0...lastw) {
-            paintTile(g, tile, localRect, new Rectangle(dst.left + iwCurr * scaledw, dst.top + lasth * scaledh, scaledw, clippedh));
+            paintTile(g, tile, localRect, new Rectangle(dst.left + iwCurr * scaledw, dst.top + lasth * scaledh, scaledw, clippedh), backgroundImage);
         }
         
         // Image clipped in both
         localRect.width = (wCount - lastw) * src.width;
         if (localRect.width > 1 && localRect.height > 1) {
-            paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + lasth * scaledh, clippedw, clippedh));
+            paintTile(g, tile, localRect, new Rectangle(dst.left + lastw * scaledw, dst.top + lasth * scaledh, clippedw, clippedh), backgroundImage);
         }
     }
 
