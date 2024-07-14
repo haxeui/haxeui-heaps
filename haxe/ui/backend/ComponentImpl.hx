@@ -231,12 +231,17 @@ class ComponentImpl extends ComponentBase {
         }
         */
         if (style.filter != null && style.filter.length > 0) {
-            var filterG = new Group();
-            for (f in style.filter) {
-                var filter = FilterConverter.convertFilter(f);
-                filterG.add(filter);
+            if (style.filter.length == 1) {
+                filter = FilterConverter.convertFilter(style.filter[0]);
+            } else {
+                // filters must be added to Group prior binding it to any Object otherwise Behavior is undefined.
+                var filterG = new Group();
+                for (f in style.filter) {
+                    var filter = FilterConverter.convertFilter(f);
+                    filterG.add(filter);
+                }
+                filter = filterG;
             }
-            filter = filterG;
         } else {
             filter = null;
         }
