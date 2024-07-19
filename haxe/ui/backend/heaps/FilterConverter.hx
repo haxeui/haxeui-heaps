@@ -53,6 +53,12 @@ class FilterConverter {
             var cM = new ColorMatrix();
             cM.matrix.colorSaturate(saturate.multiplier);
             output = cM;
+        } else if ((input is haxe.ui.filters.Invert)) {
+            var inputInvert:haxe.ui.filters.Invert = cast(input, haxe.ui.filters.Invert);
+            output = new InvertFilter(inputInvert.multiplier);
+        } else if ((input is haxe.ui.filters.Brightness)) {
+            var inputBrightness:haxe.ui.filters.Brightness = cast(input, haxe.ui.filters.Brightness);
+            output = new BrightnessFilter(inputBrightness.multiplier);
         }
         
         return output;
@@ -110,7 +116,6 @@ class GrayscaleFilter extends ColorMatrix {
     private static inline var BLUE:Float = 0.114;
     
     public function new(amount:Float = 1) {
-
         var m = new Matrix();
         m.zero();
         m._11 = 1 + (RED - 1) * amount;
@@ -124,6 +129,37 @@ class GrayscaleFilter extends ColorMatrix {
         m._33 = 1 + (BLUE - 1) * amount;
         m._44 = 1;
 
+        super(m);
+    }
+}
+
+class InvertFilter extends ColorMatrix {
+    public function new(multiplier:Float = 1) {
+        var m = new Matrix();
+        m.zero();
+        m._11 = -1 * multiplier;
+        m._22 = -1 * multiplier;
+        m._33 = -1 * multiplier;
+        m._41 = 1;
+        m._42 = 1;
+        m._43 = 1;
+        m._44 = 1;
+        super(m);
+    }
+}
+
+class BrightnessFilter extends ColorMatrix { 
+    public function new(multiplier:Float = 1) {
+        // In html, 0 is a black image, 1 has no effect, over it's a multiplier
+        // So we adapt
+        if (multiplier <= 1) multiplier = (multiplier -1) * 1;
+        if (multiplier > 1) multiplier = (multiplier -1) * 110/255;
+
+        var m = new Matrix();
+        m.identity();
+        m._41 = multiplier;
+        m._42 = multiplier;
+        m._43 = multiplier;
         super(m);
     }
 }
