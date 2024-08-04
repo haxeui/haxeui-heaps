@@ -1,9 +1,10 @@
 package haxe.ui.backend;
 
-import h2d.filter.Group;
-import h2d.Mask;
+import h2d.Graphics;
 import h2d.Object;
 import h2d.RenderContext;
+import h2d.filter.Group;
+import h2d.filter.Mask;
 import haxe.ui.Toolkit;
 import haxe.ui.backend.heaps.FilterConverter;
 import haxe.ui.backend.heaps.MouseHelper;
@@ -31,7 +32,11 @@ class ComponentImpl extends ComponentBase {
     public function new() {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
-        addChild(new Object()); // style graphics container
+        var container = new Object();
+        var styleGraphics = new Graphics();
+        styleGraphics.name = "styleGraphics";
+        container.addChild(styleGraphics);
+        addChild(container); // style graphics container
         //cast(this, Component).ready();
     }
 
@@ -39,17 +44,9 @@ class ComponentImpl extends ComponentBase {
         if (left == null || top == null) {
             return;
         }
-        
-        left = Std.int(left);
-        top = Std.int(top);
 
-        if (_mask == null) {
-            if (this.x != left) this.x = left;
-            if (this.y != top)  this.y = top;
-        } else {
-            if (_mask.x != left) _mask.x = left;
-            if (_mask.y != top)  _mask.y = top;
-        }
+        if (this.x != left) this.x = left;
+        if (this.y != top)  this.y = top;
     }
     
     private override function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
@@ -66,57 +63,37 @@ class ComponentImpl extends ComponentBase {
         super.visible = show;
     }
     
-    private var _mask:Mask = null;
+    private var _maskGraphics:Graphics = null;
     private override function handleClipRect(value:Rectangle) {
         if (this.parentComponent == null) {
             return;
         }
-        if (value != null) {
-            if (_mask == null) {
-                _mask = new Mask(Std.int(value.width * Toolkit.scaleX), Std.int(value.height * Toolkit.scaleY), this.parentComponent);
-                _mask.addChild(this);
-            }
-            value.toInts();
-            this.x = -value.left;
-            this.y = -value.top;
-            _mask.x = left;
-            _mask.y = top;
-            _mask.width = Std.int(value.width);
-            _mask.height = Std.int(value.height);
-            
-            var hasFilter = hasFilter();
-            if (hasFilter) {
-                this.x += 1;
-                this.y -= 4;
-                _mask.y += 4;
-                _mask.width += 3;
-            }
-        } else if (_mask != null) {
-            _mask = null;
+
+        if (_maskGraphics == null) {
+            _maskGraphics = new Graphics();
+            _maskGraphics.name = "maskGraphics";
+
+            parentComponent.getChildAt(0).addChildAt(_maskGraphics, 0);
+            this.filter = new Mask(_maskGraphics);
         }
-    }
-    
-    /*
-     * This is a hack for now, since filters and masks dont play well together, investigate mask filters:
-            var myMaskedElementsContainer = new Object();
-            var mask = new Graphics();
-            mask.beginFill(0xFF0000, 1.0);
-            mask.drawRect(0, 0, maskWidth, maskHeight);
-            parent.addChild(mask); // Must be added before masked content
-            parent.addChild(myMaskedElementsContainer);
-            myMaskedElementsContainer.filter = new Mask(mask); // h2d.filter.Mask
-     */
-    private function hasFilter() {
-        var p = this;
-        while (p != null) {
-            if (p.style.filter != null) {
-                return true;
-            }
-            p = p.parentComponent;
+
+        var borderSize:Float = 0;
+        if (parentComponent.style == null) {
+            parentComponent.validateNow();
         }
-        return false;
+        borderSize = parentComponent.style.borderSize;
+
+        _maskGraphics.clear();
+        _maskGraphics.beginFill(0xFF00FF, 1.0);
+        _maskGraphics.drawRect(0, 0, value.width, value.height);
+        _maskGraphics.endFill();
+        _maskGraphics.x = borderSize;
+        _maskGraphics.y = borderSize;
+
+        this.y = -value.top + borderSize;
+        this.x = -value.left + borderSize;
     }
-    
+
     //***********************************************************************************************************
     // Text related
     //***********************************************************************************************************
@@ -218,7 +195,7 @@ class ComponentImpl extends ComponentBase {
         }
         deallocate = true;
         removeChildren();
-        _mask = null;
+        _maskGraphics = null;
         remove();
     }
 
@@ -704,7 +681,7 @@ class ComponentImpl extends ComponentBase {
         // if .x/.y property is access directly, we still want to honour it, so we will set haxeui's
         // .left/.top to keep them on sync, but only if the components position isnt already invalid
         // (which would mean this has come from a haxeui validation cycle)
-        if (changed == true && isComponentInvalid(InvalidationFlags.POSITION) == false && _mask == null) {
+        if (changed == true && isComponentInvalid(InvalidationFlags.POSITION) == false && _maskGraphics == null) {
             if (this.x != this.left) {
                 this.left = this.x;
             }
