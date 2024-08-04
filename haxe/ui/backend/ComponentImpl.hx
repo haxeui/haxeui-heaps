@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import h2d.filter.Group;
 import h2d.Mask;
 import h2d.Object;
 import h2d.RenderContext;
@@ -220,7 +221,7 @@ class ComponentImpl extends ComponentBase {
         _mask = null;
         remove();
     }
-    
+
     private override function applyStyle(style:Style) {
         /*
         if (style.cursor != null && style.cursor == "pointer") {
@@ -229,9 +230,18 @@ class ComponentImpl extends ComponentBase {
             cursor = Cursor.Default;
         }
         */
-
         if (style.filter != null && style.filter.length > 0) {
-            filter = FilterConverter.convertFilter(style.filter[0]);
+            if (style.filter.length == 1) {
+                filter = FilterConverter.convertFilter(style.filter[0]);
+            } else {
+                // filters must be added to Group prior binding it to any Object otherwise Behavior is undefined.
+                var filterG = new Group();
+                for (f in style.filter) {
+                    var filter = FilterConverter.convertFilter(f);
+                    filterG.add(filter);
+                }
+                filter = filterG;
+            }
         } else {
             filter = null;
         }
