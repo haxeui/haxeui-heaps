@@ -48,6 +48,9 @@ class ComponentImpl extends ComponentBase {
             return;
         }
 
+        left = Math.fround(left);
+        top = Math.fround(top);
+
         if (this.x != left) this.x = left;
         if (this.y != top)  this.y = top;
     }
