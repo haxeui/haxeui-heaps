@@ -3,6 +3,7 @@ package haxe.ui.backend;
 import h2d.Graphics;
 import h2d.Object;
 import h2d.RenderContext;
+import h2d.filter.Filter;
 import h2d.filter.Group;
 import h2d.filter.Mask;
 import haxe.ui.Toolkit;
@@ -72,7 +73,8 @@ class ComponentImpl extends ComponentBase {
             _maskGraphics.name = "maskGraphics";
 
             _container.addChildAt(_maskGraphics, 0);
-            this.filter = new Mask(_maskGraphics);
+            _maskFilter = new Mask(_maskGraphics);
+            this.filter = createFilterGroup();
         }
 
         var borderSize:Float = 0;
@@ -205,6 +207,27 @@ class ComponentImpl extends ComponentBase {
         remove();
     }
 
+    private var _currentStyleFilters:Array<Filter> = null;
+    private var _maskFilter:Mask = null;
+    private function createFilterGroup() {
+        var n = 0;
+        var filterGroup = new Group();
+        if (_maskFilter != null) {
+            filterGroup.add(_maskFilter);
+            n++;
+        }
+        if (_currentStyleFilters != null) {
+            for (f in _currentStyleFilters) {
+                filterGroup.add(f);
+                n++;
+            }
+        }
+        if (n == 0) {
+            return null;
+        }
+        return filterGroup;
+    }
+
     private override function applyStyle(style:Style) {
         /*
         if (style.cursor != null && style.cursor == "pointer") {
@@ -214,19 +237,15 @@ class ComponentImpl extends ComponentBase {
         }
         */
         if (style.filter != null && style.filter.length > 0) {
-            if (style.filter.length == 1) {
-                _container.filter = FilterConverter.convertFilter(style.filter[0]);
-            } else {
-                // filters must be added to Group prior binding it to any Object otherwise Behavior is undefined.
-                var filterG = new Group();
-                for (f in style.filter) {
-                    var filter = FilterConverter.convertFilter(f);
-                    filterG.add(filter);
-                }
-                _container.filter = filterG;
+            _currentStyleFilters = [];
+            for (f in style.filter) {
+                var filter = FilterConverter.convertFilter(f);
+                _currentStyleFilters.push(filter);
             }
+            this.filter = createFilterGroup();
         } else {
-            _container.filter = null;
+            _currentStyleFilters = [];
+            this.filter = createFilterGroup();
         }
 
         if (style.hidden != null) {
