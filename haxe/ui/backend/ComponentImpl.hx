@@ -26,17 +26,19 @@ class ComponentImpl extends ComponentBase {
     public var styleable:Bool = true;
     
     private var _eventMap:Map<String, UIEvent->Void>;
+    private var _container:Object = null;
     
     static inline var INDEX_OFFSET = 1; // offset everything because 0th-child is always the style graphics container
 
     public function new() {
         super();
         _eventMap = new Map<String, UIEvent->Void>();
-        var container = new Object();
+        _container = new Object();
+        _container.name = "container";
         var styleGraphics = new Graphics();
         styleGraphics.name = "styleGraphics";
-        container.addChild(styleGraphics);
-        addChild(container); // style graphics container
+        _container.addChild(styleGraphics);
+        addChild(_container); // style graphics container
         //cast(this, Component).ready();
     }
 
@@ -65,20 +67,16 @@ class ComponentImpl extends ComponentBase {
     
     private var _maskGraphics:Graphics = null;
     private override function handleClipRect(value:Rectangle) {
-        if (this.parentComponent == null) {
-            return;
-        }
-
         if (_maskGraphics == null) {
             _maskGraphics = new Graphics();
             _maskGraphics.name = "maskGraphics";
 
-            parentComponent.getChildAt(0).addChildAt(_maskGraphics, 0);
+            _container.addChildAt(_maskGraphics, 0);
             this.filter = new Mask(_maskGraphics);
         }
 
         var borderSize:Float = 0;
-        if (parentComponent.style == null) {
+        if (parentComponent != null && parentComponent.style == null) {
             parentComponent.validateNow();
         }
         borderSize = parentComponent.style.borderSize;
@@ -87,11 +85,19 @@ class ComponentImpl extends ComponentBase {
         _maskGraphics.beginFill(0xFF00FF, 1.0);
         _maskGraphics.drawRect(0, 0, value.width, value.height);
         _maskGraphics.endFill();
-        _maskGraphics.x = borderSize;
-        _maskGraphics.y = borderSize;
+        _maskGraphics.x = value.left;//this.left;
+        _maskGraphics.y = value.top;//this.top;
 
-        this.y = -value.top + borderSize;
-        this.x = -value.left + borderSize;
+        // is this a hack? We dont want to move the component if the clip rect is the 
+        // full size of the component (like in the case of clip:true), feels wrong
+        // for some reason, but without this, clip:true components move around
+        // when they shouldnt (which i dont fully understand)
+        if (this.width != value.width) {
+            this.x = -value.left + borderSize;
+        }
+        if (this.height != value.height) {
+            this.y = -value.top + borderSize;
+        }
     }
 
     //***********************************************************************************************************
@@ -209,7 +215,7 @@ class ComponentImpl extends ComponentBase {
         */
         if (style.filter != null && style.filter.length > 0) {
             if (style.filter.length == 1) {
-                filter = FilterConverter.convertFilter(style.filter[0]);
+                _container.filter = FilterConverter.convertFilter(style.filter[0]);
             } else {
                 // filters must be added to Group prior binding it to any Object otherwise Behavior is undefined.
                 var filterG = new Group();
@@ -217,10 +223,10 @@ class ComponentImpl extends ComponentBase {
                     var filter = FilterConverter.convertFilter(f);
                     filterG.add(filter);
                 }
-                filter = filterG;
+                _container.filter = filterG;
             }
         } else {
-            filter = null;
+            _container.filter = null;
         }
 
         if (style.hidden != null) {
