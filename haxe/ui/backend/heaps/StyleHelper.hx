@@ -43,13 +43,13 @@ class StyleHelper {
             borderAlpha = style.borderOpacity;
         }
         
-        var styleGraphics:Graphics = null;
-        if (container.numChildren == 0) {
+        var styleGraphics:Graphics = cast(container.getObjectByName("styleGraphics"), Graphics);
+        if (styleGraphics == null) {
             styleGraphics = new Graphics();
+            styleGraphics.name = "styleGraphics";
             container.addChildAt(styleGraphics, 0);
-        } else {
-            styleGraphics = cast(container.getChildAt(0), Graphics);
         }
+
         styleGraphics.clear();
         
         var borderRadius:Float = 0;
