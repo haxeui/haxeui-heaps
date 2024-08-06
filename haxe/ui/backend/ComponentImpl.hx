@@ -243,11 +243,13 @@ class ComponentImpl extends ComponentBase {
             _currentStyleFilters = [];
             for (f in style.filter) {
                 var filter = FilterConverter.convertFilter(f);
-                _currentStyleFilters.push(filter);
+                if (filter != null) {
+                    _currentStyleFilters.push(filter);
+                }
             }
             this.filter = createFilterGroup();
         } else {
-            _currentStyleFilters = [];
+            _currentStyleFilters = null;
             this.filter = createFilterGroup();
         }
 
