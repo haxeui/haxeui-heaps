@@ -790,12 +790,13 @@ class ComponentImpl extends ComponentBase {
                 if (isInteractiveAbove(x, y)) {
                     return;
                 }
+
+                var cursor = calcCursor();
+                if (cursor != null) {
+                    Screen.instance.setCursor(cursor);
+                }
             }
 
-            var cursor = calcCursor();
-            if (cursor != null) {
-                Screen.instance.setCursor(cursor);
-            }
             
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
             if (fn != null) {
