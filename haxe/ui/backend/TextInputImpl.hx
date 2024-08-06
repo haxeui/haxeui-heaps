@@ -26,6 +26,13 @@ class TextInputImpl extends TextDisplayImpl {
         return textInput;
     }
 
+    // we're actually going to override this function so that it always returns
+    // h2d.Text.Align.Left - this is because heaps text input doesnt seem to like
+    // center aligned text (or right aligned), for now will simply turn it off
+    private override function getAlign(align:String):h2d.Text.Align {
+        return h2d.Text.Align.Left;
+    }
+
     public override function focus() {
         Toolkit.callLater(function() {
             textInput.focus();
