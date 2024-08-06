@@ -790,8 +790,9 @@ class ComponentImpl extends ComponentBase {
                 }
             }
 
-            if (this.style != null) {
-                Screen.instance.setCursor(calcCursor());
+            var cursor = calcCursor();
+            if (cursor != null) {
+                Screen.instance.setCursor(cursor);
             }
             
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
@@ -852,9 +853,11 @@ class ComponentImpl extends ComponentBase {
 
                 _mouseDownFlag = true;
                 
+                /* TODO: feels hacky (ill-conceived?)
                 if (this.style != null && (this.style.cursor == "row-resize" || this.style.cursor == "col-resize")) {
                     Screen.instance.lockCursor();
                 }
+                */
                 
                 _mouseDownButton = button;
                 var type = switch(button) {
@@ -921,10 +924,12 @@ class ComponentImpl extends ComponentBase {
                 }
             }
 
+            /* TODO: feels hacky (ill-conceived?)
             if (_mouseDownFlag && this.style != null) {
                 Screen.instance.unlockCursor();
                 Screen.instance.setCursor(calcCursor());
             }
+            */
             
             _mouseDownFlag = false;
             var type = switch(button) {
@@ -943,10 +948,12 @@ class ComponentImpl extends ComponentBase {
                 event.canceled = mouseEvent.canceled;
             }
         } else {
+            /* TODO: feels hacky (ill-conceived?)
             if (_mouseDownFlag) {
                 Screen.instance.unlockCursor();
                 Screen.instance.setCursor("default");
             }
+            */
         }
         _mouseDownFlag = false;
     }
