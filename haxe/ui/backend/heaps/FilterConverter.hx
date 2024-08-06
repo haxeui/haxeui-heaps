@@ -24,7 +24,7 @@ class FilterConverter {
             if (inputDropShadow.inner) { // TODO: temp
                 return new h2d.filter.InnerGlow(inputDropShadow.color, .1, 1, 1);
             }
-            var dropShadow = new h2d.filter.DropShadow(inputDropShadow.distance, .1, inputDropShadow.color, inputDropShadow.alpha * 2, 1, 1, 1, true);
+            var dropShadow = new h2d.filter.DropShadow(inputDropShadow.distance, 0.785, inputDropShadow.color, inputDropShadow.alpha * 2, 1, 1, 1, true);
             output = dropShadow;
         } else if ((input is haxe.ui.filters.BoxShadow)) {
             var inputDropShadow:haxe.ui.filters.BoxShadow = cast(input, haxe.ui.filters.BoxShadow);
