@@ -1,15 +1,15 @@
 package haxe.ui.backend.heaps;
 
-import h3d.mat.Pass;
 import h2d.RenderContext;
-import h2d.filter.Glow;
-import haxe.ui.filters.Saturate;
 import h2d.filter.Blur;
-import h3d.Matrix;
-import haxe.ui.util.Color;
-import haxe.ui.filters.Tint;
-import h2d.filter.Filter;
 import h2d.filter.ColorMatrix;
+import h2d.filter.Filter;
+import h2d.filter.Glow;
+import h3d.Matrix;
+import h3d.mat.Pass;
+import haxe.ui.filters.Saturate;
+import haxe.ui.filters.Tint;
+import haxe.ui.util.Color;
 
 class FilterConverter {
     public static function convertFilter(input:haxe.ui.filters.Filter):Filter {
@@ -21,10 +21,16 @@ class FilterConverter {
         
         if ((input is haxe.ui.filters.DropShadow)) {
             var inputDropShadow:haxe.ui.filters.DropShadow = cast(input, haxe.ui.filters.DropShadow);
-            var dropShadow = new h2d.filter.DropShadow(inputDropShadow.distance, 0.785, inputDropShadow.color, inputDropShadow.alpha * 2, 1, 1, 1, true);
+            if (inputDropShadow.inner) { // TODO: temp
+                return new h2d.filter.InnerGlow(inputDropShadow.color, .1, 1, 1);
+            }
+            var dropShadow = new h2d.filter.DropShadow(inputDropShadow.distance, .1, inputDropShadow.color, inputDropShadow.alpha * 2, 1, 1, 1, true);
             output = dropShadow;
         } else if ((input is haxe.ui.filters.BoxShadow)) {
             var inputDropShadow:haxe.ui.filters.BoxShadow = cast(input, haxe.ui.filters.BoxShadow);
+            if (inputDropShadow.inset) { // TODO: temp
+                return new h2d.filter.InnerGlow(inputDropShadow.color, .1, 1, 1);
+            }
             var dropShadow = new BoxShadow(inputDropShadow.offsetX,inputDropShadow.offsetY, inputDropShadow.color, inputDropShadow.alpha, inputDropShadow.blurRadius, inputDropShadow.spreadRadius, false);
             output = dropShadow;
         } else if ((input is haxe.ui.filters.Tint)) {
