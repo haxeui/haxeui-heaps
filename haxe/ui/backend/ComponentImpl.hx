@@ -872,21 +872,18 @@ class ComponentImpl extends ComponentBase {
         lastMouseY = y;
 
         var i = inBounds(x, y);
-        if (i == false && _mouseOverFlag == true) {
-            _mouseOverFlag = false;
-            Screen.instance.setCursor("default");
-            var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
-            if (fn != null) {
-                var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
-                mouseEvent.screenX = x;
-                mouseEvent.screenY = y;
-                fn(mouseEvent);
-                event.canceled = mouseEvent.canceled;
-            }
-            return;
-        }
-        
         if (i == true) {
+            if (hasComponentOver(cast this, x, y) == true) {
+                var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
+                if (fn != null) {
+                    var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
+                    mouseEvent.screenX = x;
+                    mouseEvent.screenY = y;
+                    fn(mouseEvent);
+                }
+                return;
+            }
+
             if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_OVER)) {
                 if (isInteractiveAbove(x, y)) {
                     return;
@@ -898,7 +895,6 @@ class ComponentImpl extends ComponentBase {
                 }
             }
 
-            
             var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_MOVE);
             if (fn != null) {
                 var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_MOVE);
@@ -908,8 +904,12 @@ class ComponentImpl extends ComponentBase {
                 event.canceled = mouseEvent.canceled;
             }
         }
-        
+
         if (i == true && _mouseOverFlag == false) {
+            if (hasComponentOver(cast this, x, y) == true) {
+                return;
+            }
+
             if (isEventRelevant(getComponentsAtPoint(x, y, true), MouseEvent.MOUSE_OVER)) {
                 _mouseOverFlag = true;
                 var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OVER);
@@ -1136,6 +1136,16 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Helpers
     //***********************************************************************************************************
+    @:noCompletion
+    private function hasComponentOver(ref:Component, x:Float, y:Float):Bool {
+        var array:Array<Component> = getComponentsAtPoint(x, y);
+        if (array.length == 0) {
+            return false;
+        }
+
+        return !hasChildRecursive(cast ref, cast array[array.length - 1]);
+    }
+
     @:noCompletion
     private override function set_visible(value:Bool):Bool {
         if (value == this.visible) {
