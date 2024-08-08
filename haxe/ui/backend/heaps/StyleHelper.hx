@@ -53,7 +53,8 @@ class StyleHelper {
         styleGraphics.clear();
         
         var borderRadius:Float = 0;
-        if (style.borderRadius != null && style.borderRadius > 0) {
+        var isCircle = (style.borderRadius == w && style.borderRadius == h);
+        if (!isCircle && style.borderRadius != null && style.borderRadius > 0) {
             borderRadius = style.borderRadius + 1;
         }
 
@@ -229,7 +230,11 @@ class StyleHelper {
         }
         
         if (borderAlpha > 0) {
-            if (borderRadius == 0) {
+            if (isCircle) {
+                styleGraphics.lineStyle(2, borderColor.left, borderAlpha);
+                styleGraphics.drawCircle(w / 2, h / 2, w / 2, Std.int(w));
+                styleGraphics.endFill();
+            } else if (borderRadius == 0) {
                 if (style.borderLeftSize != null && style.borderLeftSize > 0) {
                     styleGraphics.lineStyle();
                     styleGraphics.beginFill(borderColor.left, borderAlpha);
@@ -269,9 +274,7 @@ class StyleHelper {
                     styleGraphics.lineTo(w, h);
                     styleGraphics.endFill();
                 }
-            }
-            // Border radius != 0
-            else {
+            } else { // Border radius != 0
                 // Left
                 if (borderSize.left != 0) {
                     // Left-Top corner
@@ -295,8 +298,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
                             styleGraphics.lineTo(borderRadius, borderRadius);
                             styleGraphics.endFill();
-                        }
-                        else {
+                        } else {
                             var innerRadius = borderRadius - borderSize.left;
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
@@ -315,8 +317,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderRadius, borderSize.top);
                             styleGraphics.endFill();
                         }
-                    }
-                    else {
+                    } else {
                         styleGraphics.beginFill(borderColor.left, borderAlpha);
                         if (borderRadius <= borderSize.left || borderRadius <= borderSize.top) {
                             drawUnevenBordersCurve(styleGraphics, borderRadius, borderRadius, borderRadius,
@@ -324,8 +325,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(0, h * 0.5);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, borderRadius, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top,
                                                     Math.PI, Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.top));
                             styleGraphics.moveTo(0, borderRadius);
@@ -356,8 +356,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderRadius, h - borderRadius);
                             styleGraphics.lineTo(borderRadius, h);
                             styleGraphics.endFill();
-                        }
-                        else {
+                        } else {
                             var innerRadius = borderRadius - borderSize.left;
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
@@ -376,8 +375,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderRadius, h);
                             styleGraphics.endFill();
                         }
-                    }
-                    else {
+                    } else {
                         styleGraphics.beginFill(borderColor.left, borderAlpha);
                         if (borderRadius <= borderSize.left || borderRadius <= borderSize.bottom) {
                             drawUnevenBordersCurve(styleGraphics, borderRadius, h - borderRadius, borderRadius,
@@ -386,8 +384,7 @@ class StyleHelper {
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom,
                                                     Math.PI * (0.5 + 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom)),
                                                     Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.bottom));
@@ -412,8 +409,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, borderRadius, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top,
                                                     Math.PI * (1 + 0.5 * borderSize.left / (borderSize.left + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.top / (borderSize.left + borderSize.top));
@@ -433,8 +429,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(w * 0.5, 0);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, w - borderRadius, borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top,
                                                     Math.PI * -0.5, Math.PI * 0.5 * borderSize.top / (borderSize.right + borderSize.top));
                             styleGraphics.moveTo(w - borderRadius, 0);
@@ -469,8 +464,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
                             styleGraphics.lineTo(w - borderRadius, borderRadius);
                             styleGraphics.endFill();
-                        }
-                        else {
+                        } else {
                             var innerRadius = borderRadius - borderSize.right;
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
@@ -489,8 +483,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderRadius, borderSize.top);
                             styleGraphics.endFill();
                         }
-                    }
-                    else {
+                    } else {
                         styleGraphics.beginFill(borderColor.right, borderAlpha);
                         if (borderRadius <= borderSize.right || borderRadius <= borderSize.top) {
                             drawUnevenBordersCurve(styleGraphics, w - borderRadius, borderRadius, borderRadius,
@@ -499,8 +492,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, w - borderRadius, borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top,
                                                     Math.PI * (-0.5 + 0.5 * borderSize.top / (borderSize.right + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.top));
@@ -532,8 +524,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderRadius, h - borderRadius);
                             styleGraphics.lineTo(w - borderRadius, h);
                             styleGraphics.endFill();
-                        }
-                        else {
+                        } else {
                             var innerRadius = borderRadius - borderSize.right;
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
@@ -552,8 +543,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderRadius, h);
                             styleGraphics.endFill();
                         }
-                    }
-                    else {
+                    } else {
                         styleGraphics.beginFill(borderColor.right, borderAlpha);
                         if (borderRadius <= borderSize.right || borderRadius <= borderSize.bottom) {
                             drawUnevenBordersCurve(styleGraphics, w - borderRadius, h - borderRadius, borderRadius,
@@ -561,8 +551,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w, h * 0.5);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, w - borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom,
                                                     0, Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom));
                             styleGraphics.moveTo(w, h * 0.5);
@@ -585,8 +574,7 @@ class StyleHelper {
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(w * 0.5, h);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom,
                                                     Math.PI * 0.5, Math.PI * 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom));
                             styleGraphics.moveTo(w * 0.5, h);
@@ -606,8 +594,7 @@ class StyleHelper {
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
-                        }
-                        else {
+                        } else {
                             drawUnevenBordersCorner(styleGraphics, w - borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom,
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom),
                                                     Math.PI * 0.5 * borderSize.bottom / (borderSize.right + borderSize.bottom));
@@ -680,79 +667,71 @@ class StyleHelper {
         }
     }
 
-    private static function drawUnevenBordersCorner(graphics:Graphics, cx:Float, cy:Float, radius:Float, startInnerRadius:Float, endInnerRadius:Float, angleStart:Float, angleLength:Float)
-    {
+    private static function drawUnevenBordersCorner(graphics:Graphics, cx:Float, cy:Float, radius:Float, startInnerRadius:Float, endInnerRadius:Float, angleStart:Float, angleLength:Float) {
         var nsegments = 10;
         var angleOffset = angleLength / (nsegments - 1);
 
         graphics.lineTo(cx + Math.cos(angleStart) * startInnerRadius, cy + Math.sin(angleStart) * endInnerRadius);
         var a;
         // Circle on the outside
-        for(i in 0...nsegments) {
+        for (i in 0...nsegments) {
             a = i * angleOffset + angleStart;
             graphics.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
         }
         // Ellipse on the inside
         graphics.lineTo(cx + Math.cos(angleStart + angleLength) * startInnerRadius, cy + Math.sin(angleStart + angleLength) * endInnerRadius);
-        for(i in 0...nsegments) {
+        for (i in 0...nsegments) {
             a = (nsegments - 1 - i) * angleOffset + angleStart;
             graphics.lineTo(cx +  Math.cos(a) * startInnerRadius, cy + Math.sin(a) * endInnerRadius);
         }
     }
 
-    private static function drawUnevenBordersCurve(graphics:Graphics, cx:Float, cy:Float, radius:Float, angleStart:Float, angleLength:Float)
-    {
+    private static function drawUnevenBordersCurve(graphics:Graphics, cx:Float, cy:Float, radius:Float, angleStart:Float, angleLength:Float) {
         var nsegments = 10;
         var angleOffset = angleLength / (nsegments - 1);
         var a;
-        for( i in 0...nsegments ) {
+        for (i in 0...nsegments) {
             a = i * angleOffset + angleStart;
             graphics.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
         }
     }
 
-    private static function drawRoundedBackground(graphics:Graphics, w:Float, h:Float, borderSize:Rectangle, borderRadius:Float)
-    {
+    private static function drawRoundedBackground(graphics:Graphics, w:Float, h:Float, borderSize:Rectangle, borderRadius:Float) {
         // Left-Top
         if (borderRadius <= borderSize.left || borderRadius <= borderSize.top) {
             graphics.lineTo(borderSize.left, borderSize.top);
-        }
-        else {
+        } else {
             graphics.lineTo(borderSize.left, borderRadius);
             drawBackgroundCorner(graphics, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top, Math.PI, Math.PI * 0.5);
         }
         // Top-Right
         if (borderRadius <= borderSize.right || borderRadius <= borderSize.top) {
             graphics.lineTo(w - borderSize.right, borderSize.top);
-        }
-        else {
+        } else {
             graphics.lineTo(w - borderRadius, borderSize.top);
             drawBackgroundCorner(graphics, w - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top, -Math.PI * 0.5, Math.PI * 0.5);
         }
         // Right-Bottom
         if (borderRadius <= borderSize.right || borderRadius <= borderSize.bottom) {
             graphics.lineTo(w - borderSize.right, h - borderSize.bottom);
-        }
-        else {
+        } else {
             graphics.lineTo(w - borderSize.right, h - borderRadius);
             drawBackgroundCorner(graphics, w - borderRadius, h - borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom, 0, Math.PI * 0.5);
         }
         // Bottom-Left
         if (borderRadius <= borderSize.left || borderRadius <= borderSize.bottom) {
             graphics.lineTo(borderSize.left, h - borderSize.bottom);
-        }
-        else {
+        } else {
             graphics.lineTo(borderRadius, h - borderSize.bottom);
             drawBackgroundCorner(graphics, borderRadius, h - borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom, Math.PI * 0.5, Math.PI * 0.5);
         }
     }
 
-    private static inline function drawBackgroundCorner(graphics:Graphics, cx:Float, cy:Float, startRadius:Float, endRadius:Float, angleStart:Float, angleLength:Float)
-    {
+    private static inline function drawBackgroundCorner(graphics:Graphics, cx:Float, cy:Float, startRadius:Float, endRadius:Float, angleStart:Float, angleLength:Float) {
         var nsegments = startRadius != endRadius ? 200 : 100;
         var angleOffset = angleLength / (nsegments - 1);
         var a;
-        for(i in 0...nsegments) {
+        for (i in 0...nsegments) {
             a = i * angleOffset + angleStart;
             graphics.lineTo(cx +  Math.cos(a) * startRadius, cy + Math.sin(a) * endRadius);
         }
