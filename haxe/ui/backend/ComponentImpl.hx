@@ -873,7 +873,7 @@ class ComponentImpl extends ComponentBase {
 
         var i = inBounds(x, y);
         if (i == true) {
-            if (hasComponentOver(cast this, x, y) == true) {
+            if (_mouseOverFlag && hasComponentOver(cast this, x, y) == true) {
                 _mouseOverFlag = false;
                 var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
                 if (fn != null) {
@@ -881,6 +881,7 @@ class ComponentImpl extends ComponentBase {
                     mouseEvent.screenX = x;
                     mouseEvent.screenY = y;
                     fn(mouseEvent);
+                    event.canceled = mouseEvent.canceled;
                 }
                 return;
             }
