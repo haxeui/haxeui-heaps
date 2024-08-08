@@ -29,9 +29,12 @@ import haxe.ui.validation.InvalidationFlags;
 class ComponentImpl extends ComponentBase {
     public var styleable:Bool = true;
     
+    @:noCompletion
     private var _eventMap:Map<String, UIEvent->Void>;
+    @:noCompletion
     private var _container:Object = null;
     
+    @:noCompletion
     static inline var INDEX_OFFSET = 1; // offset everything because 0th-child is always the style graphics container
 
     public function new() {
@@ -46,6 +49,7 @@ class ComponentImpl extends ComponentBase {
         //cast(this, Component).ready();
     }
 
+    @:noCompletion
     private override function handlePosition(left:Null<Float>, top:Null<Float>, style:Style) {
         if (left == null || top == null) {
             return;
@@ -58,6 +62,7 @@ class ComponentImpl extends ComponentBase {
         if (this.y != top)  this.y = top;
     }
     
+    @:noCompletion
     private override function handleSize(w:Null<Float>, h:Null<Float>, style:Style) {
         if (h == null || w == null || w <= 0 || h <= 0) {
             return;
@@ -68,11 +73,14 @@ class ComponentImpl extends ComponentBase {
         }
     }
     
+    @:noCompletion
     private override function handleVisibility(show:Bool) {
         super.visible = show;
     }
     
+    @:noCompletion
     private var _maskGraphics:Graphics = null;
+    @:noCompletion
     private override function handleClipRect(value:Rectangle) {
         if (_maskGraphics == null) {
             _maskGraphics = new Graphics();
@@ -111,6 +119,7 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Text related
     //***********************************************************************************************************
+    @:noCompletion
     public override function createTextDisplay(text:String = null):TextDisplay {
         if (_textDisplay == null) {
             super.createTextDisplay(text);
@@ -120,6 +129,7 @@ class ComponentImpl extends ComponentBase {
         return _textDisplay;
     }
 
+    @:noCompletion
     public override function createTextInput(text:String = null):TextInput {
         if (_textInput == null) {
             super.createTextInput(text);
@@ -132,6 +142,7 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Image related
     //***********************************************************************************************************
+    @:noCompletion
     public override function createImageDisplay():ImageDisplay {
         if (_imageDisplay == null) {
             super.createImageDisplay();
@@ -141,6 +152,7 @@ class ComponentImpl extends ComponentBase {
         return _imageDisplay;
     }
     
+    @:noCompletion
     public override function removeImageDisplay() {
         if (_imageDisplay != null) {
             removeChild(_imageDisplay.sprite);
@@ -152,25 +164,30 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Display tree
     //***********************************************************************************************************
+    @:noCompletion
     private override function handleReady() {
         super.handleReady();
         @:privateAccess Screen.instance.addUpdateCallback();
     }
     
+    @:noCompletion
     private override function handleSetComponentIndex(child:Component, index:Int) {
         addChildAt(child, index + INDEX_OFFSET);
     }
 
+    @:noCompletion
     private override function handleAddComponent(child:Component):Component {
         addChild(child);
         return child;
     }
 
+    @:noCompletion
     private override function handleAddComponentAt(child:Component, index:Int):Component {
         addChildAt(child, index + INDEX_OFFSET);
         return child;
     }
 
+    @:noCompletion
     private override function handleRemoveComponent(child:Component, dispose:Bool = true):Component {
         removeChild(child);
         
@@ -181,6 +198,7 @@ class ComponentImpl extends ComponentBase {
         return child;
     }
 
+    @:noCompletion
     private override function handleRemoveComponentAt(index:Int, dispose:Bool = true):Component {
         var child = _children[index];
         if (child != null) {
@@ -193,8 +211,11 @@ class ComponentImpl extends ComponentBase {
         return child;
     }
     
+    @:noCompletion
     private var _deallocate:Bool = false;
+    @:noCompletion
     private var deallocate(null, set):Bool;
+    @:noCompletion
     private function set_deallocate(value:Bool) {
         _deallocate = value;
         for (c in this.childComponents) {
@@ -202,7 +223,10 @@ class ComponentImpl extends ComponentBase {
         }
         return value;
     }
+
+    @:noCompletion
     private var _disposed:Bool = false;
+    @:noCompletion
     private function dispose() {
         if (_disposed == true) {
             return;
@@ -213,8 +237,11 @@ class ComponentImpl extends ComponentBase {
         remove();
     }
 
+    @:noCompletion
     private var _currentStyleFilters:Array<Filter> = null;
+    @:noCompletion
     private var _maskFilter:Mask = null;
+    @:noCompletion
     private function createFilterGroup() {
         var n = 0;
         var filterGroup = new Group();
@@ -234,6 +261,7 @@ class ComponentImpl extends ComponentBase {
         return filterGroup;
     }
 
+    @:noCompletion
     private override function applyStyle(style:Style) {
         /*
         if (style.cursor != null && style.cursor == "pointer") {
@@ -268,6 +296,7 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Events
     //***********************************************************************************************************
+    @:noCompletion
     @:access(haxe.ui.core.Screen)
     private override function mapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
@@ -413,6 +442,7 @@ class ComponentImpl extends ComponentBase {
         }
     }
 
+    @:noCompletion
     private override function unmapEvent(type:String, listener:UIEvent->Void) {
         switch (type) {
             case MouseEvent.MOUSE_MOVE:
@@ -501,12 +531,18 @@ class ComponentImpl extends ComponentBase {
     }
     
     // lets cache certain items so we dont have to loop multiple times per frame
+    @:noCompletion
     private var _cachedScreenX:Null<Float> = null;
+    @:noCompletion
     private var _cachedScreenY:Null<Float> = null;
+    @:noCompletion
     private var _cachedClipComponent:Component = null;
+    @:noCompletion
     private var _cachedClipComponentNone:Null<Bool> = null;
+    @:noCompletion
     private var _cachedRootComponent:Component = null;
     
+    @:noCompletion
     private function clearCaches() {
         _cachedScreenX = null;
         _cachedScreenY = null;
@@ -515,6 +551,7 @@ class ComponentImpl extends ComponentBase {
         _cachedRootComponent = null;
     }
     
+    @:noCompletion
     private function cacheScreenPos() {
         if (_cachedScreenX != null && _cachedScreenY != null) {
             return;
@@ -558,18 +595,23 @@ class ComponentImpl extends ComponentBase {
         _cachedScreenY = ypos;
     }
     
+    @:noCompletion
     private var screenX(get, null):Float;
+    @:noCompletion
     private function get_screenX():Float {
         cacheScreenPos();
         return _cachedScreenX;
     }
 
+    @:noCompletion
     private var screenY(get, null):Float;
+    @:noCompletion
     private function get_screenY():Float {
         cacheScreenPos();
         return _cachedScreenY;
     }
 
+    @:noCompletion
     private function findRootComponent():Component {
         if (_cachedRootComponent != null) {
             return _cachedRootComponent;
@@ -585,10 +627,12 @@ class ComponentImpl extends ComponentBase {
         return c;
     }
     
+    @:noCompletion
     private function isRootComponent():Bool {
         return (findRootComponent() == this);
     }
     
+    @:noCompletion
     private function findClipComponent():Component {
         if (_cachedClipComponent != null) {
             return _cachedClipComponent;
@@ -614,6 +658,7 @@ class ComponentImpl extends ComponentBase {
         return clip;
     }
     
+    @:noCompletion
     @:access(haxe.ui.core.Component)
     private function inBounds(x:Float, y:Float):Bool {
         if (cast(this, Component).hidden == true) {
@@ -653,6 +698,7 @@ class ComponentImpl extends ComponentBase {
         return b;
     }
     
+    @:noCompletion
     private function isEventRelevant(children:Array<Component>, eventType:String):Bool {
         var relevant = false;
         for (c in children) {
@@ -667,6 +713,7 @@ class ComponentImpl extends ComponentBase {
         return relevant;
     }
 
+    @:noCompletion
     private function getComponentsAtPoint(x:Float, y:Float, reverse:Bool = false):Array<Component> {
         var array:Array<Component> = new Array<Component>();
         for (r in Screen.instance.rootComponents) {
@@ -680,6 +727,7 @@ class ComponentImpl extends ComponentBase {
         return array;
     }
 
+    @:noCompletion
     private function findChildrenAtPoint(child:Component, x:Float, y:Float, array:Array<Component>) {
         if (child.inBounds(x, y) == true) {
             array.push(child);
@@ -689,6 +737,7 @@ class ComponentImpl extends ComponentBase {
         }
     }
 
+    @:noCompletion
     public function hasChildRecursive(parent:Component, child:Component):Bool {
         if (parent == child) {
             return true;
@@ -709,6 +758,7 @@ class ComponentImpl extends ComponentBase {
         return r;
     }
     
+    @:noCompletion
     private override function sync(ctx:RenderContext) {
         var changed = posChanged;
         // if .x/.y property is access directly, we still want to honour it, so we will set haxeui's
@@ -726,7 +776,8 @@ class ComponentImpl extends ComponentBase {
         clearCaches();
     }
     
-    private  override function onAdd() {
+    @:noCompletion
+    private override function onAdd() {
         super.onAdd();
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) == -1) {
             Screen.instance.addComponent(cast this);
@@ -734,6 +785,7 @@ class ComponentImpl extends ComponentBase {
         cast(this, Component).ready();
     }
     
+    @:noCompletion
     private override function onRemove() {
         if (_deallocate == true) {
             _disposed = true;
@@ -744,15 +796,22 @@ class ComponentImpl extends ComponentBase {
         }
     }
     
+    @:noCompletion
     private var lastMouseX:Float = -1;
+    @:noCompletion
     private var lastMouseY:Float = -1;
     
     // For doubleclick detection
+    @:noCompletion
     private var _lastClickTime:Float = 0;
+    @:noCompletion
     private var _lastClickTimeDiff:Float = MathUtil.MAX_INT;
+    @:noCompletion
     private var _lastClickX:Float = -1;
+    @:noCompletion
     private var _lastClickY:Float = -1;
     
+    @:noCompletion
     private function calcCursor():String {
         var c = null;
         var p = this;
@@ -766,6 +825,7 @@ class ComponentImpl extends ComponentBase {
         return c;
     }
     
+    @:noCompletion
     private function findScene():Scene {
         if (this.getScene() != null) {
             return this.getScene();
@@ -773,6 +833,7 @@ class ComponentImpl extends ComponentBase {
         return Screen.instance.scene;
     }
 
+    @:noCompletion
     private function findCamera():Camera {
         var scene = findScene();
         if (scene == null) {
@@ -785,7 +846,9 @@ class ComponentImpl extends ComponentBase {
         return scene.camera;
     }
 
+    @:noCompletion
     private var _h2dPoint = new Point(); // we'll just reuse the same point rather than creating new ones
+    @:noCompletion
     private function eventToCamera(event:MouseEvent) {
         _h2dPoint.x = event.screenX;
         _h2dPoint.y = event.screenY;
@@ -797,7 +860,9 @@ class ComponentImpl extends ComponentBase {
         event.screenY = _h2dPoint.y / Toolkit.scaleY;
     }
 
+    @:noCompletion
     private var _mouseOverFlag:Bool = false;
+    @:noCompletion
     private function __onMouseMove(event:MouseEvent) {
         eventToCamera(event);
 
@@ -870,8 +935,11 @@ class ComponentImpl extends ComponentBase {
         }
     }    
     
+    @:noCompletion
     private var _mouseDownFlag:Bool = false;
+    @:noCompletion
     private var _mouseDownButton:Int = -1;
+    @:noCompletion
     private function __onMouseDown(event:MouseEvent) {
         eventToCamera(event);
 
@@ -920,6 +988,7 @@ class ComponentImpl extends ComponentBase {
         }
     }
 
+    @:noCompletion
     private function __onMouseUp(event:MouseEvent) {
         eventToCamera(event);
 
@@ -1001,6 +1070,7 @@ class ComponentImpl extends ComponentBase {
         _mouseDownFlag = false;
     }
     
+    @:noCompletion
     private function __onDoubleClick(event:MouseEvent) {
         eventToCamera(event);
 
@@ -1036,6 +1106,7 @@ class ComponentImpl extends ComponentBase {
         _mouseDownFlag = false;
     }
 
+    @:noCompletion
     private function __onMouseWheel(event:MouseEvent) {
         eventToCamera(event);
 
@@ -1065,6 +1136,7 @@ class ComponentImpl extends ComponentBase {
     //***********************************************************************************************************
     // Helpers
     //***********************************************************************************************************
+    @:noCompletion
     private override function set_visible(value:Bool):Bool {
         if (value == this.visible) {
             return value;
@@ -1074,6 +1146,7 @@ class ComponentImpl extends ComponentBase {
         return value;
     }
 
+    @:noCompletion
     private function calcObjectIndex(obj:Object):Int {
         var n = 0;
         while (obj.parent != null) {
@@ -1086,6 +1159,7 @@ class ComponentImpl extends ComponentBase {
         return obj.getScene().getChildIndex(obj);
     }
 
+    @:noCompletion
     private function isOnScreen() {
         var obj:Object = this;
         while (obj.parent != null) {
@@ -1100,6 +1174,7 @@ class ComponentImpl extends ComponentBase {
         return true;
     }
 
+    @:noCompletion
     private function isInteractiveAbove(x:Float, y:Float) {
         var scene = this.getScene();
         if (scene != null) {
