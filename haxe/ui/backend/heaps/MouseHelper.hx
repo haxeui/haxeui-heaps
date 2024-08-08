@@ -109,9 +109,8 @@ class MouseHelper {
     }
     
     private static function onMouseMove(e:hxd.Event) {
-        Screen.instance.scene.camera.eventToCamera(e);
-        currentMouseX = e.relX / (Toolkit.scaleX);
-        currentMouseY = e.relY / (Toolkit.scaleY);
+        currentMouseX = e.relX;
+        currentMouseY = e.relY;
         var list = _callbacks.get(MouseEvent.MOUSE_MOVE);
         if (list == null || list.length == 0) {
             return;
@@ -122,8 +121,8 @@ class MouseHelper {
 
         var event = new MouseEvent(MouseEvent.MOUSE_MOVE);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX);
-        event.screenY = e.relY / (Toolkit.scaleY);
+        event.screenX = e.relX;
+        event.screenY = e.relY;
         for (l in list) {
             l(event);
 			if (event.canceled) {
@@ -133,7 +132,6 @@ class MouseHelper {
     }
     
     private static function onMouseDown(e:hxd.Event) {
-        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_DOWN);
         if (list == null || list.length == 0) {
             return;
@@ -144,8 +142,8 @@ class MouseHelper {
        
         var event = new MouseEvent(MouseEvent.MOUSE_DOWN);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX);
-        event.screenY = e.relY / (Toolkit.scaleX);
+        event.screenX = e.relX;
+        event.screenY = e.relY;
         event.data = e.button;
         for (l in list) {
             l(event);
@@ -156,7 +154,6 @@ class MouseHelper {
     }
     
     private static function onMouseUp(e:hxd.Event) {
-        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_UP);
         if (list == null || list.length == 0) {
             return;
@@ -167,8 +164,8 @@ class MouseHelper {
         
         var event = new MouseEvent(MouseEvent.MOUSE_UP);
         @:privateAccess event._originalEvent = e;
-        event.screenX = e.relX / (Toolkit.scaleX);
-        event.screenY = e.relY / (Toolkit.scaleX);
+        event.screenX = e.relX;
+        event.screenY = e.relY;
         event.data = e.button;
         for (l in list) {
             l(event);
@@ -179,7 +176,6 @@ class MouseHelper {
     }
     
     private static function onMouseWheel(e:hxd.Event) {
-        Screen.instance.scene.camera.eventToCamera(e);
         var list = _callbacks.get(MouseEvent.MOUSE_WHEEL);
         if (list == null || list.length == 0) {
             return;

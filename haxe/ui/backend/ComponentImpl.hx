@@ -1,8 +1,11 @@
 package haxe.ui.backend;
 
+import h2d.Camera;
 import h2d.Graphics;
 import h2d.Object;
 import h2d.RenderContext;
+import h2d.Scene;
+import h2d.col.Point;
 import h2d.filter.Filter;
 import h2d.filter.Group;
 import h2d.filter.Mask;
@@ -763,8 +766,41 @@ class ComponentImpl extends ComponentBase {
         return c;
     }
     
+    private function findScene():Scene {
+        if (this.getScene() != null) {
+            return this.getScene();
+        }
+        return Screen.instance.scene;
+    }
+
+    private function findCamera():Camera {
+        var scene = findScene();
+        if (scene == null) {
+            return null;
+        }
+
+        if (scene.interactiveCamera != null) {
+            return scene.interactiveCamera;
+        }
+        return scene.camera;
+    }
+
+    private var _h2dPoint = new Point(); // we'll just reuse the same point rather than creating new ones
+    private function eventToCamera(event:MouseEvent) {
+        _h2dPoint.x = event.screenX;
+        _h2dPoint.y = event.screenY;
+        var camera = findCamera();
+        if (camera != null) {
+            camera.screenToCamera(_h2dPoint);
+        }
+        event.screenX = _h2dPoint.x / Toolkit.scaleX;
+        event.screenY = _h2dPoint.y / Toolkit.scaleY;
+    }
+
     private var _mouseOverFlag:Bool = false;
     private function __onMouseMove(event:MouseEvent) {
+        eventToCamera(event);
+
         var x = event.screenX;
         var y = event.screenY;
         lastMouseX = x;
@@ -837,6 +873,8 @@ class ComponentImpl extends ComponentBase {
     private var _mouseDownFlag:Bool = false;
     private var _mouseDownButton:Int = -1;
     private function __onMouseDown(event:MouseEvent) {
+        eventToCamera(event);
+
         var button:Int = event.data;
         var x = event.screenX;
         var y = event.screenY;
@@ -883,6 +921,8 @@ class ComponentImpl extends ComponentBase {
     }
 
     private function __onMouseUp(event:MouseEvent) {
+        eventToCamera(event);
+
         var button:Int = _mouseDownButton;
         var x = event.screenX;
         var y = event.screenY;
@@ -962,6 +1002,8 @@ class ComponentImpl extends ComponentBase {
     }
     
     private function __onDoubleClick(event:MouseEvent) {
+        eventToCamera(event);
+
         var button:Int = _mouseDownButton;
         var x = event.screenX;
         var y = event.screenY;
@@ -995,6 +1037,8 @@ class ComponentImpl extends ComponentBase {
     }
 
     private function __onMouseWheel(event:MouseEvent) {
+        eventToCamera(event);
+
         var delta = event.delta;
         var fn = _eventMap.get(MouseEvent.MOUSE_WHEEL);
 
