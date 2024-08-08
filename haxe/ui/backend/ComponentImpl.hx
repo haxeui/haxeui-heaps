@@ -874,6 +874,7 @@ class ComponentImpl extends ComponentBase {
         var i = inBounds(x, y);
         if (i == true) {
             if (hasComponentOver(cast this, x, y) == true) {
+                _mouseOverFlag = false;
                 var fn:UIEvent->Void = _eventMap.get(haxe.ui.events.MouseEvent.MOUSE_OUT);
                 if (fn != null) {
                     var mouseEvent = new haxe.ui.events.MouseEvent(haxe.ui.events.MouseEvent.MOUSE_OUT);
