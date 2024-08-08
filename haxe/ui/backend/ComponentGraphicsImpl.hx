@@ -127,15 +127,15 @@ class ComponentGraphicsImpl extends ComponentGraphicsBase {
     
     private function createGraphics() {
         var container = _component.getChildAt(0); // first child is always the style-objects container
-        if ( container == null ) {
+        if (container == null) {
             return; // fix crash resizing the window; container doesn't exist yet
         }
         
-        if (container.numChildren == 0) {
+        _styleGraphics = cast(container.getObjectByName("styleGraphics"), Graphics);
+        if (_styleGraphics == null) {
             _styleGraphics = new Graphics();
+            _styleGraphics.name = "styleGraphics";
             container.addChildAt(_styleGraphics, 0);
-        } else {
-            _styleGraphics = cast(container.getChildAt(0), Graphics);
         }
     }
     
