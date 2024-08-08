@@ -8,9 +8,11 @@ class TimerImpl {
         var count:Int = __timers.length;
         for (i in 0...count) {
             var timer:TimerImpl = __timers[i];
-            if (!timer._stopped && currentTime > timer._end) {
+            if (!timer._stopped && currentTime >= timer._end) {
                 timer._end = currentTime + timer._delay;
-                timer.callback();
+                if (timer.callback != null) {
+                    timer.callback();
+                }
             }
         }
 
@@ -22,7 +24,7 @@ class TimerImpl {
         }
     }
 
-    public var callback:Void->Void;
+    public var callback:Void->Void = null;
     private var _end:Float;
     private var _delay:Float;
     private var _stopped:Bool;
@@ -35,6 +37,7 @@ class TimerImpl {
     }
 
     public function stop() {
+        callback = null;
         _stopped = true;
     }
 }
