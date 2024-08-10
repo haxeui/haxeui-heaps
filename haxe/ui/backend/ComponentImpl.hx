@@ -109,10 +109,33 @@ class ComponentImpl extends ComponentBase {
         // for some reason, but without this, clip:true components move around
         // when they shouldnt (which i dont fully understand)
         if (this.width != value.width) {
-            this.x = -value.left + borderSize;
+            // multiple masks / clip rects in the same component (like tableview) can interfere with each
+            // other in heaps, so lets find them and update our co-ords appropriately
+            var offsetX:Float = 0;
+            for (c in this.parentComponent.childComponents) {
+                if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
+                    var clipComponent = c.findClipComponent();
+                    if (clipComponent != null && clipComponent.width != this.width) {
+                        trace(clipComponent.width, this.width);
+                        offsetX += clipComponent.width;
+                    }
+                }
+            }
+            this.x = -value.left + borderSize + offsetX;
         }
         if (this.height != value.height) {
-            this.y = -value.top + borderSize;
+            // multiple masks / clip rects in the same component (like tableview) can interfere with each
+            // other in heaps, so lets find them and update our co-ords appropriately
+            var offsetY:Float = 0;
+            for (c in this.parentComponent.childComponents) {
+                if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
+                    var clipComponent = c.findClipComponent();
+                    if (clipComponent != null && clipComponent.height != this.height) {
+                        offsetY += clipComponent.height;
+                    }
+                }
+            }
+            this.y = -value.top + borderSize + offsetY;
         }
     }
 
