@@ -607,12 +607,8 @@ class ComponentImpl extends ComponentBase {
         xpos *= Toolkit.scaleX;
         ypos *= Toolkit.scaleY;
 
-        if (Toolkit.scaleX != 1) {
-            xpos -= last.left;
-        }
-        if (Toolkit.scaleY != 1) {
-            ypos -= last.top;
-        }
+        xpos += last.left * (1-Toolkit.scaleX);
+        ypos += last.top * (1-Toolkit.scaleY);
 
         _cachedScreenX = xpos;
         _cachedScreenY = ypos;
