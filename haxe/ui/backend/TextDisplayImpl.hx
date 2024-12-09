@@ -129,7 +129,9 @@ class TextDisplayImpl extends TextBase {
     private override function validateDisplay() {
         if (autoWidth == false) {
             sprite.maxWidth = _width != 0 ? _width : _textWidth;
-        } else if (sprite.textAlign == h2d.Text.Align.Center) {
+        }else if (sprite.textAlign == h2d.Text.Align.Right){
+            sprite.x =_width;
+        }else if (sprite.textAlign == h2d.Text.Align.Center) {
             sprite.x = (_left) + (_width / 2);
         }
     }
