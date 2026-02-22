@@ -95,7 +95,8 @@ class ComponentImpl extends ComponentBase {
         if (parentComponent != null && parentComponent.style == null) {
             parentComponent.validateNow();
         }
-        borderSize = parentComponent.style.borderSize;
+        //CRASHFIX: if the parent component was null for whatever reason, it would hard crash.
+        if(parentComponent != null) borderSize = parentComponent.style.borderSize;
 
         _maskGraphics.clear();
         _maskGraphics.beginFill(0xFF00FF, 1.0);
