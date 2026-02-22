@@ -1,5 +1,6 @@
 package haxe.ui.backend.heaps;
 
+import h3d.Vector4;
 import h2d.Graphics;
 import h2d.Tile;
 import haxe.ui.Toolkit;
@@ -52,10 +53,22 @@ class StyleHelper {
 
         styleGraphics.clear();
         
-        var borderRadius:Float = 0;
-        var isCircle = (style.borderRadius == w && style.borderRadius == h);
-        if (!isCircle && style.borderRadius != null && style.borderRadius > 0) {
-            borderRadius = style.borderRadius + 1;
+        var borderRadius:Vector4 = new Vector4(0,0,0,0);
+        if(style.borderRadius != null) borderRadius.set(style.borderRadius,style.borderRadius,style.borderRadius,style.borderRadius);
+        if(style.borderRadiusTopLeft != null) borderRadius.x = style.borderRadiusTopLeft;
+        if(style.borderRadiusTopRight != null) borderRadius.y = style.borderRadiusTopRight;
+        if(style.borderRadiusBottomRight != null) borderRadius.z = style.borderRadiusBottomRight;
+        if(style.borderRadiusBottomLeft != null) borderRadius.w = style.borderRadiusBottomLeft;
+
+        var isEven = (borderRadius.x == borderRadius.y && borderRadius.y == borderRadius.z && borderRadius.z == borderRadius.w);
+        var isCircle = isEven && (style.borderRadius == w && style.borderRadius == h);
+
+        //Not sure why we do this?
+        if (!isCircle && isEven && borderRadius.x > 0) {
+            borderRadius.x = style.borderRadius + 1;
+            borderRadius.y = style.borderRadius + 1;
+            borderRadius.z = style.borderRadius + 1;
+            borderRadius.w = style.borderRadius + 1;
         }
 
         if (style.backgroundColor != null && backgroundAlpha > 0) {
@@ -66,7 +79,7 @@ class StyleHelper {
                 }
                 
                 var gradientSize = 256;
-                if (borderRadius == 0) {
+                if (isEven && borderRadius.x == 0) {
                     if (gradientType == "vertical" || gradientType == "horizontal") {
                         var width = w - borderSize.right - borderSize.left;
                         var height = h - borderSize.bottom - borderSize.top;
@@ -84,7 +97,7 @@ class StyleHelper {
                     styleGraphics.endFill();
                 }
             } else {
-                if (borderRadius == 0) {
+                if (isEven && borderRadius.x == 0) {
                     styleGraphics.beginFill(style.backgroundColor, backgroundAlpha);
                     styleGraphics.drawRect(borderSize.left, borderSize.top, w - borderSize.right - borderSize.left, h - borderSize.bottom - borderSize.top);
                     styleGraphics.endFill();
@@ -234,7 +247,7 @@ class StyleHelper {
                 styleGraphics.lineStyle(2, borderColor.left, borderAlpha);
                 styleGraphics.drawCircle(w / 2, h / 2, w / 2, Std.int(w));
                 styleGraphics.endFill();
-            } else if (borderRadius == 0) {
+            } else if (isEven && borderRadius.x == 0) {
                 if (style.borderLeftSize != null && style.borderLeftSize > 0) {
                     styleGraphics.lineStyle();
                     styleGraphics.beginFill(borderColor.left, borderAlpha);
@@ -279,57 +292,57 @@ class StyleHelper {
                 if (borderSize.left != 0) {
                     // Left-Top corner
                     if (borderSize.left == borderSize.top) {
-                        if (borderRadius <= borderSize.left) {
+                        if (borderRadius.x <= borderSize.left) {
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
-                            styleGraphics.drawPie(borderRadius, borderRadius, borderRadius, Math.PI, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(0, borderRadius);
-                            styleGraphics.lineTo(borderRadius, borderRadius);
+                            styleGraphics.drawPie(borderRadius.x, borderRadius.x, borderRadius.x, Math.PI, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(0, borderRadius.x);
+                            styleGraphics.lineTo(borderRadius.x, borderRadius.x);
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.endFill();
                             // Top
                             styleGraphics.beginFill(borderColor.top, borderAlpha);
-                            styleGraphics.drawPie(borderRadius, borderRadius, borderRadius, Math.PI * 1.25, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(borderRadius, 0);
+                            styleGraphics.drawPie(borderRadius.x, borderRadius.x, borderRadius.x, Math.PI * 1.25, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(borderRadius.x, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
-                            styleGraphics.lineTo(borderRadius, borderRadius);
+                            styleGraphics.lineTo(borderRadius.x, borderRadius.x);
                             styleGraphics.endFill();
                         } else {
-                            var innerRadius = borderRadius - borderSize.left;
+                            var innerRadius = borderRadius.x - borderSize.left;
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
-                            styleGraphics.drawPieInner(borderRadius, borderRadius, borderRadius, innerRadius, Math.PI, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(0, borderRadius);
-                            styleGraphics.lineTo(borderSize.left, borderRadius);
+                            styleGraphics.drawPieInner(borderRadius.x, borderRadius.x, borderRadius.x, innerRadius, Math.PI, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(0, borderRadius.x);
+                            styleGraphics.lineTo(borderSize.left, borderRadius.x);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.endFill();
                             // Top
                             styleGraphics.beginFill(borderColor.top, borderAlpha);
-                            styleGraphics.drawPieInner(borderRadius, borderRadius, borderRadius, innerRadius, Math.PI * 1.25, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(borderRadius, 0);
+                            styleGraphics.drawPieInner(borderRadius.x, borderRadius.x, borderRadius.x, innerRadius, Math.PI * 1.25, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(borderRadius.x, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
-                            styleGraphics.lineTo(borderRadius, borderSize.top);
+                            styleGraphics.lineTo(borderRadius.x, borderSize.top);
                             styleGraphics.endFill();
                         }
                     } else {
                         styleGraphics.beginFill(borderColor.left, borderAlpha);
-                        if (borderRadius <= borderSize.left || borderRadius <= borderSize.top) {
-                            drawUnevenBordersCurve(styleGraphics, borderRadius, borderRadius, borderRadius,
+                        if (borderRadius.x <= borderSize.left || borderRadius.x <= borderSize.top) {
+                            drawUnevenBordersCurve(styleGraphics, borderRadius.x, borderRadius.x, borderRadius.x,
                                                     Math.PI, Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.top));                                    
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(0, h * 0.5);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, borderRadius, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top,
+                            drawUnevenBordersCorner(styleGraphics, borderRadius.x, borderRadius.x, borderRadius.x, borderRadius.x - borderSize.left, borderRadius.x - borderSize.top,
                                                     Math.PI, Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.top));
-                            styleGraphics.moveTo(0, borderRadius);
-                            styleGraphics.lineTo(borderSize.left, borderRadius);
+                            styleGraphics.moveTo(0, borderRadius.x);
+                            styleGraphics.lineTo(borderSize.left, borderRadius.x);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(0, h * 0.5);
                         }
@@ -337,61 +350,61 @@ class StyleHelper {
                     }
                     // Left-Bottom corner
                     if (borderSize.left == borderSize.bottom) {
-                        if (borderRadius <= borderSize.left) {
+                        if (borderRadius.w <= borderSize.left) {
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
-                            styleGraphics.drawPie(borderRadius, h - borderRadius, borderRadius, Math.PI * 0.75, Math.PI * 0.25, 10);
+                            styleGraphics.drawPie(borderRadius.w, h - borderRadius.w, borderRadius.w, Math.PI * 0.75, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h - borderRadius);
-                            styleGraphics.lineTo(0, h - borderRadius);
+                            styleGraphics.lineTo(borderRadius.w, h - borderRadius.w);
+                            styleGraphics.lineTo(0, h - borderRadius.w);
                             styleGraphics.endFill();
                             // Bottom
                             styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                            styleGraphics.drawPie(borderRadius, h - borderRadius, borderRadius, Math.PI * 0.5, Math.PI * 0.25, 10);
+                            styleGraphics.drawPie(borderRadius.w, h - borderRadius.w, borderRadius.w, Math.PI * 0.5, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h - borderRadius);
-                            styleGraphics.lineTo(borderRadius, h);
+                            styleGraphics.lineTo(borderRadius.w, h - borderRadius.w);
+                            styleGraphics.lineTo(borderRadius.w, h);
                             styleGraphics.endFill();
                         } else {
-                            var innerRadius = borderRadius - borderSize.left;
+                            var innerRadius = borderRadius.w - borderSize.left;
                             // Left
                             styleGraphics.beginFill(borderColor.left, borderAlpha);
-                            styleGraphics.drawPieInner(borderRadius, h - borderRadius, borderRadius, innerRadius, Math.PI * 0.75, Math.PI * 0.25, 10);
+                            styleGraphics.drawPieInner(borderRadius.w, h - borderRadius.w, borderRadius.w, innerRadius, Math.PI * 0.75, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
-                            styleGraphics.lineTo(borderSize.left, h - borderRadius);
-                            styleGraphics.lineTo(0, h - borderRadius);
+                            styleGraphics.lineTo(borderSize.left, h - borderRadius.w);
+                            styleGraphics.lineTo(0, h - borderRadius.w);
                             styleGraphics.endFill();
                             // Bottom
                             styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                            styleGraphics.drawPieInner(borderRadius, h - borderRadius, borderRadius, innerRadius, Math.PI * 0.5, Math.PI * 0.25, 10);
+                            styleGraphics.drawPieInner(borderRadius.w, h - borderRadius.w, borderRadius.w, innerRadius, Math.PI * 0.5, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h);
+                            styleGraphics.lineTo(borderRadius.w, h - borderSize.bottom);
+                            styleGraphics.lineTo(borderRadius.w, h);
                             styleGraphics.endFill();
                         }
                     } else {
                         styleGraphics.beginFill(borderColor.left, borderAlpha);
-                        if (borderRadius <= borderSize.left || borderRadius <= borderSize.bottom) {
-                            drawUnevenBordersCurve(styleGraphics, borderRadius, h - borderRadius, borderRadius,
+                        if (borderRadius.w <= borderSize.left || borderRadius.w <= borderSize.bottom) {
+                            drawUnevenBordersCurve(styleGraphics, borderRadius.w, h - borderRadius.w, borderRadius.w,
                                                     Math.PI * (0.5 + 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom)),
                                                     Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.bottom));
                             styleGraphics.lineTo(0, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom,
+                            drawUnevenBordersCorner(styleGraphics, borderRadius.w, h - borderRadius.w, borderRadius.w, borderRadius.w - borderSize.left, borderRadius.w - borderSize.bottom,
                                                     Math.PI * (0.5 + 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom)),
                                                     Math.PI * 0.5 * borderSize.left / (borderSize.left + borderSize.bottom));
                             styleGraphics.moveTo(0, h * 0.5);
                             styleGraphics.lineTo(borderSize.left, h * 0.5);
-                            styleGraphics.lineTo(borderSize.left, h - borderRadius);
-                            styleGraphics.lineTo(0, h - borderRadius);
+                            styleGraphics.lineTo(borderSize.left, h - borderRadius.w);
+                            styleGraphics.lineTo(0, h - borderRadius.w);
                         }
                         styleGraphics.endFill();
                     }
@@ -402,40 +415,40 @@ class StyleHelper {
                     // Left-Top corner
                     if (borderSize.left != borderSize.top) {
                         styleGraphics.beginFill(borderColor.top, borderAlpha);
-                        if (borderRadius <= borderSize.left || borderRadius <= borderSize.top) {
-                            drawUnevenBordersCurve(styleGraphics, borderRadius, borderRadius, borderRadius,
+                        if (borderRadius.x <= borderSize.left || borderRadius.x <= borderSize.top) {
+                            drawUnevenBordersCurve(styleGraphics, borderRadius.x, borderRadius.x, borderRadius.x,
                                                     Math.PI * (1 + 0.5 * borderSize.left / (borderSize.left + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.top / (borderSize.left + borderSize.top));                                
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(borderSize.left, borderSize.top);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, borderRadius, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top,
+                            drawUnevenBordersCorner(styleGraphics, borderRadius.x, borderRadius.x, borderRadius.x, borderRadius.x - borderSize.left, borderRadius.x - borderSize.top,
                                                     Math.PI * (1 + 0.5 * borderSize.left / (borderSize.left + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.top / (borderSize.left + borderSize.top));
-                            styleGraphics.moveTo(borderRadius, 0);
+                            styleGraphics.moveTo(borderRadius.x, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
-                            styleGraphics.lineTo(borderRadius, borderSize.top);
+                            styleGraphics.lineTo(borderRadius.x, borderSize.top);
                         }
                         styleGraphics.endFill();
                     }
                     // Right-Top corner
                     if (borderSize.right != borderSize.top) {
                         styleGraphics.beginFill(borderColor.top, borderAlpha);
-                        if (borderRadius <= borderSize.right || borderRadius <= borderSize.top) {
-                            drawUnevenBordersCurve(styleGraphics, w - borderRadius, borderRadius, borderRadius,
+                        if (borderRadius.y <= borderSize.right || borderRadius.y <= borderSize.top) {
+                            drawUnevenBordersCurve(styleGraphics, w - borderRadius.y, borderRadius.y, borderRadius.y,
                                                     Math.PI * -0.5, Math.PI * 0.5 * borderSize.top / (borderSize.right + borderSize.top));
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(w * 0.5, 0);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, w - borderRadius, borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top,
+                            drawUnevenBordersCorner(styleGraphics, w - borderRadius.y, borderRadius.y, borderRadius.y, borderRadius.y - borderSize.right, borderRadius.y - borderSize.top,
                                                     Math.PI * -0.5, Math.PI * 0.5 * borderSize.top / (borderSize.right + borderSize.top));
-                            styleGraphics.moveTo(w - borderRadius, 0);
+                            styleGraphics.moveTo(w - borderRadius.y, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
-                            styleGraphics.lineTo(w - borderRadius, borderSize.top);
+                            styleGraphics.lineTo(w - borderRadius.y, borderSize.top);
                         }
                         styleGraphics.endFill();
                     }
@@ -445,59 +458,59 @@ class StyleHelper {
                 if(borderSize.right != 0) {
                     // Right-Top corner
                     if (borderSize.right == borderSize.top) {
-                        if (borderRadius <= borderSize.right) {
+                        if (borderRadius.y <= borderSize.right) {
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
-                            styleGraphics.drawPie(w - borderRadius, borderRadius, borderRadius, Math.PI * -0.25, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(w, borderRadius);
-                            styleGraphics.lineTo(w - borderRadius, borderRadius);
+                            styleGraphics.drawPie(w - borderRadius.y, borderRadius.y, borderRadius.y, Math.PI * -0.25, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(w, borderRadius.y);
+                            styleGraphics.lineTo(w - borderRadius.y, borderRadius.y);
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.endFill();
                             // Top
                             styleGraphics.beginFill(borderColor.top, borderAlpha);
-                            styleGraphics.drawPie(w - borderRadius, borderRadius, borderRadius, Math.PI * -0.5, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(w - borderRadius, 0);
+                            styleGraphics.drawPie(w - borderRadius.y, borderRadius.y, borderRadius.y, Math.PI * -0.5, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(w - borderRadius.y, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
-                            styleGraphics.lineTo(w - borderRadius, borderRadius);
+                            styleGraphics.lineTo(w - borderRadius.y, borderRadius.y);
                             styleGraphics.endFill();
                         } else {
-                            var innerRadius = borderRadius - borderSize.right;
+                            var innerRadius = borderRadius.y - borderSize.right;
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
-                            styleGraphics.drawPieInner(w - borderRadius, borderRadius, borderRadius, innerRadius, Math.PI * -0.25, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(w, borderRadius);
-                            styleGraphics.lineTo(w - borderSize.right, borderRadius);
+                            styleGraphics.drawPieInner(w - borderRadius.y, borderRadius.y, borderRadius.y, innerRadius, Math.PI * -0.25, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(w, borderRadius.y);
+                            styleGraphics.lineTo(w - borderSize.right, borderRadius.y);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.endFill();
                             // Top
                             styleGraphics.beginFill(borderColor.top, borderAlpha);
-                            styleGraphics.drawPieInner(w - borderRadius, borderRadius, borderRadius, innerRadius, Math.PI * -0.5, Math.PI * 0.25, 10);
-                            styleGraphics.lineTo(w - borderRadius, 0);
+                            styleGraphics.drawPieInner(w - borderRadius.y, borderRadius.y, borderRadius.y, innerRadius, Math.PI * -0.5, Math.PI * 0.25, 10);
+                            styleGraphics.lineTo(w - borderRadius.y, 0);
                             styleGraphics.lineTo(w * 0.5, 0);
                             styleGraphics.lineTo(w * 0.5, borderSize.top);
-                            styleGraphics.lineTo(w - borderRadius, borderSize.top);
+                            styleGraphics.lineTo(w - borderRadius.y, borderSize.top);
                             styleGraphics.endFill();
                         }
                     } else {
                         styleGraphics.beginFill(borderColor.right, borderAlpha);
-                        if (borderRadius <= borderSize.right || borderRadius <= borderSize.top) {
-                            drawUnevenBordersCurve(styleGraphics, w - borderRadius, borderRadius, borderRadius,
+                        if (borderRadius.y <= borderSize.right || borderRadius.y <= borderSize.top) {
+                            drawUnevenBordersCurve(styleGraphics, w - borderRadius.y, borderRadius.y, borderRadius.y,
                                                     Math.PI * (-0.5 + 0.5 * borderSize.top / (borderSize.right + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.top));
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, borderSize.top);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, w - borderRadius, borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top,
+                            drawUnevenBordersCorner(styleGraphics, w - borderRadius.y, borderRadius.y, borderRadius.y, borderRadius.y - borderSize.right, borderRadius.y - borderSize.top,
                                                     Math.PI * (-0.5 + 0.5 * borderSize.top / (borderSize.right + borderSize.top)),
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.top));
-                            styleGraphics.moveTo(w, borderRadius);
-                            styleGraphics.lineTo(w - borderSize.right, borderRadius);
+                            styleGraphics.moveTo(w, borderRadius.y);
+                            styleGraphics.lineTo(w - borderSize.right, borderRadius.y);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w, h * 0.5);
                         }
@@ -505,59 +518,59 @@ class StyleHelper {
                     }
                     // Bottom-Right corner
                     if (borderSize.right == borderSize.bottom) {
-                        if (borderRadius <= borderSize.right) {
+                        if (borderRadius.z <= borderSize.right) {
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
-                            styleGraphics.drawPie(w - borderRadius, h - borderRadius, borderRadius, 0, Math.PI * 0.25, 10);
+                            styleGraphics.drawPie(w - borderRadius.z, h - borderRadius.z, borderRadius.z, 0, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h - borderRadius);
-                            styleGraphics.lineTo(w, h - borderRadius);
+                            styleGraphics.lineTo(w - borderRadius.z, h - borderRadius.z);
+                            styleGraphics.lineTo(w, h - borderRadius.z);
                             styleGraphics.endFill();
                             // Bottom
                             styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                            styleGraphics.drawPie(w - borderRadius, h - borderRadius, borderRadius, Math.PI * 0.25, Math.PI * 0.25, 10);
+                            styleGraphics.drawPie(w - borderRadius.z, h - borderRadius.z, borderRadius.z, Math.PI * 0.25, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h - borderRadius);
-                            styleGraphics.lineTo(w - borderRadius, h);
+                            styleGraphics.lineTo(w - borderRadius.z, h - borderRadius.z);
+                            styleGraphics.lineTo(w - borderRadius.z, h);
                             styleGraphics.endFill();
                         } else {
-                            var innerRadius = borderRadius - borderSize.right;
+                            var innerRadius = borderRadius.z - borderSize.right;
                             // Right
                             styleGraphics.beginFill(borderColor.right, borderAlpha);
-                            styleGraphics.drawPieInner(w - borderRadius, h - borderRadius, borderRadius, innerRadius, 0, Math.PI * 0.25, 10);
+                            styleGraphics.drawPieInner(w - borderRadius.z, h - borderRadius.z, borderRadius.z, innerRadius, 0, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
-                            styleGraphics.lineTo(w - borderSize.right, h - borderRadius);
-                            styleGraphics.lineTo(w, h - borderRadius);
+                            styleGraphics.lineTo(w - borderSize.right, h - borderRadius.z);
+                            styleGraphics.lineTo(w, h - borderRadius.z);
                             styleGraphics.endFill();
                             // Bottom
                             styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                            styleGraphics.drawPieInner(w - borderRadius, h - borderRadius, borderRadius, innerRadius, Math.PI * 0.25, Math.PI * 0.25, 10);
+                            styleGraphics.drawPieInner(w - borderRadius.z, h - borderRadius.z, borderRadius.z, innerRadius, Math.PI * 0.25, Math.PI * 0.25, 10);
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h);
+                            styleGraphics.lineTo(w - borderRadius.z, h - borderSize.bottom);
+                            styleGraphics.lineTo(w - borderRadius.z, h);
                             styleGraphics.endFill();
                         }
                     } else {
                         styleGraphics.beginFill(borderColor.right, borderAlpha);
-                        if (borderRadius <= borderSize.right || borderRadius <= borderSize.bottom) {
-                            drawUnevenBordersCurve(styleGraphics, w - borderRadius, h - borderRadius, borderRadius,
+                        if (borderRadius.z <= borderSize.right || borderRadius.z <= borderSize.bottom) {
+                            drawUnevenBordersCurve(styleGraphics, w - borderRadius.z, h - borderRadius.z, borderRadius.z,
                                                     0, Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom));
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
                             styleGraphics.lineTo(w, h * 0.5);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, w - borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom,
+                            drawUnevenBordersCorner(styleGraphics, w - borderRadius.z, h - borderRadius.z, borderRadius.z, borderRadius.z - borderSize.right, borderRadius.z - borderSize.bottom,
                                                     0, Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom));
                             styleGraphics.moveTo(w, h * 0.5);
                             styleGraphics.lineTo(w - borderSize.right, h * 0.5);
-                            styleGraphics.lineTo(w - borderSize.right, h - borderRadius);
-                            styleGraphics.lineTo(w, h - borderRadius);
+                            styleGraphics.lineTo(w - borderSize.right, h - borderRadius.z);
+                            styleGraphics.lineTo(w, h - borderRadius.z);
                         }
                         styleGraphics.endFill();
                     }
@@ -568,40 +581,40 @@ class StyleHelper {
                     // Left-Bottom corner
                     if (borderSize.left != borderSize.bottom) {
                         styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                        if (borderRadius <= borderSize.left || borderRadius <= borderSize.bottom) {
-                            drawUnevenBordersCurve(styleGraphics, borderRadius, h - borderRadius, borderRadius,
+                        if (borderRadius.w <= borderSize.left || borderRadius.w <= borderSize.bottom) {
+                            drawUnevenBordersCurve(styleGraphics, borderRadius.w, h - borderRadius.w, borderRadius.w,
                                                     Math.PI * 0.5, Math.PI * 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom));
                             styleGraphics.lineTo(borderSize.left, h - borderSize.bottom);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(w * 0.5, h);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom,
+                            drawUnevenBordersCorner(styleGraphics, borderRadius.w, h - borderRadius.w, borderRadius.w, borderRadius.w - borderSize.left, borderRadius.w - borderSize.bottom,
                                                     Math.PI * 0.5, Math.PI * 0.5 * borderSize.bottom / (borderSize.left + borderSize.bottom));
                             styleGraphics.moveTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h - borderSize.bottom);
-                            styleGraphics.lineTo(borderRadius, h);
+                            styleGraphics.lineTo(borderRadius.w, h - borderSize.bottom);
+                            styleGraphics.lineTo(borderRadius.w, h);
                         }
                         styleGraphics.endFill();
                     }
                     // Right-Bottom corner
                     if (borderSize.right != borderSize.bottom) {
                         styleGraphics.beginFill(borderColor.bottom, borderAlpha);
-                        if (borderRadius <= borderSize.right || borderRadius <= borderSize.bottom) {
-                            drawUnevenBordersCurve(styleGraphics, w - borderRadius, h - borderRadius, borderRadius,
+                        if (borderRadius.z <= borderSize.right || borderRadius.z <= borderSize.bottom) {
+                            drawUnevenBordersCurve(styleGraphics, w - borderRadius.z, h - borderRadius.z, borderRadius.z,
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom),
                                                     Math.PI * 0.5 * borderSize.bottom / (borderSize.right + borderSize.bottom));
                             styleGraphics.lineTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
                             styleGraphics.lineTo(w - borderSize.right, h - borderSize.bottom);
                         } else {
-                            drawUnevenBordersCorner(styleGraphics, w - borderRadius, h - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom,
+                            drawUnevenBordersCorner(styleGraphics, w - borderRadius.z, h - borderRadius.z, borderRadius.z, borderRadius.z - borderSize.right, borderRadius.z - borderSize.bottom,
                                                     Math.PI * 0.5 * borderSize.right / (borderSize.right + borderSize.bottom),
                                                     Math.PI * 0.5 * borderSize.bottom / (borderSize.right + borderSize.bottom));
                             styleGraphics.moveTo(w * 0.5, h);
                             styleGraphics.lineTo(w * 0.5, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h - borderSize.bottom);
-                            styleGraphics.lineTo(w - borderRadius, h);
+                            styleGraphics.lineTo(w - borderRadius.z, h - borderSize.bottom);
+                            styleGraphics.lineTo(w - borderRadius.z, h);
                         }
                         styleGraphics.endFill();
                     }
@@ -696,34 +709,34 @@ class StyleHelper {
         }
     }
 
-    private static function drawRoundedBackground(graphics:Graphics, w:Float, h:Float, borderSize:Rectangle, borderRadius:Float) {
+    private static function drawRoundedBackground(graphics:Graphics, w:Float, h:Float, borderSize:Rectangle, borderRadius:Vector4) {
         // Left-Top
-        if (borderRadius <= borderSize.left || borderRadius <= borderSize.top) {
+        if (borderRadius.x <= borderSize.left || borderRadius.x <= borderSize.top) {
             graphics.lineTo(borderSize.left, borderSize.top);
         } else {
-            graphics.lineTo(borderSize.left, borderRadius);
-            drawBackgroundCorner(graphics, borderRadius, borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.top, Math.PI, Math.PI * 0.5);
+            graphics.lineTo(borderSize.left, borderRadius.x);
+            drawBackgroundCorner(graphics, borderRadius.x, borderRadius.x, borderRadius.x - borderSize.left, borderRadius.x - borderSize.top, Math.PI, Math.PI * 0.5);
         }
         // Top-Right
-        if (borderRadius <= borderSize.right || borderRadius <= borderSize.top) {
+        if (borderRadius.y <= borderSize.right || borderRadius.y <= borderSize.top) {
             graphics.lineTo(w - borderSize.right, borderSize.top);
         } else {
-            graphics.lineTo(w - borderRadius, borderSize.top);
-            drawBackgroundCorner(graphics, w - borderRadius, borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.top, -Math.PI * 0.5, Math.PI * 0.5);
+            graphics.lineTo(w - borderRadius.y, borderSize.top);
+            drawBackgroundCorner(graphics, w - borderRadius.y, borderRadius.y, borderRadius.y - borderSize.right, borderRadius.y - borderSize.top, -Math.PI * 0.5, Math.PI * 0.5);
         }
         // Right-Bottom
-        if (borderRadius <= borderSize.right || borderRadius <= borderSize.bottom) {
+        if (borderRadius.z <= borderSize.right || borderRadius.z <= borderSize.bottom) {
             graphics.lineTo(w - borderSize.right, h - borderSize.bottom);
         } else {
-            graphics.lineTo(w - borderSize.right, h - borderRadius);
-            drawBackgroundCorner(graphics, w - borderRadius, h - borderRadius, borderRadius - borderSize.right, borderRadius - borderSize.bottom, 0, Math.PI * 0.5);
+            graphics.lineTo(w - borderSize.right, h - borderRadius.z);
+            drawBackgroundCorner(graphics, w - borderRadius.z, h - borderRadius.z, borderRadius.z - borderSize.right, borderRadius.z - borderSize.bottom, 0, Math.PI * 0.5);
         }
         // Bottom-Left
-        if (borderRadius <= borderSize.left || borderRadius <= borderSize.bottom) {
+        if (borderRadius.w <= borderSize.left || borderRadius.w <= borderSize.bottom) {
             graphics.lineTo(borderSize.left, h - borderSize.bottom);
         } else {
-            graphics.lineTo(borderRadius, h - borderSize.bottom);
-            drawBackgroundCorner(graphics, borderRadius, h - borderRadius, borderRadius - borderSize.left, borderRadius - borderSize.bottom, Math.PI * 0.5, Math.PI * 0.5);
+            graphics.lineTo(borderRadius.w, h - borderSize.bottom);
+            drawBackgroundCorner(graphics, borderRadius.w, h - borderRadius.w, borderRadius.w - borderSize.left, borderRadius.w - borderSize.bottom, Math.PI * 0.5, Math.PI * 0.5);
         }
     }
 
