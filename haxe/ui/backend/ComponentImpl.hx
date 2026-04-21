@@ -874,8 +874,21 @@ class ComponentImpl extends ComponentBase {
     private var _h2dPoint = new Point(); // we'll just reuse the same point rather than creating new ones
     @:noCompletion
     private function eventToCamera(event:MouseEvent) {
-        _h2dPoint.x = event.screenX;
-        _h2dPoint.y = event.screenY;
+        // The same haxe.ui MouseEvent instance is dispatched to every
+        // registered ComponentImpl listener by MouseHelper, so mutating
+        // event.screenX/Y here and then re-reading it on the next call
+        // would repeatedly re-apply screenToCamera(). At camera scale 1
+        // that's a no-op, but at any non-identity camera scale the coords
+        // get divided on every pass and most inBounds() checks fail.
+        // Always seed from the original untransformed hxd.Event coords.
+        var orig:hxd.Event = @:privateAccess event._originalEvent;
+        if (orig != null) {
+            _h2dPoint.x = orig.relX;
+            _h2dPoint.y = orig.relY;
+        } else {
+            _h2dPoint.x = event.screenX;
+            _h2dPoint.y = event.screenY;
+        }
         var camera = findCamera();
         if (camera != null) {
             camera.screenToCamera(_h2dPoint);
