@@ -283,34 +283,74 @@ class ScreenImpl extends ScreenBase {
         }
     }
     
+    // Screen level mouse events have to arrive in the same coordinate space as
+    // component level ones (ComponentImpl.eventToCamera): camera transformed and
+    // divided by Toolkit.scaleX/Y. Anything that tracks a drag through
+    // Screen.instance (splitters, sliders, scrollbar thumbs, menus, drag and
+    // drop) compares these coords against component positions, so a raw window
+    // pixel here is a drag that runs away from the cursor at any non identity
+    // scale or camera.
+    //
+    // Note the incoming MouseEvent is the single instance MouseHelper dispatches
+    // to every listener, and ComponentImpl.eventToCamera has already written its
+    // own transformed coords into it by the time this runs (or not, depending on
+    // registration order) - so seed from the untransformed hxd.Event, never from
+    // event.screenX/Y.
+    private var _h2dPoint = new h2d.col.Point();
+    private function eventToCamera(event:MouseEvent) {
+        var orig:hxd.Event = @:privateAccess event._originalEvent;
+        if (orig != null) {
+            _h2dPoint.x = orig.relX;
+            _h2dPoint.y = orig.relY;
+        } else {
+            _h2dPoint.x = event.screenX;
+            _h2dPoint.y = event.screenY;
+        }
+
+        var s = scene;
+        if (s != null) {
+            var camera = (s.interactiveCamera != null) ? s.interactiveCamera : s.camera;
+            if (camera != null) {
+                camera.screenToCamera(_h2dPoint);
+            }
+        }
+
+        _h2dPoint.x /= Toolkit.scaleX;
+        _h2dPoint.y /= Toolkit.scaleY;
+        return _h2dPoint;
+    }
+
     private function __onMouseMove(event:MouseEvent) {
         var fn = _mapping.get(MouseEvent.MOUSE_MOVE);
         if (fn != null) {
+            var p = eventToCamera(event);
             var mouseEvent = new MouseEvent(MouseEvent.MOUSE_MOVE);
-            mouseEvent.screenX = event.screenX;
-            mouseEvent.screenY = event.screenY;
+            mouseEvent.screenX = p.x;
+            mouseEvent.screenY = p.y;
             mouseEvent.buttonDown = event.data;
             fn(mouseEvent);
         }
     }
-    
+
     private function __onMouseDown(event:MouseEvent) {
         var fn = _mapping.get(MouseEvent.MOUSE_DOWN);
         if (fn != null) {
+            var p = eventToCamera(event);
             var mouseEvent = new MouseEvent(MouseEvent.MOUSE_DOWN);
-            mouseEvent.screenX = event.screenX;
-            mouseEvent.screenY = event.screenY;
+            mouseEvent.screenX = p.x;
+            mouseEvent.screenY = p.y;
             mouseEvent.buttonDown = event.data;
             fn(mouseEvent);
         }
     }
-    
+
     private function __onMouseUp(event:MouseEvent) {
         var fn = _mapping.get(MouseEvent.MOUSE_UP);
         if (fn != null) {
+            var p = eventToCamera(event);
             var mouseEvent = new MouseEvent(MouseEvent.MOUSE_UP);
-            mouseEvent.screenX = event.screenX;
-            mouseEvent.screenY = event.screenY;
+            mouseEvent.screenX = p.x;
+            mouseEvent.screenY = p.y;
             mouseEvent.buttonDown = event.data;
             fn(mouseEvent);
         }
