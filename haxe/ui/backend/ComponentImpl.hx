@@ -158,8 +158,16 @@ class ComponentImpl extends ComponentBase {
         if (_textInput == null) {
             super.createTextInput(text);
             addChild(_textInput.sprite);
+            // The selection highlight belongs BEHIND the text, and it goes in the
+            // style graphics container to get there: that container is always the
+            // 0th child, so anything in it is drawn before the text sprite, and
+            // nothing is inserted into this component's own child list - which
+            // would put every component child one place out (see INDEX_OFFSET).
+            if (_textInput.selectionSprite != null) {
+                _container.addChild(_textInput.selectionSprite);
+            }
         }
-        
+
         return _textInput;
     }
     
