@@ -41,12 +41,17 @@ class TextInputImpl extends TextDisplayImpl {
 
     var textInput: TextInput;
 
+    /** The same object as `textInput`, typed for the scrolling it adds. **/
+    var scrollableInput: ScrollingTextInput;
+
     public function new() {
         super();
     }
 
     private override function createText() {
-        textInput = new TextInput(hxd.res.DefaultFont.get());
+        scrollableInput = new ScrollingTextInput(hxd.res.DefaultFont.get());
+        scrollableInput.onCursorMoved = keepCursorInView;
+        textInput = scrollableInput;
         textInput.lineBreak = false;
         textInput.onChange = onChange;
         textInput.onClick = function(e) {
@@ -90,22 +95,128 @@ class TextInputImpl extends TextDisplayImpl {
     private function onChange() {
         _text = textInput.text;
         _htmlText = textInput.text;
-        
+
         measureText();
-        
+        syncScroll();
+        keepCursorInView();
+
         if (_inputData.onChangedCallback != null) {
             _inputData.onChangedCallback();
         }
-        
+
         if (parentComponent != null) {
             parentComponent.dispatch(new UIEvent(UIEvent.CHANGE));
         }
     }
 
+    private override function validateData() {
+        super.validateData();
+        syncScroll();   // the words changed, so how far they reach has too
+    }
+
     private override function validateDisplay() {
         super.validateDisplay();
-        
-        textInput.inputWidth = Math.round(textInput.maxWidth); // clip text input display to text component's width
+        if (!textInput.multiline) {
+            textInput.inputWidth = Math.round(textInput.maxWidth); // clip text input display to text component's width
+        } else {
+            // A multiline field is a WINDOW onto its text: h2d.TextInput turns its
+            // own clipping and scrolling off when multiline (it expects to stand at
+            // full height inside something that scrolls), so the size it has been
+            // given is handed down as the view and everything past it is scrolled
+            // rather than drawn over whatever the component sits next to.
+            scrollableInput.viewWidth = _width;
+            scrollableInput.viewHeight = _height;
+        }
+        syncScroll();
+    }
+
+    /**
+        Keep the scroll range, and the position, in step with the text and with the
+        size the component has been given.
+
+        This is what fills in `vscrollMax` and `vscrollPageSize`, which is all a
+        TextArea needs to give its scrollbar something to do - the same numbers a
+        ScrollView works its own out from: the range is how much text does not fit,
+        and the page is the share of it that shows.
+    **/
+    private function syncScroll() {
+        if (scrollableInput == null) {
+            return;
+        }
+        if (!textInput.multiline || _height <= 0) {
+            _inputData.vscrollMax = 0;
+            _inputData.vscrollPageSize = 0;
+            scrollableInput.scrollY = 0;
+            applySelectionView();
+            return;
+        }
+
+        var max = _textHeight - _height;
+        if (max < 0) {
+            max = 0;
+        }
+        _inputData.vscrollMax = max;
+        _inputData.vscrollPageSize = (max > 0 && _textHeight > 0) ? (_height / _textHeight) * max : 0;
+
+        if (_inputData.vscrollPos > max) {
+            _inputData.vscrollPos = max;
+        }
+        if (_inputData.vscrollPos < 0) {
+            _inputData.vscrollPos = 0;
+        }
+        scrollableInput.scrollY = _inputData.vscrollPos;
+        applySelectionView();
+    }
+
+    // The highlight is a separate object, so it scrolls and clips separately too.
+    private function applySelectionView() {
+        if (selectionSprite == null) {
+            return;
+        }
+        selectionSprite.scrollY = (scrollableInput != null) ? scrollableInput.scrollY : 0;
+        selectionSprite.viewHeight = textInput.multiline ? _height : 0;
+    }
+
+    /**
+        Bring the line the caret is on back into view, and tell the component so
+        that its scrollbar follows.
+
+        Heaps has its own answer to this and it does not apply: a multiline
+        h2d.TextInput asks its parent CONTAINERS to scroll to the caret
+        (`scrollToPos`), which only works when it sits inside an h2d flow.
+    **/
+    private function keepCursorInView() {
+        if (scrollableInput == null || !textInput.multiline || _height <= 0) {
+            return;
+        }
+        if (textInput.cursorIndex < 0) {   // not being edited: leave it where it is
+            return;
+        }
+
+        var line = scrollableInput.cursorLineTop();
+        var lineHeight = textInput.font.lineHeight;
+        var pos = _inputData.vscrollPos;
+        if (line < pos) {
+            pos = line;
+        } else if (line + lineHeight > pos + _height) {
+            pos = line + lineHeight - _height;
+        }
+        if (pos > _inputData.vscrollMax) {
+            pos = _inputData.vscrollMax;
+        }
+        if (pos < 0) {
+            pos = 0;
+        }
+        if (pos == _inputData.vscrollPos) {
+            return;
+        }
+
+        _inputData.vscrollPos = pos;
+        scrollableInput.scrollY = pos;
+        applySelectionView();
+        if (_inputData.onScrollCallback != null) {
+            _inputData.onScrollCallback();
+        }
     }
 
     private override function resizeFont(fontSizeValue:Int, isBitmap:Bool) {
@@ -136,6 +247,12 @@ class TextInputImpl extends TextDisplayImpl {
             textInput.canEdit = false;
         } else {
             textInput.canEdit = true;
+        }
+        if (_textStyle != null) {
+            if (_displayData.multiline != textInput.multiline) {
+                textInput.multiline = _displayData.multiline;
+                measureTextRequired = true;
+            }
         }
         
         return measureTextRequired;
@@ -244,6 +361,13 @@ class TextInputImpl extends TextDisplayImpl {
 **/
 class TextSelection extends h2d.Graphics {
 
+    /** How far down the text the field has been scrolled, and how much of it
+        shows - the highlight is a separate object, so it has to be moved and
+        clipped separately. Zero height is no window, which is the single-line
+        case: everything is drawn where it falls. **/
+    public var scrollY:Float = 0;
+    public var viewHeight:Float = 0;
+
     var input:h2d.TextInput;
     var last:String = null;
 
@@ -260,7 +384,8 @@ class TextSelection extends h2d.Graphics {
     function refresh() {
         var range = input.selectionRange;
         var now = (range == null) ? "-"
-            : range.start + ":" + range.length + ":" + input.text.length + ":" + input.x + ":" + input.y;
+            : range.start + ":" + range.length + ":" + input.text.length + ":" + input.x + ":" + input.y
+              + ":" + scrollY + ":" + viewHeight;
         if (now == last) {
             return;
         }
@@ -301,8 +426,102 @@ class TextSelection extends h2d.Graphics {
                 width = input.cursorTile.width;
             }
             offset += line.length;
-            drawRect(left, i * lineHeight, width, lineHeight);
+
+            // Scrolled and clipped by hand, since this object is drawn outside
+            // the render zone the field clips its own text with.
+            var top = i * lineHeight - scrollY;
+            var bottom = top + lineHeight;
+            if (viewHeight > 0) {
+                if (bottom <= 0 || top >= viewHeight) {
+                    continue;
+                }
+                if (top < 0) {
+                    top = 0;
+                }
+                if (bottom > viewHeight) {
+                    bottom = viewHeight;
+                }
+            }
+            drawRect(left, top, width, bottom - top);
         }
         endFill();
+    }
+}
+
+/**
+    An h2d.TextInput that can be a WINDOW onto its own text.
+
+    Heaps turns clipping and horizontal scrolling off for a multiline field
+    (`if( multiline ) { iw = -1; scrollX = 0; }` in its draw) because it expects
+    such a field to stand at its full height inside something that scrolls. A
+    HaxeUI TextArea is not that: it is a fixed box with scrollbars of its own, so
+    the field has to hold the view itself - otherwise its text is drawn straight
+    over whatever the component happens to sit next to, and its scrollbars have
+    nothing to move.
+
+    So: a view size, a vertical offset applied the same way heaps applies its own
+    horizontal one, and a render zone to keep the words inside the box.
+**/
+private class ScrollingTextInput extends h2d.TextInput {
+
+    /** How far down the text the view has been moved, in pixels. **/
+    public var scrollY:Float = 0;
+
+    /** The size of the window onto the text. Zero or less is no window at all,
+        which is the single-line case and heaps' own behaviour. **/
+    public var viewWidth:Float = 0;
+    public var viewHeight:Float = 0;
+
+    /** Called whenever a key has moved the caret - typing arrives through
+        `onChange` instead. **/
+    public var onCursorMoved:Void->Void = null;
+
+    public function new(font:h2d.Font, ?parent:h2d.Object) {
+        super(font, parent);
+    }
+
+    /** Where the caret's line begins, measured down the text. **/
+    public function cursorLineTop():Float {
+        return getCursorYOffset();
+    }
+
+    override function onCursorChange() {
+        super.onCursorChange();
+        if (onCursorMoved != null) {
+            onCursorMoved();
+        }
+    }
+
+    // A click lands on the line that is SHOWN there, not the one that would be
+    // there unscrolled.
+    override function textPos(x:Float, y:Float) {
+        return super.textPos(x, y + scrollY);
+    }
+
+    // The clickable area is the window, not the whole text: without this a field
+    // scrolled to its last line would still be taking clicks from the components
+    // below it.
+    override function syncInteract() {
+        super.syncInteract();
+        if (viewHeight > 0 && interactive != null && interactive.height > viewHeight) {
+            interactive.height = viewHeight;
+        }
+    }
+
+    override function draw(ctx:h2d.RenderContext) {
+        if (!multiline || viewHeight <= 0 || viewWidth <= 0) {
+            super.draw(ctx);
+            return;
+        }
+
+        var far = localToGlobal(new h2d.col.Point(viewWidth, viewHeight));
+        ctx.clipRenderZone(absX, absY, far.x - absX, far.y - absY);
+        // The same shift heaps makes for scrollX, down the other axis.
+        absX -= scrollY * matB;
+        absY -= scrollY * matD;
+        super.draw(ctx);
+        absX += scrollY * matB;
+        absY += scrollY * matD;
+        ctx.popRenderZone();
     }
 }
