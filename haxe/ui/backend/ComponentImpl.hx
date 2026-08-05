@@ -290,6 +290,25 @@ class ComponentImpl extends ComponentBase {
         if (n == 0) {
             return null;
         }
+        // Render the offscreen at the resolution the component is DRAWN at,
+        // not the one it is laid out at.
+        //
+        // heaps renders a filtered object into a texture and then composites
+        // it, and sizes that texture at `viewportScaleX * resolutionScale`
+        // (h2d.Object.drawFilters). Toolkit.scaleX is neither of those: it
+        // magnifies the root COMPONENT, so at a display scale the scene's
+        // viewport stays 1, the texture is rasterised at layout size, and the
+        // composite stretches it. Everything a clip rect touches - which is
+        // every scrollview, list, tree and dropdown - came out soft, while the
+        // text beside it that no filter touches stayed sharp. Same fault the
+        // glyph-size fix addresses for text drawn directly, one layer further
+        // out.
+        //
+        // Read at creation rather than per frame; applyStyle and handleClipRect
+        // both rebuild the group, so a scale set before the UI is built - which
+        // is when it has to be set anyway, since a component measured at one
+        // scale and drawn at another lays out wrong - is always the current one.
+        filterGroup.resolutionScale = Toolkit.scaleX;
         return filterGroup;
     }
 
