@@ -723,8 +723,31 @@ class ComponentImpl extends ComponentBase {
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX;
-        var sy = screenY;
+        // screenBounds, not screenX. The two are different sums and they part
+        // company on a component whose ROOT is not at the origin.
+        //
+        // cacheScreenPos adds every `left` up the chain and scales the TOTAL;
+        // screenBounds (ComponentBase) scales each `left` except the root
+        // component's own. For an ordinary root at left 0 those are the same
+        // number, which is why everything inside a window hit-tests correctly
+        // and this went unnoticed. A dropdown's open list is not that: it is a
+        // root component of the SCREEN, and DropDownHandler positions it with
+        // `_wrapper.left = _dropdown.screenLeft`, a value already in screen
+        // pixels — so scaling the total scales it a second time and screenX
+        // stops describing where the thing is.
+        //
+        // screenBounds is the one that agrees with the sprite: measured on a
+        // dropdown row at Toolkit.scale 1.5, screenBounds and the drawn sprite
+        // both said 739,755 while screenX said 370,400. It is also what
+        // ComponentBase.hitTest compares against, so this puts the two hit
+        // paths of this backend on the same number instead of two.
+        //
+        // Unpatched: at any scale but 1 a press on a row of an open dropdown
+        // list falls straight through to whatever is behind it, and half a
+        // property panel is dropdowns.
+        var bounds = cast(this, Component).screenBounds;
+        var sx = bounds.left;
+        var sy = bounds.top;
         var cx = this.width * Toolkit.scaleX;
         var cy = this.height * Toolkit.scaleY;
 
@@ -737,8 +760,9 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + (clip.componentClipRect.left * Toolkit.scaleX));
-                var sy = (clip.screenY + (clip.componentClipRect.top * Toolkit.scaleY));
+                var clipBounds = clip.screenBounds;
+                var sx = (clipBounds.left + (clip.componentClipRect.left * Toolkit.scaleX));
+                var sy = (clipBounds.top + (clip.componentClipRect.top * Toolkit.scaleY));
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
