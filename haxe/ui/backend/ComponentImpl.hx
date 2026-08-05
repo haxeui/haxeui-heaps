@@ -299,9 +299,8 @@ class ComponentImpl extends ComponentBase {
         // viewport stays 1, the texture is rasterised at layout size, and the
         // composite stretches it. Everything a clip rect touches - which is
         // every scrollview, list, tree and dropdown - came out soft, while the
-        // text beside it that no filter touches stayed sharp. Same fault the
-        // glyph-size fix addresses for text drawn directly, one layer further
-        // out.
+        // text beside it that no filter touches stayed sharp, which is the
+        // tell.
         //
         // Read at creation rather than per frame; applyStyle and handleClipRect
         // both rebuild the group, so a scale set before the UI is built - which
