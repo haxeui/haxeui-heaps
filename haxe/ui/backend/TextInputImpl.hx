@@ -109,6 +109,24 @@ class TextInputImpl extends TextDisplayImpl {
         }
     }
 
+    /**
+        Layout units per unit of the TEXT's own space.
+
+        The glyphs are baked at DEVICE size and the text sprite stands scaled
+        down to match (TextDisplayImpl, which is where the ratio comes from), so
+        everything measured off the field — a line height, a caret's offset down
+        the text, the width of a run of characters — is in units that much
+        bigger than the component around it. Anything handed DOWN to the field
+        divides by this; anything read back off it multiplies. At Toolkit scale
+        1 every one of those is an identity, which is why none of it showed
+        until the editor followed the desktop.
+    **/
+    private var textScale(get, never):Float;
+    private function get_textScale():Float {
+        var s = (sprite != null) ? sprite.scaleY : 1;
+        return (s > 0) ? s : 1;
+    }
+
     private override function validateData() {
         super.validateData();
         syncScroll();   // the words changed, so how far they reach has too
@@ -124,8 +142,13 @@ class TextInputImpl extends TextDisplayImpl {
             // full height inside something that scrolls), so the size it has been
             // given is handed down as the view and everything past it is scrolled
             // rather than drawn over whatever the component sits next to.
-            scrollableInput.viewWidth = _width;
-            scrollableInput.viewHeight = _height;
+            //
+            // In the TEXT's units (see textScale): the view is a rectangle the
+            // field clips its own drawing to, and the field draws in the units
+            // its glyphs are baked in. Handed the component's own numbers it
+            // showed only 1/scale of every line and 1/scale of the lines.
+            scrollableInput.viewWidth = _width / textScale;
+            scrollableInput.viewHeight = _height / textScale;
         }
         syncScroll();
     }
@@ -164,7 +187,7 @@ class TextInputImpl extends TextDisplayImpl {
         if (_inputData.vscrollPos < 0) {
             _inputData.vscrollPos = 0;
         }
-        scrollableInput.scrollY = _inputData.vscrollPos;
+        scrollableInput.scrollY = _inputData.vscrollPos / textScale;
         applySelectionView();
     }
 
@@ -173,8 +196,16 @@ class TextInputImpl extends TextDisplayImpl {
         if (selectionSprite == null) {
             return;
         }
+        // Both in the TEXT's units, which is what the highlight measures itself
+        // in (it walks the field's own lines) and what the scale below draws it
+        // at — the scroll it takes is the field's own, already converted.
         selectionSprite.scrollY = (scrollableInput != null) ? scrollableInput.scrollY : 0;
-        selectionSprite.viewHeight = textInput.multiline ? _height : 0;
+        selectionSprite.viewHeight = textInput.multiline ? _height / textScale : 0;
+        // The words are drawn at the text's scale and the bars under them are
+        // built from the same measurements, so they are drawn at it too. Set
+        // here rather than once, because the font (and with it the ratio) is
+        // rebuilt whenever the style is.
+        selectionSprite.setScale(textScale);
     }
 
     /**
@@ -193,8 +224,11 @@ class TextInputImpl extends TextDisplayImpl {
             return;
         }
 
-        var line = scrollableInput.cursorLineTop();
-        var lineHeight = textInput.font.lineHeight;
+        // Measured off the FIELD, so in its units; everything they are compared
+        // with below (the scroll position, the height, the maximum) is the
+        // component's, so they are brought over here rather than each time.
+        var line = scrollableInput.cursorLineTop() * textScale;
+        var lineHeight = textInput.font.lineHeight * textScale;
         var pos = _inputData.vscrollPos;
         if (line < pos) {
             pos = line;
@@ -212,7 +246,7 @@ class TextInputImpl extends TextDisplayImpl {
         }
 
         _inputData.vscrollPos = pos;
-        scrollableInput.scrollY = pos;
+        scrollableInput.scrollY = pos / textScale;
         applySelectionView();
         if (_inputData.onScrollCallback != null) {
             _inputData.onScrollCallback();
