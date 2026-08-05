@@ -117,7 +117,6 @@ class ComponentImpl extends ComponentBase {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.width != this.width) {
-                        trace(clipComponent.width, this.width);
                         offsetX += clipComponent.width;
                     }
                 }
