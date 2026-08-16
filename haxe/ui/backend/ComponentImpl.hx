@@ -80,6 +80,15 @@ class ComponentImpl extends ComponentBase {
     
     @:noCompletion
     private var _maskGraphics:Graphics = null;
+    // Whether the clip rect below has taken ownership of this component's
+    // x/y (a scrolled scrollview's contents), per axis — so a later clip
+    // that matches the component's size can tell a stale scroll translation
+    // (which must be undone) from a layout-owned position (which must not
+    // be touched, the clip:true case the guard below exists for).
+    @:noCompletion
+    private var _clipOwnsX:Bool = false;
+    @:noCompletion
+    private var _clipOwnsY:Bool = false;
     @:noCompletion
     private override function handleClipRect(value:Rectangle) {
         if (_maskGraphics == null) {
@@ -122,6 +131,16 @@ class ComponentImpl extends ComponentBase {
                 }
             }
             this.x = -value.left + borderSize + offsetX;
+            _clipOwnsX = true;
+        } else if (_clipOwnsX) {
+            // The clip translated this component before and now matches its
+            // width exactly: the scroll is gone (content emptied or shrunk
+            // inside the viewport), so the translation goes with it. Without
+            // this, a scrolled-to-bottom scrollview that is then cleared
+            // keeps its contents shifted by the old scroll offset — drawn
+            // entirely outside the mask, a scrollview that "appears gone".
+            this.x = -value.left + borderSize;
+            _clipOwnsX = false;
         }
         if (this.height != value.height) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
@@ -136,6 +155,11 @@ class ComponentImpl extends ComponentBase {
                 }
             }
             this.y = -value.top + borderSize + offsetY;
+            _clipOwnsY = true;
+        } else if (_clipOwnsY) {
+            // Same as x above: undo a stale vertical scroll translation.
+            this.y = -value.top + borderSize;
+            _clipOwnsY = false;
         }
     }
 
@@ -306,6 +330,24 @@ class ComponentImpl extends ComponentBase {
         // both rebuild the group, so a scale set before the UI is built - which
         // is when it has to be set anyway, since a component measured at one
         // scale and drawn at another lays out wrong - is always the current one.
+        //
+        // EVERY filter, not just the group. h2d.filter.Group does not pass its
+        // resolutionScale down to the filters inside it, and a Mask renders its
+        // mask object through a filter of its own (AbstractMask.hide, which is
+        // what its own set_resolutionScale exists to keep in step). Left at 1
+        // while the content around it is rasterised at the display scale, the
+        // two textures are different sizes and the matrix in
+        // AbstractMask.getMaskTexture maps the mask onto 1/scale of the area it
+        // covers - so at 150% a scrollview clipped everything below two thirds
+        // of its height, cutting a line of text in half and hiding the rest.
+        if (_maskFilter != null) {
+            _maskFilter.resolutionScale = Toolkit.scaleX;
+        }
+        if (_currentStyleFilters != null) {
+            for (f in _currentStyleFilters) {
+                f.resolutionScale = Toolkit.scaleX;
+            }
+        }
         filterGroup.resolutionScale = Toolkit.scaleX;
         return filterGroup;
     }
