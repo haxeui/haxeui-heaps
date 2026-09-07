@@ -57,9 +57,24 @@ class TextInputImpl extends TextDisplayImpl {
         textInput.onClick = function(e) {
             cast(parentComponent, InteractiveComponent).focus = true;
         }
+        textInput.onSubmit = onSubmit;
         hideNativeSelection();
         selectionSprite = new TextSelection(textInput);
         return textInput;
+    }
+
+    // h2d.TextInput blurs its Interactive when Enter is pressed in a single line input (and only
+    // then calls onSubmit). No other haxeui backend drops focus on Enter, and the FocusManager is
+    // never told about that blur, so take the native focus back - unless the KEY_DOWN handler that
+    // already ran for this key press moved haxeui focus elsewhere. handleKey ignores all input while
+    // cursorIndex < 0, so put the cursor back too (h2d's onBlur reset it).
+    private function onSubmit() {
+        if (parentComponent == null || cast(parentComponent, InteractiveComponent).focus == false) {
+            return;
+        }
+        textInput.focus();
+        textInput.cursorIndex = textInput.getTextLength();
+        keepCursorInView();
     }
 
     // Whatever heaps would draw for the selection, draw none of it: the tile keeps
