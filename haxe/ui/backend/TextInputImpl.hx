@@ -65,11 +65,23 @@ class TextInputImpl extends TextDisplayImpl {
 
     // h2d.TextInput blurs its Interactive when Enter is pressed in a single line input (and only
     // then calls onSubmit). No other haxeui backend drops focus on Enter, and the FocusManager is
-    // never told about that blur, so take the native focus back - unless the KEY_DOWN handler that
-    // already ran for this key press moved haxeui focus elsewhere. handleKey ignores all input while
+    // never told about that blur, so take the native focus back. handleKey ignores all input while
     // cursorIndex < 0, so put the cursor back too (h2d's onBlur reset it).
+    //
+    // Only when the field can still be typed into, which by this point is not a given: the KEY_DOWN
+    // listener for this same key press has already run, and a submit handler routinely moves focus
+    // on, hides the field (a wizard step advancing, a form swapped out) or disables it. Re-focusing
+    // an invisible Interactive is worse than doing nothing: hxd.SceneEvents.checkFocus blurs it on
+    // the next event because it is not visible, and the focus is then NOWHERE - every later
+    // keystroke is dropped by the whole application until something is clicked.
     private function onSubmit() {
-        if (parentComponent == null || cast(parentComponent, InteractiveComponent).focus == false) {
+        if (parentComponent == null) {
+            return;
+        }
+        var c = cast(parentComponent, InteractiveComponent);
+        // `hidden` reports a hidden ancestor as well, which is the common case here: the container
+        // the field sits in is swapped out, while the field itself was never touched.
+        if (c.focus == false || c.hidden == true || c.disabled == true) {
             return;
         }
         textInput.focus();
