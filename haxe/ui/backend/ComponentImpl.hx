@@ -80,6 +80,15 @@ class ComponentImpl extends ComponentBase {
     
     @:noCompletion
     private var _maskGraphics:Graphics = null;
+    // Whether the clip rect below has taken ownership of this component's
+    // x/y (a scrolled scrollview's contents), per axis — so a later clip
+    // that matches the component's size can tell a stale scroll translation
+    // (which must be undone) from a layout-owned position (which must not
+    // be touched, the clip:true case the guard below exists for).
+    @:noCompletion
+    private var _clipOwnsX:Bool = false;
+    @:noCompletion
+    private var _clipOwnsY:Bool = false;
     @:noCompletion
     private override function handleClipRect(value:Rectangle) {
         if (_maskGraphics == null) {
@@ -117,12 +126,21 @@ class ComponentImpl extends ComponentBase {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.width != this.width) {
-                        trace(clipComponent.width, this.width);
                         offsetX += clipComponent.width;
                     }
                 }
             }
             this.x = -value.left + borderSize + offsetX;
+            _clipOwnsX = true;
+        } else if (_clipOwnsX) {
+            // The clip translated this component before and now matches its
+            // width exactly: the scroll is gone (content emptied or shrunk
+            // inside the viewport), so the translation goes with it. Without
+            // this, a scrolled-to-bottom scrollview that is then cleared
+            // keeps its contents shifted by the old scroll offset — drawn
+            // entirely outside the mask, a scrollview that "appears gone".
+            this.x = -value.left + borderSize;
+            _clipOwnsX = false;
         }
         if (this.height != value.height) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
@@ -137,6 +155,11 @@ class ComponentImpl extends ComponentBase {
                 }
             }
             this.y = -value.top + borderSize + offsetY;
+            _clipOwnsY = true;
+        } else if (_clipOwnsY) {
+            // Same as x above: undo a stale vertical scroll translation.
+            this.y = -value.top + borderSize;
+            _clipOwnsY = false;
         }
     }
 
@@ -158,8 +181,16 @@ class ComponentImpl extends ComponentBase {
         if (_textInput == null) {
             super.createTextInput(text);
             addChild(_textInput.sprite);
+            // The selection highlight belongs BEHIND the text, and it goes in the
+            // style graphics container to get there: that container is always the
+            // 0th child, so anything in it is drawn before the text sprite, and
+            // nothing is inserted into this component's own child list - which
+            // would put every component child one place out (see INDEX_OFFSET).
+            if (_textInput.selectionSprite != null) {
+                _container.addChild(_textInput.selectionSprite);
+            }
         }
-        
+
         return _textInput;
     }
     
@@ -282,6 +313,42 @@ class ComponentImpl extends ComponentBase {
         if (n == 0) {
             return null;
         }
+        // Render the offscreen at the resolution the component is DRAWN at,
+        // not the one it is laid out at.
+        //
+        // heaps renders a filtered object into a texture and then composites
+        // it, and sizes that texture at `viewportScaleX * resolutionScale`
+        // (h2d.Object.drawFilters). Toolkit.scaleX is neither of those: it
+        // magnifies the root COMPONENT, so at a display scale the scene's
+        // viewport stays 1, the texture is rasterised at layout size, and the
+        // composite stretches it. Everything a clip rect touches - which is
+        // every scrollview, list, tree and dropdown - came out soft, while the
+        // text beside it that no filter touches stayed sharp, which is the
+        // tell.
+        //
+        // Read at creation rather than per frame; applyStyle and handleClipRect
+        // both rebuild the group, so a scale set before the UI is built - which
+        // is when it has to be set anyway, since a component measured at one
+        // scale and drawn at another lays out wrong - is always the current one.
+        //
+        // EVERY filter, not just the group. h2d.filter.Group does not pass its
+        // resolutionScale down to the filters inside it, and a Mask renders its
+        // mask object through a filter of its own (AbstractMask.hide, which is
+        // what its own set_resolutionScale exists to keep in step). Left at 1
+        // while the content around it is rasterised at the display scale, the
+        // two textures are different sizes and the matrix in
+        // AbstractMask.getMaskTexture maps the mask onto 1/scale of the area it
+        // covers - so at 150% a scrollview clipped everything below two thirds
+        // of its height, cutting a line of text in half and hiding the rest.
+        if (_maskFilter != null) {
+            _maskFilter.resolutionScale = Toolkit.scaleX;
+        }
+        if (_currentStyleFilters != null) {
+            for (f in _currentStyleFilters) {
+                f.resolutionScale = Toolkit.scaleX;
+            }
+        }
+        filterGroup.resolutionScale = Toolkit.scaleX;
         return filterGroup;
     }
 
@@ -696,8 +763,31 @@ class ComponentImpl extends ComponentBase {
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX;
-        var sy = screenY;
+        // screenBounds, not screenX. The two are different sums and they part
+        // company on a component whose ROOT is not at the origin.
+        //
+        // cacheScreenPos adds every `left` up the chain and scales the TOTAL;
+        // screenBounds (ComponentBase) scales each `left` except the root
+        // component's own. For an ordinary root at left 0 those are the same
+        // number, which is why everything inside a window hit-tests correctly
+        // and this went unnoticed. A dropdown's open list is not that: it is a
+        // root component of the SCREEN, and DropDownHandler positions it with
+        // `_wrapper.left = _dropdown.screenLeft`, a value already in screen
+        // pixels — so scaling the total scales it a second time and screenX
+        // stops describing where the thing is.
+        //
+        // screenBounds is the one that agrees with the sprite: measured on a
+        // dropdown row at Toolkit.scale 1.5, screenBounds and the drawn sprite
+        // both said 739,755 while screenX said 370,400. It is also what
+        // ComponentBase.hitTest compares against, so this puts the two hit
+        // paths of this backend on the same number instead of two.
+        //
+        // Unpatched: at any scale but 1 a press on a row of an open dropdown
+        // list falls straight through to whatever is behind it, and half a
+        // property panel is dropdowns.
+        var bounds = cast(this, Component).screenBounds;
+        var sx = bounds.left;
+        var sy = bounds.top;
         var cx = this.width * Toolkit.scaleX;
         var cy = this.height * Toolkit.scaleY;
 
@@ -710,8 +800,9 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + (clip.componentClipRect.left * Toolkit.scaleX));
-                var sy = (clip.screenY + (clip.componentClipRect.top * Toolkit.scaleY));
+                var clipBounds = clip.screenBounds;
+                var sx = (clipBounds.left + (clip.componentClipRect.left * Toolkit.scaleX));
+                var sy = (clipBounds.top + (clip.componentClipRect.top * Toolkit.scaleY));
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
