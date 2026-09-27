@@ -7,6 +7,10 @@ class EventMapper {
         haxe.ui.events.MouseEvent.MOUSE_OUT => EventType.MOUSE_OUT,
         haxe.ui.events.MouseEvent.MOUSE_DOWN => EventType.MOUSE_DOWN,
         haxe.ui.events.MouseEvent.MOUSE_UP => EventType.MOUSE_UP,
+        haxe.ui.events.MouseEvent.RIGHT_MOUSE_DOWN => EventType.MOUSE_DOWN,
+        haxe.ui.events.MouseEvent.RIGHT_MOUSE_UP => EventType.MOUSE_UP,
+        haxe.ui.events.MouseEvent.MIDDLE_MOUSE_DOWN => EventType.MOUSE_DOWN,
+        haxe.ui.events.MouseEvent.MIDDLE_MOUSE_UP => EventType.MOUSE_UP,
         haxe.ui.events.MouseEvent.MOUSE_WHEEL => EventType.MOUSE_WHEEL,
         haxe.ui.events.MouseEvent.CLICK => EventType.CLICK,
 

@@ -233,17 +233,22 @@ class ScreenImpl extends ScreenBase {
                     _mapping.set(type, listener);
                     MouseHelper.notify(MouseEvent.MOUSE_MOVE, __onMouseMove);
                 }
-            case MouseEvent.MOUSE_DOWN:
+            case MouseEvent.MOUSE_DOWN | MouseEvent.RIGHT_MOUSE_DOWN | MouseEvent.MIDDLE_MOUSE_DOWN:
                 if (_mapping.exists(type) == false) {
+                    // one MouseHelper listener serves all three buttons
+                    if (hasMapping(MOUSE_DOWN_TYPES) == false) {
+                        MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                    }
                     _mapping.set(type, listener);
-                    MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
                 }
-            case MouseEvent.MOUSE_UP:
+            case MouseEvent.MOUSE_UP | MouseEvent.RIGHT_MOUSE_UP | MouseEvent.MIDDLE_MOUSE_UP:
                 if (_mapping.exists(type) == false) {
+                    if (hasMapping(MOUSE_UP_TYPES) == false) {
+                        MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                    }
                     _mapping.set(type, listener);
-                    MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                 }
-            case KeyboardEvent.KEY_DOWN:     
+            case KeyboardEvent.KEY_DOWN:
                 if (_mapping.exists(type) == false) {
                     _mapping.set(type, listener);
                     KeyboardHelper.notify(KeyboardEvent.KEY_DOWN, __onKeyDown);
@@ -266,12 +271,16 @@ class ScreenImpl extends ScreenBase {
             case MouseEvent.MOUSE_MOVE:
                 _mapping.remove(type);
                 MouseHelper.remove(MouseEvent.MOUSE_MOVE, __onMouseMove);
-            case MouseEvent.MOUSE_DOWN:
+            case MouseEvent.MOUSE_DOWN | MouseEvent.RIGHT_MOUSE_DOWN | MouseEvent.MIDDLE_MOUSE_DOWN:
                 _mapping.remove(type);
-                MouseHelper.remove(MouseEvent.MOUSE_DOWN, __onMouseDown);
-            case MouseEvent.MOUSE_UP:
+                if (hasMapping(MOUSE_DOWN_TYPES) == false) {
+                    MouseHelper.remove(MouseEvent.MOUSE_DOWN, __onMouseDown);
+                }
+            case MouseEvent.MOUSE_UP | MouseEvent.RIGHT_MOUSE_UP | MouseEvent.MIDDLE_MOUSE_UP:
                 _mapping.remove(type);
-                MouseHelper.remove(MouseEvent.MOUSE_UP, __onMouseUp);
+                if (hasMapping(MOUSE_UP_TYPES) == false) {
+                    MouseHelper.remove(MouseEvent.MOUSE_UP, __onMouseUp);
+                }
             case KeyboardEvent.KEY_DOWN:     
                 _mapping.remove(type);
                 KeyboardHelper.remove(KeyboardEvent.KEY_DOWN, __onKeyDown);
@@ -293,25 +302,48 @@ class ScreenImpl extends ScreenBase {
             fn(mouseEvent);
         }
     }
-    
-    private function __onMouseDown(event:MouseEvent) {
-        var fn = _mapping.get(MouseEvent.MOUSE_DOWN);
-        if (fn != null) {
-            var mouseEvent = new MouseEvent(MouseEvent.MOUSE_DOWN);
-            mouseEvent.screenX = event.screenX;
-            mouseEvent.screenY = event.screenY;
-            mouseEvent.buttonDown = event.data;
-            fn(mouseEvent);
+
+    // Split by hxd.Event.button the same way ComponentImpl does, so a right or
+    // middle press reaches RIGHT_/MIDDLE_MOUSE_* listeners and not MOUSE_DOWN/UP
+    // (0 = left, 1 = right, 2 = middle; anything else counts as left).
+    private static var MOUSE_DOWN_TYPES = [MouseEvent.MOUSE_DOWN, MouseEvent.RIGHT_MOUSE_DOWN, MouseEvent.MIDDLE_MOUSE_DOWN];
+    private static var MOUSE_UP_TYPES = [MouseEvent.MOUSE_UP, MouseEvent.RIGHT_MOUSE_UP, MouseEvent.MIDDLE_MOUSE_UP];
+
+    private function hasMapping(types:Array<String>):Bool {
+        for (t in types) {
+            if (_mapping.exists(t)) {
+                return true;
+            }
         }
+        return false;
+    }
+
+    private function __onMouseDown(event:MouseEvent) {
+        var type = switch (event.data) {
+            case 1: MouseEvent.RIGHT_MOUSE_DOWN;
+            case 2: MouseEvent.MIDDLE_MOUSE_DOWN;
+            case _: MouseEvent.MOUSE_DOWN;
+        }
+        dispatchMouseButtonEvent(type, event);
     }
     
     private function __onMouseUp(event:MouseEvent) {
-        var fn = _mapping.get(MouseEvent.MOUSE_UP);
+        var type = switch (event.data) {
+            case 1: MouseEvent.RIGHT_MOUSE_UP;
+            case 2: MouseEvent.MIDDLE_MOUSE_UP;
+            case _: MouseEvent.MOUSE_UP;
+        }
+        dispatchMouseButtonEvent(type, event);
+    }
+
+    private function dispatchMouseButtonEvent(type:String, event:MouseEvent) {
+        var fn = _mapping.get(type);
         if (fn != null) {
-            var mouseEvent = new MouseEvent(MouseEvent.MOUSE_UP);
+            var mouseEvent = new MouseEvent(type);
             mouseEvent.screenX = event.screenX;
             mouseEvent.screenY = event.screenY;
             mouseEvent.buttonDown = event.data;
+            mouseEvent.data = event.data;
             fn(mouseEvent);
         }
     }
