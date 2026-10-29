@@ -130,9 +130,11 @@ class ComponentImpl extends ComponentBase {
         // when they shouldnt (which i dont fully understand)
         if (this.width != value.width) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
-            // other in heaps, so lets find them and update our co-ords appropriately
+            // other in heaps, so lets find them and update our co-ords appropriately. Only while layout
+            // hasn't placed this component: a laid-out left already counts them (a tableview's contents
+            // sit below its header), and adding them again draws it a header away from where it is hit.
             var offsetX:Float = 0;
-            for (c in this.parentComponent.childComponents) {
+            if (this.left == null) for (c in this.parentComponent.childComponents) {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.width != this.width) {
@@ -154,9 +156,10 @@ class ComponentImpl extends ComponentBase {
         }
         if (this.height != value.height) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
-            // other in heaps, so lets find them and update our co-ords appropriately
+            // other in heaps, so lets find them and update our co-ords appropriately (only while layout
+            // hasn't placed this component, as for x above)
             var offsetY:Float = 0;
-            for (c in this.parentComponent.childComponents) {
+            if (this.top == null) for (c in this.parentComponent.childComponents) {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.height != this.height) {
