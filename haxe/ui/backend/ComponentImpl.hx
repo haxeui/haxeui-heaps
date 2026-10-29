@@ -42,7 +42,7 @@ class ComponentImpl extends ComponentBase {
         _eventMap = new Map<String, UIEvent->Void>();
         _container = new Object();
         _container.name = "container";
-        var styleGraphics = new Graphics();
+        var styleGraphics = new haxe.ui.backend.heaps.PixelGraphics();
         styleGraphics.name = "styleGraphics";
         _container.addChild(styleGraphics);
         addChild(_container); // style graphics container
