@@ -26,6 +26,22 @@ class HtmlFacesTest {
         eq(HtmlFaces.normalize('<a title="say &quot;hi&quot;">x<br/></a>'), '<a title="say &quot;hi&quot;">x<br/></a>');
         eq(HtmlFaces.normalize("<b>a &amp; b</b>"), '<font face="bold">a &amp; b</font>');
 
+        // void br
+        eq(HtmlFaces.normalize("a<br>b"), "a<br/>b");
+        eq(HtmlFaces.normalize("a<BR >b<br  >c"), "a<br/>b<br/>c");
+        eq(HtmlFaces.normalize("<b>a<br>b</b>"), '<font face="bold">a<br/>b</font>');
+        eq(HtmlFaces.normalize("<p>a<br>b</p>"), "<p>a<br/>b</p>");
+        eq(HtmlFaces.normalize("a<br/>b"), "a<br/>b");
+        eq(HtmlFaces.normalize("a<br />b"), "a<br/>b");
+        // fallback escapes everything
+        eq(HtmlFaces.normalize('<b>x & "y"'), "&lt;b&gt;x &amp; &quot;y&quot;");
+        // comments are dropped
+        eq(HtmlFaces.normalize("x<!-- hidden -->y"), "xy");
+        eq(HtmlFaces.normalize("<b>x<!-- hidden --></b>"), '<font face="bold">x</font>');
+        // null and empty
+        eq(HtmlFaces.normalize(null), null);
+        eq(HtmlFaces.normalize(""), "");
+
         Sys.println(count + " assertions, " + failures + " failed");
         if (failures > 0) {
             Sys.exit(1);

@@ -6,14 +6,23 @@ package haxe.ui.backend.heaps;
  * `h2d.HtmlText` handles `<b>` and `<i>` by loading the face "bold" or "italic", so italic is lost
  * inside bold (and the other way round). `normalize` turns `b`, `strong`, `i` and `em` into
  * `<font face="...">` where the face is `bold`, `italic` or `bolditalic`, whichever the surrounding
- * markup adds up to. All other tags and attributes are kept as written, entities stay escaped.
+ * markup adds up to. All other tags and attributes are kept, comments are dropped (h2d.HtmlText would
+ * show them as text). Void `<br>` tags are accepted and written as `<br/>`.
+ *
+ * Entities: `Xml.parse` decodes the standard ones (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#NN;`) and the
+ * output encodes them again (`&`, `<`, `>` in text; `&`, `<`, `"` in attribute values), so the text
+ * round trips. Names the parser does not know (`&nbsp;`) are not decoded and come out as `&amp;nbsp;`.
  *
  * Pure on purpose: nothing from heaps or HaxeUI is imported.
  */
 class HtmlFaces {
+    private static var _voidBr:EReg = ~/<br\s*>/gi;
+
     /**
      * Returns `markup` with `b`/`strong`/`i`/`em` replaced by `font` tags naming the combined face.
-     * Markup that is not well formed is returned as plain text, with `<` and `>` escaped.
+     * A void `<br>` (any case, optional spaces) is rewritten to `<br/>` before parsing.
+     * Markup that is still not well formed is returned as plain text, with `&`, `<`, `>` and `"` escaped.
+     * `null` gives `null`, an empty string gives an empty string.
      */
     public static function normalize(markup:String):String {
         if (markup == null) {
@@ -21,7 +30,7 @@ class HtmlFaces {
         }
         var doc:Xml = null;
         try {
-            doc = Xml.parse(markup);
+            doc = Xml.parse(_voidBr.replace(markup, "<br/>"));
         } catch (e:Dynamic) {
             return escape(markup);
         }
@@ -37,8 +46,11 @@ class HtmlFaces {
     }
 
     private static function writeNode(node:Xml, bold:Bool, italic:Bool, out:StringBuf) {
+        if (node.nodeType == Xml.Comment) {
+            return;
+        }
         if (node.nodeType != Xml.Element) {
-            // text keeps its entities as written, comments and the like are passed through
+            // text is encoded again by toString, other node types are passed through
             out.add(node.toString());
             return;
         }
@@ -81,6 +93,9 @@ class HtmlFaces {
     }
 
     private static function escape(text:String):String {
-        return StringTools.replace(StringTools.replace(text, "<", "&lt;"), ">", "&gt;");
+        text = StringTools.replace(text, "&", "&amp;");
+        text = StringTools.replace(text, "<", "&lt;");
+        text = StringTools.replace(text, ">", "&gt;");
+        return StringTools.replace(text, '"', "&quot;");
     }
 }
