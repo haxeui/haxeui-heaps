@@ -119,6 +119,102 @@ class TextInputImpl extends TextDisplayImpl {
         @:privateAccess textInput.interactive.blur();
     }
 
+    // A text input is edited as plain text, whatever its display counterpart can show.
+    private override function get_supportsHtml():Bool {
+        return false;
+    }
+
+    // Caret and selection, in the text itself.
+    //
+    // h2d.TextInput counts its text as it WRAPS it: cursorIndex and selectionRange
+    // both include a line break for every place a line has been wrapped, so past
+    // the first wrap they run ahead of the text by one per wrap. What the caller
+    // is given (and hands back) is a position in `textInput.text`, which is what
+    // getTextPos and getCursorPos translate.
+    //
+    // A field that is not being edited has no caret (cursorIndex is -1); it reads
+    // as the start, which is where focusing it puts one.
+
+    private override function get_caretIndex():Int {
+        return textInput.getTextPos(cursorOrStart());
+    }
+
+    private override function set_caretIndex(value:Int):Int {
+        var pos = clampToText(value);
+        textInput.selectionRange = null;
+        textInput.cursorIndex = textInput.getCursorPos(pos);
+        selectionMoved();
+        return pos;
+    }
+
+    private override function get_selectionStartIndex():Int {
+        var range = textInput.selectionRange;
+        if (range == null) {
+            return get_caretIndex();
+        }
+        return textInput.getTextPos(range.start);
+    }
+
+    // Setting the start leaves nothing selected: it is the one end of a selection
+    // that is about to be completed by setting the other.
+    private override function set_selectionStartIndex(value:Int):Int {
+        return set_caretIndex(value);
+    }
+
+    private override function get_selectionEndIndex():Int {
+        var range = textInput.selectionRange;
+        if (range == null) {
+            return get_caretIndex();
+        }
+        return textInput.getTextPos(range.start + range.length);
+    }
+
+    // From where the selection starts now to `value`, with the caret at `value`.
+    private override function set_selectionEndIndex(value:Int):Int {
+        var start = get_selectionStartIndex();
+        var end = clampToText(value);
+        if (start == end) {
+            return set_caretIndex(end);
+        }
+        var from = (start < end) ? start : end;
+        var to = (start < end) ? end : start;
+        var cursorFrom = cursorAtLineStart(from);
+        var cursorTo = textInput.getCursorPos(to);
+        textInput.selectionRange = { start: cursorFrom, length: cursorTo - cursorFrom };
+        textInput.cursorIndex = textInput.getCursorPos(end);
+        selectionMoved();
+        return end;
+    }
+
+    private function cursorOrStart():Int {
+        return (textInput.cursorIndex < 0) ? 0 : textInput.cursorIndex;
+    }
+
+    private function clampToText(pos:Int):Int {
+        var length = textInput.text.length;
+        return (pos < 0) ? 0 : ((pos > length) ? length : pos);
+    }
+
+    // A wrap happens just after a space, so the first character of a wrapped line
+    // is at the same position in the text as the end of the line above, and
+    // getCursorPos gives that earlier one: a selection started there would begin
+    // with the break itself, drawn as a bar at the end of the line above. Step
+    // over the break when there is one (a real newline moves the text position
+    // on, an inserted one does not).
+    private function cursorAtLineStart(pos:Int):Int {
+        var cursor = textInput.getCursorPos(pos);
+        if (cursor < textInput.getTextLength() && textInput.getTextPos(cursor + 1) == pos) {
+            cursor++;
+        }
+        return cursor;
+    }
+
+    // Nothing is dispatched to say the caret moved when it is set from here, as
+    // there is when a key moves it.
+    private function selectionMoved() {
+        keepCursorInView();
+    }
+
     private function onChange() {
         _text = textInput.text;
         _htmlText = textInput.text;
