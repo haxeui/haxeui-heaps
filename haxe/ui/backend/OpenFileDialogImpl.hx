@@ -1,13 +1,65 @@
 package haxe.ui.backend;
 
 import haxe.ui.containers.dialogs.Dialogs.SelectedFileInfo;
+import haxe.ui.containers.dialogs.Dialogs;
+import haxe.ui.containers.dialogs.MessageBox.MessageBoxType;
 import haxe.ui.core.Platform;
 
 using StringTools;
 
 class OpenFileDialogImpl extends OpenFileDialogBase {
-    #if hl
-    
+    #if (heaps_android && hl)
+
+    /**
+     * Android has no path-shaped file dialog: the Storage Access Framework
+     * returns a content:// URI that cannot be opened, so heaps-android imports
+     * the document into private storage and hands back a real path. That path
+     * outlives the file the user picked, which is what lets a caller keep it in
+     * a recent-files list.
+     *
+     * `options.extensions` is deliberately ignored. SAF filters on the MIME
+     * type the *provider* reports, and providers routinely report .epub as
+     * application/octet-stream and .md as nothing at all, so a filter that
+     * looked right would hide real files from the user with no explanation.
+     * `options.multiple` is not supported either: one file comes back.
+     */
+    public override function show() {
+        haxe.ui.backend.android.FileDialog.openToFile("*/*",
+            haxe.ui.backend.android.FileDialog.DEFAULT_PICK_DIR,
+            function(path:Null<String>, error:Null<String>) {
+                if (error != null) {
+                    // The dialog contract has only OK and CANCEL, so without
+                    // this the user would see a picker close for no reason.
+                    var title = options.title != null ? options.title : "Open File";
+                    Dialogs.messageBox(error, title, MessageBoxType.TYPE_ERROR);
+                    dialogCancelled();
+                    return;
+                }
+                if (path == null) {
+                    dialogCancelled();
+                    return;
+                }
+
+                var info:SelectedFileInfo = {
+                    name: haxe.io.Path.withoutDirectory(path),
+                    fullPath: path,
+                    isBinary: false
+                };
+                if (options.readContents == true) {
+                    if (options.readAsBinary) {
+                        info.isBinary = true;
+                        info.bytes = sys.io.File.getBytes(path);
+                    } else {
+                        info.isBinary = false;
+                        info.text = sys.io.File.getContent(path);
+                    }
+                }
+                dialogConfirmed([info]);
+            });
+    }
+
+    #elseif hl
+
     public override function show() {
         if (Platform.instance.isWindows) {
             var title = options.title;

@@ -42,7 +42,7 @@ class ComponentImpl extends ComponentBase {
         _eventMap = new Map<String, UIEvent->Void>();
         _container = new Object();
         _container.name = "container";
-        var styleGraphics = new Graphics();
+        var styleGraphics = new haxe.ui.backend.heaps.PixelGraphics();
         styleGraphics.name = "styleGraphics";
         _container.addChild(styleGraphics);
         addChild(_container); // style graphics container
@@ -80,6 +80,15 @@ class ComponentImpl extends ComponentBase {
     
     @:noCompletion
     private var _maskGraphics:Graphics = null;
+    // Whether the clip rect below has taken ownership of this component's
+    // x/y (a scrolled scrollview's contents), per axis — so a later clip
+    // that matches the component's size can tell a stale scroll translation
+    // (which must be undone) from a layout-owned position (which must not
+    // be touched, the clip:true case the guard below exists for).
+    @:noCompletion
+    private var _clipOwnsX:Bool = false;
+    @:noCompletion
+    private var _clipOwnsY:Bool = false;
     @:noCompletion
     private override function handleClipRect(value:Rectangle) {
         if (_maskGraphics == null) {
@@ -105,30 +114,52 @@ class ComponentImpl extends ComponentBase {
         _maskGraphics.x = value.left;//this.left;
         _maskGraphics.y = value.top;//this.top;
 
-        // is this a hack? We dont want to move the component if the clip rect is the 
+        // Where layout put this component, which the scroll is subtracted
+        // FROM. It used to be the parent's borderSize alone, which is right
+        // only while the parent has no padding: a scrollview's contents are
+        // laid out at (paddingLeft + border, paddingTop + border), so any
+        // padding on it was dropped the moment it scrolled — drawn at the
+        // edge, while cacheScreenPos (left/top minus the clip) hit-tests
+        // them where layout put them. The mask is a child, so it follows.
+        var homeX:Float = this.left != null ? Math.fround(this.left) : borderSize;
+        var homeY:Float = this.top != null ? Math.fround(this.top) : borderSize;
+
+        // is this a hack? We dont want to move the component if the clip rect is the
         // full size of the component (like in the case of clip:true), feels wrong
         // for some reason, but without this, clip:true components move around
         // when they shouldnt (which i dont fully understand)
         if (this.width != value.width) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
-            // other in heaps, so lets find them and update our co-ords appropriately
+            // other in heaps, so lets find them and update our co-ords appropriately. Only while layout
+            // hasn't placed this component: a laid-out left already counts them (a tableview's contents
+            // sit below its header), and adding them again draws it a header away from where it is hit.
             var offsetX:Float = 0;
-            for (c in this.parentComponent.childComponents) {
+            if (this.left == null) for (c in this.parentComponent.childComponents) {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.width != this.width) {
-                        trace(clipComponent.width, this.width);
                         offsetX += clipComponent.width;
                     }
                 }
             }
-            this.x = -value.left + borderSize + offsetX;
+            this.x = -value.left + homeX + offsetX;
+            _clipOwnsX = true;
+        } else if (_clipOwnsX) {
+            // The clip translated this component before and now matches its
+            // width exactly: the scroll is gone (content emptied or shrunk
+            // inside the viewport), so the translation goes with it. Without
+            // this, a scrolled-to-bottom scrollview that is then cleared
+            // keeps its contents shifted by the old scroll offset — drawn
+            // entirely outside the mask, a scrollview that "appears gone".
+            this.x = -value.left + homeX;
+            _clipOwnsX = false;
         }
         if (this.height != value.height) {
             // multiple masks / clip rects in the same component (like tableview) can interfere with each
-            // other in heaps, so lets find them and update our co-ords appropriately
+            // other in heaps, so lets find them and update our co-ords appropriately (only while layout
+            // hasn't placed this component, as for x above)
             var offsetY:Float = 0;
-            for (c in this.parentComponent.childComponents) {
+            if (this.top == null) for (c in this.parentComponent.childComponents) {
                 if (c._maskGraphics != null && c._maskGraphics != this._maskGraphics) {
                     var clipComponent = c.findClipComponent();
                     if (clipComponent != null && clipComponent.height != this.height) {
@@ -136,7 +167,12 @@ class ComponentImpl extends ComponentBase {
                     }
                 }
             }
-            this.y = -value.top + borderSize + offsetY;
+            this.y = -value.top + homeY + offsetY;
+            _clipOwnsY = true;
+        } else if (_clipOwnsY) {
+            // Same as x above: undo a stale vertical scroll translation.
+            this.y = -value.top + homeY;
+            _clipOwnsY = false;
         }
     }
 
@@ -158,8 +194,16 @@ class ComponentImpl extends ComponentBase {
         if (_textInput == null) {
             super.createTextInput(text);
             addChild(_textInput.sprite);
+            // The selection highlight belongs BEHIND the text, and it goes in the
+            // style graphics container to get there: that container is always the
+            // 0th child, so anything in it is drawn before the text sprite, and
+            // nothing is inserted into this component's own child list - which
+            // would put every component child one place out (see INDEX_OFFSET).
+            if (_textInput.selectionSprite != null) {
+                _container.addChild(_textInput.selectionSprite);
+            }
         }
-        
+
         return _textInput;
     }
     
@@ -209,6 +253,24 @@ class ComponentImpl extends ComponentBase {
     private override function handleAddComponentAt(child:Component, index:Int):Component {
         addChildAt(child, index + INDEX_OFFSET);
         return child;
+    }
+
+    /**
+     * A root component hidden with `Screen.removeComponent(c, false)` stays in the scene, invisible,
+     * in ScreenImpl's `_removedComponents`, so it can be shown again; a menu closes that way. Once
+     * it is destroyed it never will be, but haxeui-core's Screen only disposes a component that is
+     * no longer a root: nothing took it out of the scene, so it stayed there for good, still synced
+     * every frame. Let it go here. (A root removed with dispose also stayed in that list.)
+     */
+    @:noCompletion
+    private override function handleDestroy() {
+        if (parentComponent == null) {
+            @:privateAccess Screen.instance._removedComponents.remove(cast this);
+            if (parent != null) {
+                remove();
+            }
+        }
+        super.handleDestroy();
     }
 
     @:noCompletion
@@ -282,7 +344,70 @@ class ComponentImpl extends ComponentBase {
         if (n == 0) {
             return null;
         }
+        // Render the offscreen at the resolution the component is DRAWN at,
+        // not the one it is laid out at.
+        //
+        // heaps renders a filtered object into a texture and then composites
+        // it, and sizes that texture at `viewportScaleX * resolutionScale`
+        // (h2d.Object.drawFilters). Toolkit.scaleX is neither of those: it
+        // magnifies the root COMPONENT, so at a display scale the scene's
+        // viewport stays 1, the texture is rasterised at layout size, and the
+        // composite stretches it. Everything a clip rect touches - which is
+        // every scrollview, list, tree and dropdown - came out soft, while the
+        // text beside it that no filter touches stayed sharp, which is the
+        // tell.
+        //
+        // Read at creation rather than per frame; applyStyle and handleClipRect
+        // both rebuild the group, so a scale set before the UI is built - which
+        // is when it has to be set anyway, since a component measured at one
+        // scale and drawn at another lays out wrong - is always the current one.
+        //
+        // EVERY filter, not just the group. h2d.filter.Group does not pass its
+        // resolutionScale down to the filters inside it, and a Mask renders its
+        // mask object through a filter of its own (AbstractMask.hide, which is
+        // what its own set_resolutionScale exists to keep in step). Left at 1
+        // while the content around it is rasterised at the display scale, the
+        // two textures are different sizes and the matrix in
+        // AbstractMask.getMaskTexture maps the mask onto 1/scale of the area it
+        // covers - so at 150% a scrollview clipped everything below two thirds
+        // of its height, cutting a line of text in half and hiding the rest.
+        if (_maskFilter != null) {
+            _maskFilter.resolutionScale = Toolkit.scaleX;
+        }
+        if (_currentStyleFilters != null) {
+            for (f in _currentStyleFilters) {
+                f.resolutionScale = Toolkit.scaleX;
+            }
+        }
+        filterGroup.resolutionScale = Toolkit.scaleX;
         return filterGroup;
+    }
+
+    // Draw a filtered component - every clip rect, so every scrollview, list,
+    // tree and dropdown - from a whole screen pixel.
+    //
+    // heaps renders the filtered content into a texture laid out from this
+    // object's absolute position and then composites that texture at the same
+    // position (h2d.Object.drawFilters/emitTile). At a scale that is not a
+    // whole number, layout positions land between pixels (13 at 125% is
+    // 16.25), so the texture's pixels sit a fraction off the screen's and the
+    // composite resamples it: everything clipped came out soft while the text
+    // beside it stayed sharp. 200% hid it - every position is whole there.
+    //
+    // Only the pass's origin moves, not the content: children are rasterised
+    // relative to it and composited back from it, so they land where they
+    // were, and a filter nested inside this one is snapped within a texture
+    // that is itself on the pixel grid.
+    @:noCompletion
+    private override function drawFilters(ctx:h2d.RenderContext) {
+        var ax = absX, ay = absY;
+        var sx = ctx.scene != null ? ctx.scene.viewportScaleX : 1.0;
+        var sy = ctx.scene != null ? ctx.scene.viewportScaleY : 1.0;
+        absX = Math.round(ax * sx) / sx;
+        absY = Math.round(ay * sy) / sy;
+        super.drawFilters(ctx);
+        absX = ax;
+        absY = ay;
     }
 
     @:noCompletion
@@ -346,11 +471,18 @@ class ComponentImpl extends ComponentBase {
                     MouseHelper.notify(MouseEvent.MOUSE_DOWN, __onMouseDown);
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
                     _eventMap.set(MouseEvent.MOUSE_DOWN, listener);
+                } else if (_eventMap.get(MouseEvent.MOUSE_DOWN) == null) {
+                    // CLICK booked it (and the MouseHelper notifications) without a listener, so
+                    // it can see presses; a MOUSE_DOWN registered after that still needs its own.
+                    _eventMap.set(MouseEvent.MOUSE_DOWN, listener);
                 }
                 
             case MouseEvent.MOUSE_UP:
                 if (_eventMap.exists(MouseEvent.MOUSE_UP) == false) {
                     MouseHelper.notify(MouseEvent.MOUSE_UP, __onMouseUp);
+                    _eventMap.set(MouseEvent.MOUSE_UP, listener);
+                } else if (_eventMap.get(MouseEvent.MOUSE_UP) == null) {
+                    // booked by CLICK without a listener, as MOUSE_DOWN above
                     _eventMap.set(MouseEvent.MOUSE_UP, listener);
                 }
                 
@@ -489,6 +621,11 @@ class ComponentImpl extends ComponentBase {
                 _eventMap.remove(type);
 
             case MouseEvent.MOUSE_DOWN:
+                if (_eventMap.exists(MouseEvent.CLICK)) {
+                    // CLICK still needs to see presses: back to its listener-less booking
+                    _eventMap.set(MouseEvent.MOUSE_DOWN, null);
+                    return;
+                }
                 _eventMap.remove(type);
                 if (_eventMap.exists(MouseEvent.MOUSE_DOWN) == false
                     && _eventMap.exists(MouseEvent.RIGHT_MOUSE_DOWN) == false) {
@@ -496,6 +633,11 @@ class ComponentImpl extends ComponentBase {
                 }
 
             case MouseEvent.MOUSE_UP:
+                if (_eventMap.exists(MouseEvent.CLICK)) {
+                    // CLICK still needs to see releases: back to its listener-less booking
+                    _eventMap.set(MouseEvent.MOUSE_UP, null);
+                    return;
+                }
                 _eventMap.remove(type);
                 if (_eventMap.exists(MouseEvent.MOUSE_UP) == false
                     && _eventMap.exists(MouseEvent.RIGHT_MOUSE_UP) == false) {
@@ -696,8 +838,31 @@ class ComponentImpl extends ComponentBase {
         x *= Toolkit.scaleX;
         y *= Toolkit.scaleY;
         var b:Bool = false;
-        var sx = screenX;
-        var sy = screenY;
+        // screenBounds, not screenX. The two are different sums and they part
+        // company on a component whose ROOT is not at the origin.
+        //
+        // cacheScreenPos adds every `left` up the chain and scales the TOTAL;
+        // screenBounds (ComponentBase) scales each `left` except the root
+        // component's own. For an ordinary root at left 0 those are the same
+        // number, which is why everything inside a window hit-tests correctly
+        // and this went unnoticed. A dropdown's open list is not that: it is a
+        // root component of the SCREEN, and DropDownHandler positions it with
+        // `_wrapper.left = _dropdown.screenLeft`, a value already in screen
+        // pixels — so scaling the total scales it a second time and screenX
+        // stops describing where the thing is.
+        //
+        // screenBounds is the one that agrees with the sprite: measured on a
+        // dropdown row at Toolkit.scale 1.5, screenBounds and the drawn sprite
+        // both said 739,755 while screenX said 370,400. It is also what
+        // ComponentBase.hitTest compares against, so this puts the two hit
+        // paths of this backend on the same number instead of two.
+        //
+        // Unpatched: at any scale but 1 a press on a row of an open dropdown
+        // list falls straight through to whatever is behind it, and half a
+        // property panel is dropdowns.
+        var bounds = cast(this, Component).screenBounds;
+        var sx = bounds.left;
+        var sy = bounds.top;
         var cx = this.width * Toolkit.scaleX;
         var cy = this.height * Toolkit.scaleY;
 
@@ -710,8 +875,9 @@ class ComponentImpl extends ComponentBase {
             var clip:Component = findClipComponent();
             if (clip != null) {
                 b = false;
-                var sx = (clip.screenX + (clip.componentClipRect.left * Toolkit.scaleX));
-                var sy = (clip.screenY + (clip.componentClipRect.top * Toolkit.scaleY));
+                var clipBounds = clip.screenBounds;
+                var sx = (clipBounds.left + (clip.componentClipRect.left * Toolkit.scaleX));
+                var sy = (clipBounds.top + (clip.componentClipRect.top * Toolkit.scaleY));
                 var cx = clip.componentClipRect.width * Toolkit.scaleX;
                 var cy = clip.componentClipRect.height * Toolkit.scaleY;
                 if (x >= sx && y >= sy && x <= sx + cx && y <= sy + cy) {
@@ -814,12 +980,30 @@ class ComponentImpl extends ComponentBase {
         if (_deallocate == true) {
             _disposed = true;
             super.onRemove();
+        } else {
+            unregisterInteractives(this);
         }
         if (this.parentComponent == null && Screen.instance.rootComponents.indexOf(cast this) != -1) {
             Screen.instance.removeComponent(cast this, _deallocate);
         }
     }
     
+    // Skipping super.onRemove keeps the subtree allocated, but also skips h2d.Interactive.onRemove,
+    // leaving a removed TextInput in the scene's list of interactives: hit-tested and sent events,
+    // though no longer in the scene (isInteractiveAbove then crashed on its null scene). Take each
+    // out of the list but leave its `scene` set, so Interactive.onHierarchyMoved - what a re-add of
+    // an allocated object calls - registers it again.
+    @:noCompletion
+    private static function unregisterInteractives(o:Object) {
+        var i = Std.downcast(o, h2d.Interactive);
+        if (i != null && @:privateAccess i.scene != null) {
+            @:privateAccess i.scene.removeEventTarget(i);
+        }
+        for (c in @:privateAccess o.children) {
+            unregisterInteractives(c);
+        }
+    }
+
     @:noCompletion
     private var lastMouseX:Float = -1;
     @:noCompletion
@@ -1228,7 +1412,7 @@ class ComponentImpl extends ComponentBase {
         var scene = this.getScene();
         if (scene != null) {
             var interactive = scene.getInteractive(x, y);
-            if (interactive != null) {
+            if (interactive != null && interactive.getScene() == scene) { // one left behind has none
                 var n1 = calcObjectIndex(interactive);
                 var n2 = calcObjectIndex(this);
                 if (n1 > n2) {

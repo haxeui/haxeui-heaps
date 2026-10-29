@@ -1,0 +1,4 @@
+-cp haxe
+-cp test
+-main HtmlFacesTest
+--interp

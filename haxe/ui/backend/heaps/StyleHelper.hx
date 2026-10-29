@@ -46,12 +46,30 @@ class StyleHelper {
         
         var styleGraphics:Graphics = cast(container.getObjectByName("styleGraphics"), Graphics);
         if (styleGraphics == null) {
-            styleGraphics = new Graphics();
+            styleGraphics = new PixelGraphics();
             styleGraphics.name = "styleGraphics";
             container.addChildAt(styleGraphics, 0);
         }
 
         styleGraphics.clear();
+
+        // Background and borders in whole screen pixels (PixelGraphics): the size rounded, a border
+        // floored as a browser floors one but never below a pixel, so all four sides match.
+        var kx = 1.0, ky = 1.0;
+        var pixels = Std.downcast(styleGraphics, PixelGraphics);
+        if (pixels != null) {
+            kx = PixelGraphics.screenScaleX(pixels);
+            ky = PixelGraphics.screenScaleY(pixels);
+            pixels.builtScaleX = kx;
+            pixels.builtScaleY = ky;
+            pixels.rebuild = apply.bind(c, style, w, h);
+        }
+        borderSize.left = pixelEdge(borderSize.left, kx);
+        borderSize.right = pixelEdge(borderSize.right, kx);
+        borderSize.top = pixelEdge(borderSize.top, ky);
+        borderSize.bottom = pixelEdge(borderSize.bottom, ky);
+        // A background image keeps the size it is laid out at.
+        var imageW = w, imageH = h;
         
         var borderRadius:Vector4 = new Vector4(0,0,0,0);
         if(style.borderRadius != null) borderRadius.set(style.borderRadius,style.borderRadius,style.borderRadius,style.borderRadius);
@@ -62,6 +80,10 @@ class StyleHelper {
 
         var isEven = (borderRadius.x == borderRadius.y && borderRadius.y == borderRadius.z && borderRadius.z == borderRadius.w);
         var isCircle = isEven && (style.borderRadius == w && style.borderRadius == h);
+        if (kx > 0 && ky > 0) {
+            w = Math.max(1, Math.round(w * kx)) / kx;
+            h = Math.max(1, Math.round(h * ky)) / ky;
+        }
 
         //Not sure why we do this?
         if (!isCircle && isEven && borderRadius.x > 0) {
@@ -161,7 +183,7 @@ class StyleHelper {
                 }
                 
                 if (slice != null) {
-                    var rects:Slice9Rects = Slice9.buildRects(w, h, trc.width, trc.height, slice);
+                    var rects:Slice9Rects = Slice9.buildRects(imageW, imageH, trc.width, trc.height, slice);
                     var srcRects:Array<Rectangle> = rects.src;
                     var dstRects:Array<Rectangle> = rects.dst;
                     
@@ -216,24 +238,24 @@ class StyleHelper {
                     var scaleY:Float = 1;
                     
                     if (style.backgroundImageRepeat == null || style.backgroundImageRepeat == "stretch") {
-                        scaleX = w / trc.width;
-                        scaleY = h / trc.height;
+                        scaleX = imageW / trc.width;
+                        scaleY = imageH / trc.height;
                     }
                     else {
                         if (style.backgroundWidth != null) {
                             scaleX = style.backgroundWidth / trc.width;
                         } else if (style.backgroundWidthPercent != null) {
-                            scaleX = ((w / trc.width) * style.backgroundWidthPercent) / 100;
+                            scaleX = ((imageW / trc.width) * style.backgroundWidthPercent) / 100;
                         }
                         if (style.backgroundHeight != null) {
                             scaleY = style.backgroundHeight / trc.height;
                         } else if (style.backgroundHeightPercent != null) {
-                            scaleY = ((h / trc.height) * style.backgroundHeightPercent) / 100;
+                            scaleY = ((imageH / trc.height) * style.backgroundHeightPercent) / 100;
                         }
                     }
                     
                     if (style.backgroundImageRepeat == "repeat") {
-                        paintTileRepeat(bgImageGraphics, tile, trc, scaleX, scaleY, new Rectangle(0, 0, w, h), style.backgroundImage);
+                        paintTileRepeat(bgImageGraphics, tile, trc, scaleX, scaleY, new Rectangle(0, 0, imageW, imageH), style.backgroundImage);
                     }
                     else {
                         paintTile(bgImageGraphics, tile, trc, new Rectangle(0, 0, trc.width * scaleX, trc.height * scaleY), style.backgroundImage);
@@ -623,6 +645,14 @@ class StyleHelper {
         } // End borders
     }
     
+    /** A border `size` layout units thick, as a whole number of screen pixels at `k` pixels a unit. */
+    private static function pixelEdge(size:Float, k:Float):Float {
+        if (!(size > 0) || !(k > 0)) {
+            return size;
+        }
+        return Math.max(1, Math.floor(size * k + 1e-6)) / k;
+    }
+
     private static function paintTile(g:Graphics, tile:Tile, src:Rectangle, dst:Rectangle, backgroundImage:String) {
         var scaleX = dst.width / src.width;
         var scaleY = dst.height / src.height;

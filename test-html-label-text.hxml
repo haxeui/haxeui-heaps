@@ -1,0 +1,8 @@
+# Headless HtmlLabelText checks. Needs HashLink; the output goes wherever you point it, e.g.
+#   haxe test-html-label-text.hxml -hl %TEMP%/HtmlLabelTextTest.hl && hl %TEMP%/HtmlLabelTextTest.hl
+-cp haxe
+-cp test
+-lib heaps
+# hxd.Res wants a resource directory; the test loads nothing from it
+-D resourcesPath=test
+-main HtmlLabelTextTest
