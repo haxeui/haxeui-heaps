@@ -58,6 +58,8 @@ class TextInputImpl extends TextDisplayImpl {
             cast(parentComponent, InteractiveComponent).focus = true;
         }
         textInput.onSubmit = onSubmit;
+        textInput.onFocus = onFocusGained;
+        textInput.onFocusLost = onFocusLost;
         hideNativeSelection();
         selectionSprite = new TextSelection(textInput);
         return textInput;
@@ -136,11 +138,16 @@ class TextInputImpl extends TextDisplayImpl {
     // as the start, which is where focusing it puts one.
 
     private override function get_caretIndex():Int {
+        var kept = keptSelection();
+        if (kept != null) {
+            return kept.caret;
+        }
         return textInput.getTextPos(cursorOrStart());
     }
 
     private override function set_caretIndex(value:Int):Int {
         var pos = clampToText(value);
+        _keptSelection = null;
         textInput.selectionRange = null;
         textInput.cursorIndex = textInput.getCursorPos(pos);
         selectionMoved();
@@ -148,6 +155,10 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private override function get_selectionStartIndex():Int {
+        var kept = keptSelection();
+        if (kept != null) {
+            return kept.start;
+        }
         var range = textInput.selectionRange;
         if (range == null) {
             return get_caretIndex();
@@ -162,6 +173,10 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private override function get_selectionEndIndex():Int {
+        var kept = keptSelection();
+        if (kept != null) {
+            return kept.end;
+        }
         var range = textInput.selectionRange;
         if (range == null) {
             return get_caretIndex();
@@ -173,6 +188,7 @@ class TextInputImpl extends TextDisplayImpl {
     private override function set_selectionEndIndex(value:Int):Int {
         var start = get_selectionStartIndex();
         var end = clampToText(value);
+        _keptSelection = null;
         if (start == end) {
             return set_caretIndex(end);
         }
@@ -184,6 +200,40 @@ class TextInputImpl extends TextDisplayImpl {
         textInput.cursorIndex = textInput.getCursorPos(end);
         selectionMoved();
         return end;
+    }
+
+    // What was selected when the field lost focus, in text positions.
+    //
+    // Losing focus empties the selection (h2d.TextInput.onBlur), and it is lost
+    // before whatever was clicked has had its click: a button beside the field
+    // takes the press that blurs it. The selection is held here so that what
+    // acts on it, such as that button, still finds it; the native backends keep
+    // theirs on blur too. Only for as long as it is still true: gone when the
+    // field is focused again, when it is written to, and when its text is not
+    // the text it was taken from.
+    private var _keptSelection:{ caret:Int, start:Int, end:Int, text:String } = null;
+
+    // The kept selection while the field is not being edited, otherwise null.
+    private function keptSelection():{ caret:Int, start:Int, end:Int, text:String } {
+        if (_keptSelection == null || textInput.cursorIndex >= 0) {
+            return null;
+        }
+        if (_keptSelection.text != textInput.text) {
+            _keptSelection = null;
+        }
+        return _keptSelection;
+    }
+
+    // h2d calls this before it resets the cursor and the selection.
+    private function onFocusLost(e:Event) {
+        if (textInput.cursorIndex < 0) {
+            return;
+        }
+        _keptSelection = { caret: get_caretIndex(), start: get_selectionStartIndex(), end: get_selectionEndIndex(), text: textInput.text };
+    }
+
+    private function onFocusGained(e:Event) {
+        _keptSelection = null;
     }
 
     private function cursorOrStart():Int {
@@ -216,6 +266,7 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private function onChange() {
+        _keptSelection = null;
         _text = textInput.text;
         _htmlText = textInput.text;
 
