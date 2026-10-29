@@ -2,9 +2,16 @@ package haxe.ui.backend;
 
 import h2d.Font;
 import haxe.ui.Toolkit;
+import haxe.ui.backend.heaps.HtmlFaces;
+import haxe.ui.backend.heaps.HtmlLabelText;
 import haxe.ui.backend.heaps.SDFFonts;
 
 class TextDisplayImpl extends TextBase {
+    /**
+        What draws the text: an h2d.Text, or - while the label shows `htmlText` - an HtmlLabelText
+        in its place (see validateData). Not the same object for the life of the label, so read it
+        here each time rather than keeping it.
+    **/
     public var sprite:h2d.Text;
 
     // defaults
@@ -21,13 +28,100 @@ class TextDisplayImpl extends TextBase {
         });
     }
 
+    private override function get_supportsHtml():Bool {
+        return true;
+    }
+
     private override function validateData() {
+        if (supportsHtml && _text == null && _htmlText != null) {
+            var html = htmlSprite();
+            if (html == null) {
+                html = new HtmlLabelText(hxd.res.DefaultFont.get());
+                // the faces are built at the size the label's own font already is (resizeFont)
+                html.deviceSize = Std.int(Math.max(1, Math.abs(sprite.font.size)));
+                replaceSprite(html);
+            }
+            // h2d.HtmlText throws on markup that is not XML; normalize never returns any
+            html.text = HtmlFaces.normalize(normalizeText(_htmlText));
+            return;
+        }
+
+        // A text input never gets here with an HtmlLabelText (its supportsHtml is false), so this
+        // never replaces its h2d.TextInput.
+        if (htmlSprite() != null) {
+            var plain = new h2d.Text(hxd.res.DefaultFont.get());
+            plain.lineBreak = false;
+            replaceSprite(plain);
+        }
         if (_text != null) {
             sprite.text = normalizeText(_text);
         } else if (_htmlText != null) {
             sprite.text = normalizeText(_htmlText);
         }
-        
+    }
+
+    private inline function htmlSprite():HtmlLabelText {
+        return Std.downcast(sprite, HtmlLabelText);
+    }
+
+    /**
+        Puts `next` where `sprite` is - the same place among its parent's children, so it is drawn
+        in the same order - and hands it everything the style and layout have already set on the
+        old one: those are only set again when they change, and they have not.
+    **/
+    private function replaceSprite(next:h2d.Text) {
+        var old = sprite;
+        next.smooth = old.smooth;
+        next.font = old.font;
+        next.scaleX = old.scaleX;
+        next.scaleY = old.scaleY;
+        next.textColor = old.textColor;
+        next.textAlign = old.textAlign;
+        next.lineBreak = old.lineBreak;
+        next.maxWidth = old.maxWidth;
+        next.x = old.x;
+        next.y = old.y;
+        next.alpha = old.alpha;
+        next.visible = old.visible;
+
+        var parent = old.parent;
+        if (parent != null) {
+            var index = parent.getChildIndex(old);
+            old.remove();
+            parent.addChildAt(next, index);
+        }
+        sprite = next;
+    }
+
+    // ---- links (`<a href>` in htmlText), in the parent component's units, as haxeui-cs has them ----
+
+    /** How many links the htmlText holds. **/
+    public function linkCount():Int {
+        var html = htmlSprite();
+        return (html == null) ? 0 : html.linkHrefs.length;
+    }
+
+    /** A link's href, by its place in the text (0 is the first), or null. **/
+    public function linkHref(index:Int):Null<String> {
+        var html = htmlSprite();
+        if (html == null || index < 0 || index >= html.linkHrefs.length) {
+            return null;
+        }
+        return html.linkHrefs[index];
+    }
+
+    /**
+        The link at a point in the parent component's own units, or -1.
+
+        The text's own numbers are device pixels from the sprite's origin (see measureText), so the
+        point is moved to that origin and stood up by the sprite's scale before it is looked up.
+    **/
+    public function linkAt(x:Float, y:Float):Int {
+        var html = htmlSprite();
+        if (html == null || html.scaleX <= 0 || html.scaleY <= 0) {
+            return -1;
+        }
+        return html.linkAt((x - html.x) / html.scaleX, (y - html.y) / html.scaleY);
     }
     
     private var _currentFontData:FontData = null;
@@ -122,6 +216,12 @@ class TextDisplayImpl extends TextBase {
     }
 
     private function resizeFont(fontSizeValue:Int, isBitmap:Bool) {
+        // HTML faces are built at deviceSize, and setting the font below rebuilds the text, which
+        // loads them: it has to be the new size by then.
+        var html = htmlSprite();
+        if (html != null) {
+            html.deviceSize = fontSizeValue;
+        }
         var temp = sprite.font.clone();
         sprite.font = null;
         if (isBitmap) {
