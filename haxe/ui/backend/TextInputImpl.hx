@@ -136,8 +136,16 @@ class TextInputImpl extends TextDisplayImpl {
     //
     // A field that is not being edited has no caret (cursorIndex is -1); it reads
     // as the start, which is where focusing it puts one.
+    //
+    // While an IME composes, the composition is on show in the field but is not
+    // in its text: the caret is where it will be inserted, the selection is empty
+    // (starting a composition replaced it), and setting either commits first, as
+    // clicking away or typing would.
 
     private override function get_caretIndex():Int {
+        if (scrollableInput.isComposing()) {
+            return scrollableInput.composedAt();
+        }
         var kept = keptSelection();
         if (kept != null) {
             return kept.caret;
@@ -146,6 +154,7 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private override function set_caretIndex(value:Int):Int {
+        textInput.commitComposition();
         var pos = clampToText(value);
         _keptSelection = null;
         textInput.selectionRange = null;
@@ -155,6 +164,9 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private override function get_selectionStartIndex():Int {
+        if (scrollableInput.isComposing()) {
+            return get_caretIndex();
+        }
         var kept = keptSelection();
         if (kept != null) {
             return kept.start;
@@ -173,6 +185,9 @@ class TextInputImpl extends TextDisplayImpl {
     }
 
     private override function get_selectionEndIndex():Int {
+        if (scrollableInput.isComposing()) {
+            return get_caretIndex();
+        }
         var kept = keptSelection();
         if (kept != null) {
             return kept.end;
@@ -186,6 +201,7 @@ class TextInputImpl extends TextDisplayImpl {
 
     // From where the selection starts now to `value`, with the caret at `value`.
     private override function set_selectionEndIndex(value:Int):Int {
+        textInput.commitComposition();
         var start = get_selectionStartIndex();
         var end = clampToText(value);
         _keptSelection = null;
@@ -587,7 +603,8 @@ class TextSelection extends h2d.Graphics {
     }
 
     function refresh() {
-        var range = input.selectionRange;
+        // No selection is drawn while an IME composes: starting one replaced it.
+        var range = input.isComposing() ? null : input.selectionRange;
         var now = (range == null) ? "-"
             : range.start + ":" + range.length + ":" + input.text.length + ":" + input.x + ":" + input.y
               + ":" + scrollY + ":" + viewHeight;
@@ -704,8 +721,29 @@ private class ScrollingTextInput extends h2d.TextInput {
         super(font, parent);
     }
 
+    /**
+        Masked after the composition is spliced in, not before.
+
+        h2d.TextInput puts the composition into the field's own text (and only
+        into that: not a substring being measured) in its `initGlyphs`, which here
+        runs after the mask - so a composition would be drawn in the clear, and
+        the caret, laid out on the masked text, would be out of step with it.
+        Splice it in here instead, then mask the lot; what reaches heaps no
+        longer equals `text`, so it does not splice a second time.
+    **/
     override function initGlyphs(text:String, rebuild = true):Void {
-        super.initGlyphs(password ? mask(text) : text, rebuild);
+        if (password) {
+            if (isComposing() && !measuringText && text == this.text) {
+                text = displayText();
+            }
+            text = mask(text);
+        }
+        super.initGlyphs(text, rebuild);
+    }
+
+    /** Where the composition sits in `text` - the caret as the field's text knows it. **/
+    public function composedAt():Int {
+        return compositionStart();
     }
 
     function mask(text:String):String {
