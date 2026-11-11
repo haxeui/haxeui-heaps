@@ -791,6 +791,12 @@ private class ScrollingTextInput extends h2d.TextInput {
         }
     }
 
+    // draw() shifts the text up by scrollY, which localToGlobal does not know: the IME's candidate
+    // window is placed with it.
+    override function getTextScrollY():Float {
+        return (multiline && viewHeight > 0 && viewWidth > 0) ? scrollY : 0;
+    }
+
     override function draw(ctx:h2d.RenderContext) {
         if (!multiline || viewHeight <= 0 || viewWidth <= 0) {
             super.draw(ctx);
